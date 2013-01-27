@@ -8,7 +8,7 @@ all: $(targets)
 .PHONY: all
 
 server: $(objs) ../lib/libdagame.a
-	gcc $(CFLAGS) -o server $(objs) $(libs)
+	gcc $(CFLAGS) -pthread -o server $(objs) $(libs)
 
 $(objs) : $(src)
 
