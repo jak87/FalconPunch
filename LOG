@@ -1,10 +1,50 @@
 1/27/13
 Attendees: Svetlin, Ben, Jack
 Questions:
----
+1) Why does <pthread.h> not register when the program is
+being made with server.c? (See comment 2) 
 Decisions:
 ---
 Todo:
-Finish Part 6 of Assignment 1
+Finish Assignment 1
 Comments/Notes:
-Finished Part 5
+1) Finished Assignment 1
+2) There was a problem with pthread not being included
+when making the program, so we included it directly
+in the Makefile when linking.
+3) Answers to questions in Programs:
+
+server.c :
+1) What does ntohl do?
+   -Changes the byte order from network order to host,
+    preventing byte order conflicts between local machines
+    and networks. (Converts it from most significant byte
+    order to least).
+2) What is happening in "pthread_create(&tid, NULL, &doit, (void *)connfd);"?
+   -It's creating a new thread that will be given the ID at
+    tid. The NULL means that there are no special attributes
+    for its initialization, and when the new thread is created
+    it will start from the doit function (hence the reference
+    to doit's address being passed in). connfd is getting
+    passed to doit, and is being cast as a void pointer to
+    be properly passed into doit.
+
+client.c :
+1) What does getInput() do, and why?
+   -After zeroing the buffer, it reads in a line from stdin
+    to globals' LineBuffer data buffer. It then checks to
+    see if the final character is a "\n" or not. If it is,
+    then it removes it since we don't want to echo that
+    (though it notes that there is a newline at the end of
+    the buffer). It keeps track of newline because doSend 
+    calls getInput until there is a newline.
+2) What does sendStr() do, and how?
+   -It first determines the length of the string that it needs
+    to send and converts it to network byte order. It then
+    writes the length of an int into nlen and the length of the
+    string into the first part of the string that's going to be
+    sent. It allocates a buffer of length len and reads 
+    the message that should be the same length. If at any point 
+    it returns -1 instead of 1, it'll throw an error showing that 
+    the send failed and the connection will end and the buffer 
+    will be freed.
