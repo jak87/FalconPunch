@@ -7,7 +7,7 @@ libs = -L../lib -ldagame
 all: $(targets)
 .PHONY: all
 
-server: $(objs) ../lib/libdagame.a
+client: $(objs) ../lib/libdagame.a
 	gcc $(CFLAGS) -o client $(objs) $(libs)
 
 $(objs) : $(src)
