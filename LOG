@@ -48,3 +48,13 @@ client.c :
     it returns -1 instead of 1, it'll throw an error showing that 
     the send failed and the connection will end and the buffer 
     will be freed.
+
+2/10/13
+Attendees: Ben, Jack
+Questions: 
+Decisions:
+Todo: 
+--Familiarize with code
+--Divide up workload
+--Setup next meet time
+Comments/Notes:
