@@ -1,16 +1,7 @@
-CFLAGS := -g
-targets = libdagame.a
-src = $(wildcard *.c)
-objs = $(patsubst %.c,%.o,$(src))
+targets = $(DAGAMELIBFILE)
 
-all: $(targets)
-.PHONY : all
+include ../config.mk
 
-libdagame.a: $(objs)
+$(DAGAMELIBFILE): $(objs)
+	ar -c -r $(DAGAMELIBFILE) $(objs)
 
-	ar -c -r libdagame.a $(objs)
-
-$(objs) : $(src)
-
-clean:
-	rm $(objs) $(targets)

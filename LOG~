@@ -50,22 +50,11 @@ client.c :
     will be freed.
 
 2/10/13
-Attendees: Ben, Jack (in contact with Svetlin)
+Attendees: Ben, Jack
 Questions: 
---Does marshalling take place before the calls to the session, or
-  in the called functions?
 Decisions:
-1) Meet up on Friday or Saturday.
-2) Split up work between files (though helping each other if questions
-   come up and understanding the code for each).
-3) Finish each part and meet up to make sure the code works so we can
-   move on to next part of the assignment.
 Todo: 
 --Familiarize with code
---Start assignment 2
 --Divide up workload
 --Setup next meet time
 Comments/Notes:
-1) Finished all marshalling / unmarshalling functions in 
-   proto_session.c.
-  
