@@ -201,14 +201,17 @@ proto_server_req_dispatcher(void * arg)
 
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
-        fprintf(stderr, "ADD CODE");
+        mt = s.rhdr.type;
+
+	hdlr = Proto_Server.base_req_handlers[mt];
+
 	if (hdlr(&s)<0) goto leave;
     } else {
       goto leave;
     }
   }
  leave:
-  /*Proto_Server.*/NYI()
+  Proto_Server.session_lost_handler(&s);
   close(s.fd);
   return NULL;
 }
@@ -229,8 +232,7 @@ proto_server_rpc_listen(void *arg)
   }
 
   for (;;) {
-    connfd = 0;
-    NYI()
+    connfd = net_accept(fd);
     if (connfd < 0) {
       fprintf(stderr, "Error: proto_server_rpc_listen accept failed (%d)\n", errno);
     } else {
