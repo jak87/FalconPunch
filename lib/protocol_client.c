@@ -75,7 +75,7 @@ proto_client_set_event_handler(Proto_Client_Handle ch, Proto_Msg_Types mt,
   if (mt>PROTO_MT_EVENT_BASE_RESERVED_FIRST && 
       mt<PROTO_MT_EVENT_BASE_RESERVED_LAST) {
     i=mt - PROTO_MT_EVENT_BASE_RESERVED_FIRST - 1;
-    NYI()
+    c->base_event_handlers[i] = h;
     return 1;
   } else {
     return -1;
@@ -111,19 +111,19 @@ proto_client_event_dispatcher(void * arg)
 
   pthread_detach(pthread_self());
 
-  c = NYI()
-  s = NYI()
+  c = (Proto_Client *) arg;
+  s = &(c->event_session);
 
   for (;;) {
     if (proto_session_rcv_msg(s)==1) {
       mt = proto_session_hdr_unmarshall_type(s);
       if (mt > PROTO_MT_EVENT_BASE_RESERVED_FIRST && 
 	  mt < PROTO_MT_EVENT_BASE_RESERVED_LAST) {
-	NYI()
+	hdlr = c->base_event_handlers[mt];
 	if (hdlr(s)<0) goto leave;
       }
     } else {
-      NYI()
+      c->session_lost_handler(s);
       goto leave;
     }
   }
@@ -147,7 +147,7 @@ proto_client_init(Proto_Client_Handle *ch)
 
   for (mt=PROTO_MT_EVENT_BASE_RESERVED_FIRST+1;
        mt<PROTO_MT_EVENT_BASE_RESERVED_LAST; mt++)
-    NYI()
+    proto_client_set_event_handler(c, mt, proto_client_event_null_handler);
 
   *ch = c;
   return 1;

@@ -201,9 +201,9 @@ proto_server_req_dispatcher(void * arg)
 
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
-        mt = s.rhdr.type;
+        mt = proto_session_hdr_unmarshall_type(&s);
 
-	hdlr = Proto_Server.base_req_handlers[mt];
+	hdlr = Proto_Server.base_req_handlers[mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1];
 
 	if (hdlr(&s)<0) goto leave;
     } else {

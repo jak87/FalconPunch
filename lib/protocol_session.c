@@ -26,13 +26,14 @@
 #include <strings.h>
 #include <errno.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "net.h"
 #include "protocol.h"
 #include "protocol_utils.h"
 #include "protocol_session.h"
 
-#define NYI() fprintf(stderr, "ADD CODE\n");exit(1);
+#define NYI() assert(0);
 
 extern void
 proto_session_dump(Proto_Session *s)
@@ -121,7 +122,7 @@ proto_session_hdr_unmarshall_blen(Proto_Session *s)
 static void
 proto_session_hdr_marshall_type(Proto_Session *s, Proto_Msg_Types t)
 {
-  //s->shdr.type = htonl(t->type); 
+  s->shdr.type = htonl(t); 
 }
 
 static int
