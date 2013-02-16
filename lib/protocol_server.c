@@ -96,14 +96,16 @@ proto_server_record_event_subscriber(int fd, int *num)
   if (Proto_Server.EventLastSubscriber < PROTO_SERVER_MAX_EVENT_SUBSCRIBERS
       && Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber]
       ==-1) {
-    NYI()
+    *num = Proto_Server.EventLastSubscriber;
+    Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber] = fd;
+    Proto_Server.EventLastSubscriber++;
     rc = 1;
   } else {
     int i;
     for (i=0; i< PROTO_SERVER_MAX_EVENT_SUBSCRIBERS; i++) {
       if (Proto_Server.EventSubscribers[i]==-1) {
-	NYI()
 	*num=i;
+	Proto_Server.EventSubscribers[i] = fd;
 	rc=1;
       }
     }
@@ -127,14 +129,14 @@ proto_server_event_listen(void *arg)
   }
 
   for (;;) {
-    connfd = NYI()
+    connfd = net_accept(fd);
     if (connfd < 0) {
       fprintf(stderr, "Error: EventListen accept failed (%d)\n", errno);
     } else {
       int i;
       fprintf(stderr, "EventListen: connfd=%d -> ", connfd);
 
-      if (/* ADD CODE */ 0<0) {
+      if (proto_server_record_event_subscriber(connfd,&i)<0) {
 	fprintf(stderr, "oops no space for any more event subscribers\n");
 	close(connfd);
       } else {
