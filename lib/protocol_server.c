@@ -33,7 +33,7 @@
 #include "protocol_server.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
-#define NYI() fprintf(stderr, "ADD CODE\n");exit(1);
+#define NYI() fprintf(stderr, "ADD CODE\n");
 
 struct {
   FDType   RPCListenFD;
@@ -77,7 +77,8 @@ proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h)
       mt<PROTO_MT_REQ_BASE_RESERVED_LAST) {
     i = mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1;
 
-    NYI()
+    Proto_Server.base_req_handlers[i] = h;
+
     return 1;
   } else {
     return -1;
@@ -117,6 +118,7 @@ static
 void *
 proto_server_event_listen(void *arg)
 {
+  fprintf(stderr, "proto_server_event_listen\n");
   int fd = Proto_Server.EventListenFD;
   int connfd;
 
@@ -178,6 +180,8 @@ proto_server_post_event(void)
 static void *
 proto_server_req_dispatcher(void * arg)
 {
+  fprintf(stderr, "proto_server_req_dispatcher\n");
+
   Proto_Session s;
   Proto_Msg_Types mt;
   Proto_MT_Handler hdlr;
@@ -211,6 +215,8 @@ static
 void *
 proto_server_rpc_listen(void *arg)
 {
+  fprintf(stderr, "proto_server_rpc_listen\n");
+
   int fd = Proto_Server.RPCListenFD;
   unsigned long connfd;
   pthread_t tid;
@@ -235,6 +241,9 @@ proto_server_rpc_listen(void *arg)
 extern int
 proto_server_start_rpc_loop(void)
 {
+  fprintf(stderr, "proto_server_start_rpc_loop\n");
+
+
   if (pthread_create(&(Proto_Server.RPCListenTid), NULL, 
 		     &proto_server_rpc_listen, NULL) !=0) {
     fprintf(stderr, 
@@ -280,6 +289,9 @@ proto_server_mt_null_handler(Proto_Session *s)
 extern int
 proto_server_init(void)
 {
+  fprintf(stderr, "proto_server_init\n");
+
+
   int i;
   int rc;
 
@@ -289,7 +301,7 @@ proto_server_init(void)
 				     proto_session_lost_default_handler);
   for (i=PROTO_MT_REQ_BASE_RESERVED_FIRST+1; 
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
-    NYI()
+    proto_server_set_req_handler(i, proto_server_mt_null_handler);
   }
 
 
