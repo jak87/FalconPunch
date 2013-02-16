@@ -32,6 +32,8 @@
 #include "protocol_utils.h"
 #include "protocol_session.h"
 
+#define NYI() fprintf(stderr, "ADD CODE\n");exit(1);
+
 extern void
 proto_session_dump(Proto_Session *s)
 {
@@ -119,7 +121,7 @@ proto_session_hdr_unmarshall_blen(Proto_Session *s)
 static void
 proto_session_hdr_marshall_type(Proto_Session *s, Proto_Msg_Types t)
 {
-  s->shdr.type = htonl(t->type); 
+  //s->shdr.type = htonl(t->type); 
 }
 
 static int
@@ -277,7 +279,7 @@ proto_session_send_msg(Proto_Session *s, int reset)
   s->shdr.blen = htonl(s->slen);
 
   // write request
-  ADD CODE
+  NYI()
   
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_send_msg: SENT:\n", pthread_self());
@@ -297,7 +299,7 @@ proto_session_rcv_msg(Proto_Session *s)
   proto_session_reset_receive(s);
 
   // read reply
-  ADD CODE
+  NYI()
 
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_rcv_msg: RCVED:\n", pthread_self());
@@ -311,7 +313,7 @@ proto_session_rpc(Proto_Session *s)
 {
   int rc;
   
-  ADD CODE
+  NYI()
 
   return rc;
 }

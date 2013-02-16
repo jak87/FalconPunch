@@ -33,6 +33,7 @@
 #include "protocol_server.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
+#define NYI() fprintf(stderr, "ADD CODE\n");exit(1);
 
 struct {
   FDType   RPCListenFD;
@@ -76,7 +77,7 @@ proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h)
       mt<PROTO_MT_REQ_BASE_RESERVED_LAST) {
     i = mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1;
 
-    ADD CODE
+    NYI()
     return 1;
   } else {
     return -1;
@@ -94,13 +95,13 @@ proto_server_record_event_subscriber(int fd, int *num)
   if (Proto_Server.EventLastSubscriber < PROTO_SERVER_MAX_EVENT_SUBSCRIBERS
       && Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber]
       ==-1) {
-    ADD CODE
+    NYI()
     rc = 1;
   } else {
     int i;
     for (i=0; i< PROTO_SERVER_MAX_EVENT_SUBSCRIBERS; i++) {
       if (Proto_Server.EventSubscribers[i]==-1) {
-	ADD CODE
+	NYI()
 	*num=i;
 	rc=1;
       }
@@ -124,14 +125,14 @@ proto_server_event_listen(void *arg)
   }
 
   for (;;) {
-    connfd = ADD CODE
+    connfd = NYI()
     if (connfd < 0) {
       fprintf(stderr, "Error: EventListen accept failed (%d)\n", errno);
     } else {
       int i;
       fprintf(stderr, "EventListen: connfd=%d -> ", connfd);
 
-      if (ADD CODE<0) {
+      if (/* ADD CODE */ 0<0) {
 	fprintf(stderr, "oops no space for any more event subscribers\n");
 	close(connfd);
       } else {
@@ -155,12 +156,12 @@ proto_server_post_event(void)
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
     if (Proto_Server.EventSession.fd != -1) {
       num--;
-      if (ADD CODE)<0) {
+      if (/* ADD CODE */0<0) {
 	// must have lost an event connection
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
-	Proto_Server.ADD CODE
+	/*Server_Proto.*/NYI()
       } 
       // FIXME: add ack message here to ensure that game is updated 
       // correctly everywhere... at the risk of making server dependent
@@ -194,15 +195,14 @@ proto_server_req_dispatcher(void * arg)
 
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
-      ADD CODE
+        fprintf(stderr, "ADD CODE");
 	if (hdlr(&s)<0) goto leave;
-      }
     } else {
       goto leave;
     }
   }
  leave:
-  Proto_Server.ADD CODE
+  /*Proto_Server.*/NYI()
   close(s.fd);
   return NULL;
 }
@@ -221,7 +221,8 @@ proto_server_rpc_listen(void *arg)
   }
 
   for (;;) {
-    connfd = ADD CODE
+    connfd = 0;
+    NYI()
     if (connfd < 0) {
       fprintf(stderr, "Error: proto_server_rpc_listen accept failed (%d)\n", errno);
     } else {
@@ -288,7 +289,7 @@ proto_server_init(void)
 				     proto_session_lost_default_handler);
   for (i=PROTO_MT_REQ_BASE_RESERVED_FIRST+1; 
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
-    ADD CODE
+    NYI()
   }
 
 
