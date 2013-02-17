@@ -280,8 +280,10 @@ proto_session_send_msg(Proto_Session *s, int reset)
   s->shdr.blen = htonl(s->slen);
 
   // write request
-  NYI()
-  
+  net_writen(s->fd, &(s->shdr), sizeof(Proto_Msg_Hdr));
+
+  net_writen(s->fd, s->sbuf, s->slen);
+
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_send_msg: SENT:\n", pthread_self());
     proto_session_dump(s);
@@ -290,22 +292,26 @@ proto_session_send_msg(Proto_Session *s, int reset)
   // communication was successfull 
   if (reset) proto_session_reset_send(s);
 
+  // TODO: proper logic for return code
   return 1;
 }
 
 extern int
 proto_session_rcv_msg(Proto_Session *s)
-{
-  
+{  
   proto_session_reset_receive(s);
 
   // read reply
-  NYI()
+  net_readn(s->fd, &(s->rhdr), sizeof(Proto_Msg_Hdr));
+
+  net_readn(s->fd, s->rbuf, ntohl(s->rhdr.blen));
 
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_rcv_msg: RCVED:\n", pthread_self());
     proto_session_dump(s);
   }
+
+  // TODO: proper logic for return code
   return 1;
 }
 
@@ -314,8 +320,11 @@ proto_session_rpc(Proto_Session *s)
 {
   int rc;
   
-  NYI()
+  proto_session_send_msg(s, 1);
 
-  return rc;
+  proto_session_rcv_msg(s);
+
+  // TODO: proper logic for return code
+  return 1;
 }
 

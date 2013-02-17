@@ -160,12 +160,13 @@ proto_server_post_event(void)
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
     if (Proto_Server.EventSession.fd != -1) {
       num--;
-      if (/* ADD CODE */0<0) {
+      // try to send the message, without resetting it
+      if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 	// must have lost an event connection
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
-	/*Server_Proto.*/NYI()
+	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
       } 
       // FIXME: add ack message here to ensure that game is updated 
       // correctly everywhere... at the risk of making server dependent

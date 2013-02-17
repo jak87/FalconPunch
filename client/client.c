@@ -245,6 +245,7 @@ initGlobals(int argc, char **argv)
 int 
 main(int argc, char **argv)
 {
+  proto_debug_on();
   Client c;
 
   initGlobals(argc, argv);

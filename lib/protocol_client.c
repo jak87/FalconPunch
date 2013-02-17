@@ -26,12 +26,12 @@
 #include <strings.h>
 #include <errno.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "protocol.h"
 #include "protocol_utils.h"
 #include "protocol_client.h"
 
-#define NYI() fprintf(stderr, "ADD CODE\n");exit(1);
 
 
 typedef struct {
@@ -193,16 +193,16 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
   Proto_Session *s;
   Proto_Client *c = ch;
 
-  s = NYI()
+  s = &(c->rpc_session);
   // marshall
 
   marshall_mtonly(s, mt);
-  rc = NYI() //proto_session_ADD CODE
+  rc = proto_session_rpc(s);
 
   if (rc==1) {
     proto_session_body_unmarshall_int(s, 0, &rc);
   } else {
-    NYI()
+    assert(0);
   }
   
   return rc;
