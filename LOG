@@ -68,4 +68,20 @@ Todo:
 Comments/Notes:
 1) Finished all marshalling / unmarshalling functions in 
    proto_session.c.
-  
+ 
+2/16/13
+Attendees: Jack, Svetlin, Ben
+Questions:
+-Why don't we marshall in the session?
+Decisions:
+1) Now that we all know what's going on, finish all the functions individually
+2) Meet up Tuesday evening to decide more stuff
+Todo: (between now and next time)
+1) Finish replacing all NYI()s so we can start working on Tic-Tac-Toe
+Comments/Notes: 
+1) Managed to make everything compile
+2) Managed to implement most functions without NYI()s 
+   (except proto_session_rpc()) 
+3) Server starts listening for RPC and the client attempts
+   to connect (well, it did, but it caused an event that
+   broke the connection).
