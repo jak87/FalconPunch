@@ -282,13 +282,13 @@ proto_session_send_msg(Proto_Session *s, int reset)
 
   // write request
   rc = net_writen(s->fd, &(s->shdr), sizeof(Proto_Msg_Hdr));
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "net_writen failed!");
     return rc;
   }
 
   rc = net_writen(s->fd, s->sbuf, s->slen);
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "net_writen failed!");
     return rc;
   }
@@ -301,7 +301,7 @@ proto_session_send_msg(Proto_Session *s, int reset)
   // communication was successfull 
   if (reset) proto_session_reset_send(s);
 
-  return rc;
+  return 1;
 }
 
 extern int
@@ -313,13 +313,13 @@ proto_session_rcv_msg(Proto_Session *s)
   // read reply
 
   rc = net_readn(s->fd, &(s->rhdr), sizeof(Proto_Msg_Hdr));
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "net_readn failed!");
     return rc;
   }
 
   rc = net_readn(s->fd, s->rbuf, ntohl(s->rhdr.blen));
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "net_readn failed!");
     return rc;
   }
@@ -329,7 +329,7 @@ proto_session_rcv_msg(Proto_Session *s)
     proto_session_dump(s);
   }
 
-  return rc;
+  return 1;
 }
 
 extern int
@@ -338,16 +338,16 @@ proto_session_rpc(Proto_Session *s)
   int rc;
   
   rc = proto_session_send_msg(s, 1);
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "proto_session_send_msg failed!");
     return rc;
   }
 
   rc = proto_session_rcv_msg(s);
-  if(rc < 1) {
+  if(rc < 0) {
     fprintf(stderr, "proto_session_rcv_msg failed!");
   }
 
-  return rc;
+  return 1;
 }
 
