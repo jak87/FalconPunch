@@ -277,12 +277,21 @@ proto_session_body_unmarshall_bytes(Proto_Session *s, int offset, int len,
 extern  int
 proto_session_send_msg(Proto_Session *s, int reset)
 {
+  int rc;
   s->shdr.blen = htonl(s->slen);
 
   // write request
-  net_writen(s->fd, &(s->shdr), sizeof(Proto_Msg_Hdr));
+  rc = net_writen(s->fd, &(s->shdr), sizeof(Proto_Msg_Hdr));
+  if(rc < 1) {
+    fprintf(stderr, "net_writen failed!");
+    return rc;
+  }
 
-  net_writen(s->fd, s->sbuf, s->slen);
+  rc = net_writen(s->fd, s->sbuf, s->slen);
+  if(rc < 1) {
+    fprintf(stderr, "net_writen failed!");
+    return rc;
+  }
 
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_send_msg: SENT:\n", pthread_self());
@@ -292,27 +301,35 @@ proto_session_send_msg(Proto_Session *s, int reset)
   // communication was successfull 
   if (reset) proto_session_reset_send(s);
 
-  // TODO: proper logic for return code
-  return 1;
+  return rc;
 }
 
 extern int
 proto_session_rcv_msg(Proto_Session *s)
 {  
+  int rc;
   proto_session_reset_receive(s);
 
   // read reply
-  net_readn(s->fd, &(s->rhdr), sizeof(Proto_Msg_Hdr));
 
-  net_readn(s->fd, s->rbuf, ntohl(s->rhdr.blen));
+  rc = net_readn(s->fd, &(s->rhdr), sizeof(Proto_Msg_Hdr));
+  if(rc < 1) {
+    fprintf(stderr, "net_readn failed!");
+    return rc;
+  }
+
+  rc = net_readn(s->fd, s->rbuf, ntohl(s->rhdr.blen));
+  if(rc < 1) {
+    fprintf(stderr, "net_readn failed!");
+    return rc;
+  }
 
   if (proto_debug()) {
     fprintf(stderr, "%p: proto_session_rcv_msg: RCVED:\n", pthread_self());
     proto_session_dump(s);
   }
 
-  // TODO: proper logic for return code
-  return 1;
+  return rc;
 }
 
 extern int
@@ -320,11 +337,17 @@ proto_session_rpc(Proto_Session *s)
 {
   int rc;
   
-  proto_session_send_msg(s, 1);
+  rc = proto_session_send_msg(s, 1);
+  if(rc < 1) {
+    fprintf(stderr, "proto_session_send_msg failed!");
+    return rc;
+  }
 
-  proto_session_rcv_msg(s);
+  rc = proto_session_rcv_msg(s);
+  if(rc < 1) {
+    fprintf(stderr, "proto_session_rcv_msg failed!");
+  }
 
-  // TODO: proper logic for return code
-  return 1;
+  return rc;
 }
 
