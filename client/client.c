@@ -154,7 +154,7 @@ doRPC(Client *C)
   scanf("%c", &c);
   rc=doRPCCmd(C,c);
 
-  printf("\ndoRPC: rc=0x%x\n", rc);
+  printf("doRPC: rc=0x%x\n", rc);
 
   return rc;
 }
@@ -243,18 +243,62 @@ initGlobals(int argc, char **argv)
 
 }
 
+/*
+ * Shell that runs before a connection is established
+ */
+int
+initialShell(void * arg) {
+  char buf[STRLEN];
+  char readBuf[STRLEN];
+  int ip1=0, ip2=0, ip3=0, ip4=0, port=0;
+  while(1) {
+    printf("\nclient>");
+    fflush(stdout);
+    bzero(buf,sizeof(buf));
+    bzero(readBuf,sizeof(readBuf));
+
+    if (fgets(readBuf, sizeof(readBuf), stdin) == NULL) {
+      fprintf(stderr, "ERROR: fgets error\n");
+      return;
+    }
+    sscanf(readBuf, "%s", buf);
+
+    if (strcmp("q",buf) == 0) return 0;
+
+    if (strcmp("connect",buf) == 0) {
+      bzero(buf,sizeof(buf));
+      if (sscanf(readBuf, "%s%d.%d.%d.%d:%d", buf, &ip1, &ip2, &ip3, &ip4, &port) != 6) {
+        bzero(buf,sizeof(buf));
+        if (sscanf(readBuf, "%s%d", buf, &port) == 2) {
+          strncpy(globals.host, "localhost", STRLEN);
+					globals.port = port;
+          return 1;
+        }
+        printf("connect takes args <ip:port>, or <port> if you want to default to localh\
+ost");
+      }
+      else {
+        sprintf(globals.host, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+        return 1;
+      }
+    } 
+
+    else printf("Must first connect to a network! (Or quit with 'q')");
+  }
+}
+
 int 
 main(int argc, char **argv)
 {
-  proto_debug_on();
   Client c;
-
-  initGlobals(argc, argv);
 
   if (clientInit(&c) < 0) {
     fprintf(stderr, "ERROR: clientInit failed\n");
     return -1;
-  }    
+  }
+	
+  bzero(&globals, sizeof(globals));
+  if (initialShell(&c) == 0) return 0;
 
   // ok startup our connection to the server
   if (startConnection(&c, globals.host, globals.port, update_event_handler)<0) {
