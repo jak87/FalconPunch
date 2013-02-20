@@ -33,7 +33,6 @@
 #include "protocol_server.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
-#define NYI() fprintf(stderr, "ADD CODE\n");
 
 struct {
   FDType   RPCListenFD;
@@ -53,6 +52,12 @@ struct {
   Proto_MT_Handler   base_req_handlers[PROTO_MT_REQ_BASE_RESERVED_LAST - 
 				       PROTO_MT_REQ_BASE_RESERVED_FIRST-1];
 } Proto_Server;
+
+struct {
+  int		players[2];
+  int		hasTurn;
+  char		board[9];	
+} TicTacToe;
 
 extern PortType proto_server_rpcport(void) { return Proto_Server.RPCPort; }
 extern PortType proto_server_eventport(void) { return Proto_Server.EventPort; }
@@ -84,7 +89,6 @@ proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h)
     return -1;
   }
 }
-
 
 static int
 proto_server_record_event_subscriber(int fd, int *num)
@@ -291,6 +295,59 @@ proto_server_mt_null_handler(Proto_Session *s)
   return rc;
 }
 
+
+/**** TIC TAC TOE code.
+ *    Figure out how to separete game logic and handlers from server code. 
+ ****/
+
+static int 
+tictactoe_hello_handler(Proto_Session *s)
+{
+  int rc=1;
+  Proto_Msg_Hdr h;
+  
+  fprintf(stderr, "tictactoe_hello_handler: invoked for session:\n");
+  proto_session_dump(s);
+
+  char symbol = 'X';
+
+  int playerXfd = TicTacToe.players[0];
+  int playerYfd = TicTacToe.players[1];
+
+  if (playerXfd == 0 || playerXfd == s->fd) {
+    TicTacToe.players[0] = s->fd;
+    symbol = 'X';
+  } else if (playerYfd == 0 || playerYfd == s->fd) {
+    TicTacToe.players[1] = s->fd;
+    symbol = 'Y';
+  } else {
+    symbol = '_';
+  }
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_HELLO;
+  proto_session_hdr_marshall(s, &h);
+ 
+  proto_session_body_marshall_char(s, symbol);
+
+  rc=proto_session_send_msg(s,1);
+
+  return rc;
+}
+
+
+/****
+ *    END TIC TAC TOE code.
+ ****/
+
+
+
+
+
+
+
+
+
 extern int
 proto_server_init(void)
 {
@@ -306,7 +363,14 @@ proto_server_init(void)
 				     proto_session_lost_default_handler);
   for (i=PROTO_MT_REQ_BASE_RESERVED_FIRST+1; 
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
-    proto_server_set_req_handler(i, proto_server_mt_null_handler);
+    switch (i) {
+      case PROTO_MT_REQ_BASE_HELLO:
+        proto_server_set_req_handler(i, tictactoe_hello_handler);
+        break;
+      default:
+        proto_server_set_req_handler(i, proto_server_mt_null_handler);
+        break;
+    }
   }
 
 
@@ -347,3 +411,5 @@ proto_server_init(void)
 
   return 0;
 }
+
+
