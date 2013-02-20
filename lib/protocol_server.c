@@ -26,6 +26,7 @@
 #include <strings.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "net.h"
 #include "protocol.h"
@@ -335,6 +336,50 @@ tictactoe_hello_handler(Proto_Session *s)
   return rc;
 }
 
+static int
+tictactoe_move_handler(Proto_Session *s){
+  int rc=1;
+  Proto_Msg_Hdr h;
+
+  fprintf(stderr, "tictactoe_move_handler: invoked for session:\n");
+  proto_session_dump(s);
+
+  FDType fd = s->fd;
+
+  if (fd != TicTacToe.players[TicTacToe.hasTurn]){
+    rc = -2; //not your turn
+    goto out;
+  }
+  
+  char c;
+  proto_session_body_unmarshall_char(s,0,&c);
+  if ('0'<c && c<='9'){
+    char *space = strchr(TicTacToe.board, c);
+    if (space){
+      if (fd == TicTacToe.players[0]){
+        *space = 'X';
+      }
+      else if (fd==TicTacToe.players[1]){
+        *space = 'Y';
+      }
+      TicTacToe.hasTurn = !TicTacToe.hasTurn;
+    }
+  }
+  else{
+    rc = -1; //requested move is invalid;
+  }
+
+ out:
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_MOVE;
+  proto_session_hdr_marshall(s, &h);
+  proto_session_body_marshall_int(s,rc);
+  
+  rc = proto_session_send_msg(s,1);
+  return rc;
+
+}
+
 
 /****
  *    END TIC TAC TOE code.
@@ -367,6 +412,9 @@ proto_server_init(void)
       case PROTO_MT_REQ_BASE_HELLO:
         proto_server_set_req_handler(i, tictactoe_hello_handler);
         break;
+      case PROTO_MT_REQ_BASE_MOVE:
+	proto_server_set_req_handler(i, tictactoe_move_handler);
+	break;
       default:
         proto_server_set_req_handler(i, proto_server_mt_null_handler);
         break;
