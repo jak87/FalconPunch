@@ -85,3 +85,19 @@ Comments/Notes:
 3) Server starts listening for RPC and the client attempts
    to connect (well, it did, but it caused an event that
    broke the connection).
+
+2/20/13
+Attendees: Jack, Ben, Svetlin
+Questions:
+--
+Decisions:
+-Meetup again tomorrow, hopefully finish
+Todo:
+-Make gameboard display
+-Make it so that the server doesn't crash when a client disconnects
+Comments/Notes:
+-It's compiling fine on csa2, but there's a weird scanf error on curzon
+-Made the client match the inputs specified in the pdf
+-protocol_server can successfully assign X and O to players
+-protocol_server can successfully register moves (though this is
+ done at low-level encoding - should be able to make better)
