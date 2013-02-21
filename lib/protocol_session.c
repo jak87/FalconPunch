@@ -346,6 +346,7 @@ proto_session_rpc(Proto_Session *s)
   rc = proto_session_rcv_msg(s);
   if(rc < 0) {
     fprintf(stderr, "proto_session_rcv_msg failed!");
+    return rc;
   }
 
   return 1;

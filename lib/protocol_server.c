@@ -57,7 +57,7 @@ struct {
 struct {
   int		players[2];
   int		hasTurn;
-  char		board[9];	
+  char *	board;
 } TicTacToe;
 
 extern PortType proto_server_rpcport(void) { return Proto_Server.RPCPort; }
@@ -381,6 +381,7 @@ tictactoe_move_handler(Proto_Session *s){
 }
 
 
+
 /****
  *    END TIC TAC TOE code.
  ****/
@@ -398,6 +399,10 @@ proto_server_init(void)
 {
   fprintf(stderr, "proto_server_init\n");
 
+  // initialize TicTacToe global struct to zeros	
+  bzero(&TicTacToe, sizeof(TicTacToe));
+
+  TicTacToe.board = "123456789";
 
   int i;
   int rc;
