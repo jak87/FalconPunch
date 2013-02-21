@@ -86,12 +86,11 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 
 
 int
-prompt(char * buf, int menu) 
+prompt(char * buf, int menu, char * player) 
 {
-  static char MenuString[] = "\nclient> ";
   int ret = 1;
 
-  if (menu) printf("%s", MenuString);
+  if (menu) printf("\n%c> ", *player);
   fflush(stdout);
   if (fgets(buf, STRLEN, stdin) == NULL) {
     fprintf(stderr, "fgets error in prompt\n");
@@ -199,7 +198,7 @@ docmd(Client *C, char * buf)
 }
 
 void *
-shell(void *arg)
+shell(void *arg, char * player)
 {
   Client *C = arg;
   char buf[STRLEN];
@@ -207,7 +206,7 @@ shell(void *arg)
   int menu=1;
 
   while (1) {
-    if (prompt(buf, menu) != 0) rc=docmd(C, buf);
+    if (prompt(buf, menu, player) != 0) rc=docmd(C, buf);
     if (rc<0) break;
     if (rc==1) menu=1; else menu=0;
   }
@@ -319,9 +318,10 @@ main(int argc, char **argv)
 
   char* symbol = malloc(sizeof(char));
 
-  proto_client_hello(&c, symbol);
+  proto_client_hello(c.ph, symbol);
+  printf("You are player %c!", *symbol);
 
-  shell(&c);
+  shell(&c,symbol);
 
   return 0;
 }
