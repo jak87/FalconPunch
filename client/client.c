@@ -115,7 +115,7 @@ game_process_reply(Client *C)
   return 1;
 }
 
-
+/*
 int 
 doRPCCmd(Client *C, char c) 
 {
@@ -143,8 +143,9 @@ doRPCCmd(Client *C, char c)
   printf("%s: rc=0x%x\n", __func__, rc);
   if (rc == 0xdeadbeef) rc=1;
   return rc;
-}
+  }*/
 
+ /*
 int
 doRPC(Client *C)
 {
@@ -159,7 +160,7 @@ doRPC(Client *C)
   printf("doRPC: rc=0x%x\n", rc);
 
   return rc;
-}
+  }*/
 
 
 int 
@@ -315,6 +316,10 @@ main(int argc, char **argv)
     fprintf(stderr, "ERROR: startConnection failed\n");
     return -1;
   }
+
+  char* symbol = malloc(sizeof(char));
+
+  proto_client_hello(&c, symbol);
 
   shell(&c);
 
