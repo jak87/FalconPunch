@@ -86,16 +86,18 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 
 
 int
-prompt(int menu) 
+prompt(char * buf, int menu) 
 {
   static char MenuString[] = "\nclient> ";
-  int ret;
-  int c=0;
+  int ret = 1;
 
   if (menu) printf("%s", MenuString);
   fflush(stdout);
-  c = getchar();
-  return c;
+  if (fgets(buf, STRLEN, stdin) == NULL) {
+    fprintf(stderr, "fgets error in prompt\n");
+    ret = 0;
+  }
+  return ret;
 }
 
 
@@ -161,29 +163,37 @@ doRPC(Client *C)
 
 
 int 
-docmd(Client *C, char cmd)
+docmd(Client *C, char * buf)
 {
   int rc = 1;
 
-  switch (cmd) {
-  case 'd':
-    proto_debug_on();
-    break;
-  case 'D':
-    proto_debug_off();
-    break;
-  case 'r':
-    rc = doRPC(C);
-    break;
-  case 'q':
-    rc=-1;
-    break;
-  case '\n':
-    rc=1;
-    break;
-  default:
-    printf("Unkown Command\n");
+  char cmd[STRLEN];
+  sscanf(buf, "%s", cmd);
+  
+  // need to send request to disconnect
+  if (strcmp(cmd,"disconnect") == 0) return -1;
+  
+  // display board
+  else if (strcmp(cmd,"\n") == 0) return -1;
+
+  else if (cmd[0] == '[') {
+    if (cmd[1] > '0' && cmd[1] <= '9') {
+      proto_client_move(C->ph, cmd[1]);
+    }
+    else {
+      printf("Error, invalid move\n");
+    }
   }
+
+  else if (strcmp(cmd,"where") == 0)
+    printf("host: %s, port: %d\n", globals.host, globals.port);
+
+  // disconnect first
+  else if (strcmp(cmd,"quit") == 0) return -1;
+  
+  else
+    printf("Nice try, guy. %s isn't a command...\n", cmd);
+
   return rc;
 }
 
@@ -191,12 +201,12 @@ void *
 shell(void *arg)
 {
   Client *C = arg;
-  char c;
+  char buf[STRLEN];
   int rc;
   int menu=1;
 
   while (1) {
-    if ((c=prompt(menu))!=0) rc=docmd(C, c);
+    if (prompt(buf, menu) != 0) rc=docmd(C, buf);
     if (rc<0) break;
     if (rc==1) menu=1; else menu=0;
   }
