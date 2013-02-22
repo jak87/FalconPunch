@@ -249,7 +249,8 @@ proto_client_move(Proto_Client_Handle ch, char data)
 
   if (rc==1) {
     proto_session_body_unmarshall_int(s, 0, &rc);
-  } else {
+  }
+  else {
     c->session_lost_handler(s);
   }
   

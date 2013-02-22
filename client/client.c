@@ -167,6 +167,7 @@ int
 docmd(Client *C, char * buf)
 {
   int rc = 1;
+  int temp = 0;
 
   char cmd[STRLEN];
   sscanf(buf, "%s", cmd);
@@ -179,7 +180,15 @@ docmd(Client *C, char * buf)
 
   else if (cmd[0] == '[') {
     if (cmd[1] > '0' && cmd[1] <= '9') {
-      proto_client_move(C->ph, cmd[1]);
+      temp = proto_client_move(C->ph, cmd[1]);
+      if (temp == 1)
+	printf("You claimed %c!",cmd[1]);
+      else if (temp == -2)
+	printf("It's not your turn!");
+      else if (temp == -3)
+	printf("That space is already taken!");
+      else
+	printf("Strange Error");
     }
     else {
       printf("Error, invalid move\n");
@@ -190,7 +199,7 @@ docmd(Client *C, char * buf)
     printf("host: %s, port: %d\n", globals.host, globals.port);
 
   // disconnect first
-  else if (strcmp(cmd,"quit") == 0) return -1;
+  else if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"q") == 0) return -1;
   
   else
     printf("Nice try, guy. %s isn't a command...\n", cmd);

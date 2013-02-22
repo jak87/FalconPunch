@@ -336,7 +336,7 @@ int do_gameboard_event()
     proto_session_body_marshall_char(s, TicTacToe.board[i]);
   }
   
-  fprintf(stderr, "\n\n\nABOUT TO CALL proto_server_post_event\n\n\n");
+  //fprintf(stderr, "\n\n\nABOUT TO CALL proto_server_post_event\n\n\n");
 
   proto_server_post_event();
 
@@ -432,15 +432,27 @@ tictactoe_move_handler(Proto_Session *s){
   char c;
   proto_session_body_unmarshall_char(s,0,&c);
   if ('0'<c && c<='9'){
-    char *space = strchr(TicTacToe.board, c);
-    if (space){
-      if (fd == TicTacToe.players[0]){
-        *space = 'X';
+    // Gets the exact location where that char should be
+    char space = TicTacToe.board[(int)c - 47];
+    if (space != 'X' && space != 'O') {
+      if (fd == TicTacToe.players[0]) {
+        TicTacToe.board[(int)c - 47] = 'X';
       }
-      else if (fd==TicTacToe.players[1]){
-        *space = 'O';
+      else if (fd==TicTacToe.players[1]) {
+        TicTacToe.board[(int)c - 47] = 'O';
       }
       TicTacToe.hasTurn = !TicTacToe.hasTurn;
+      /******************************************************
+       * THIS CODE IS CURRENTLY NOT FUNCTIONING CORRECTLY!
+       * THE ERROR OCCURS WHEN IT ATTEMPTS TO SEND THE BODY OF
+       * THE MESSAGE IN PROTO_SERVER_POST_EVENT. IT SUCCESSFULLY
+       * WRITES THE HEADER APPARENTLY, BUT THE PROGRAM SEGFAULTS
+       * WHEN IT TRIES TO WRITE THE OTHER. STILL NOT SURE WHY.
+       * THE PROGRAMS WORKS SO FAR WITHOUT CALLING THESE METHODS
+       * AT THE MOMENT, HOWEVER.
+       ******************************************************
+       * ALL THIS IS COMMENTED OUT
+       ******************************************************
       do_gameboard_event();
       char c = check_for_win();
       if (c)
@@ -451,6 +463,11 @@ tictactoe_move_handler(Proto_Session *s){
       {
 	do_gameover_event('D');
       }
+      *******************************************************/
+    }
+    else {
+      // This means that the space on the board is already taken
+      rc = -3;
     }
   }
   else{
