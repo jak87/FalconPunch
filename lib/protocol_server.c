@@ -302,6 +302,75 @@ proto_server_mt_null_handler(Proto_Session *s)
  *    Figure out how to separete game logic and handlers from server code. 
  ****/
 
+int do_gameover_event(char c){
+
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
+  
+  s = proto_server_event_session();
+  hdr.type = PROTO_MT_EVENT_BASE_GAMEOVER;
+  proto_session_hdr_marshall(s, &hdr);
+  proto_session_body_marshall_char(s, c);
+  proto_server_post_event();
+  
+  return 1;
+}
+
+int do_gameboard_event()
+{
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
+
+  s = proto_server_event_session();
+  hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
+  proto_session_hdr_marshall(s, &hdr);
+  
+  int i;
+  for (i=0; i<strlen(TicTacToe.board); i++){
+    proto_session_body_marshall_char(s, TicTacToe.board[i]);
+  }
+  
+  proto_server_post_event();
+
+  return 1;
+}
+
+//returns winning player if game is over, NULL otherwise
+char check_for_win(){
+  char *b = TicTacToe.board;
+  if ((b[0] == b[1]) && (b[1] == b[2])){
+    return b[1];
+  }
+  else if ((b[3] == b[4]) && (b[4] == b[5])){
+    return b[4];
+  }
+  else if ((b[6] == b[7]) && (b[7] == b[8])){
+    return b[7];
+  }
+  else if ((b[0] == b[3]) && (b[3] == b[6])){
+    return b[3];
+  }
+  else if ((b[1] == b[4]) && (b[4] == b[7])){
+    return b[4];
+  }
+  else if ((b[2] == b[5]) && (b[5] == b[8])){
+    return b[5];
+  }
+  else if ((b[0] == b[4]) && (b[4] == b[8])){
+    return b[4];
+  }
+  else if ((b[2] == b[4]) && (b[4] == b[6])){
+    return b[4];
+  }
+  else{
+    return NULL;
+  }
+
+}
+
+
+
+
 static int 
 tictactoe_hello_handler(Proto_Session *s)
 {
@@ -391,71 +460,7 @@ tictactoe_move_handler(Proto_Session *s){
 
 }
 
-int do_gameover_event(char c){
 
-  Proto_Session *s;
-  Proto_Msg_Hdr hdr;
-  
-  s = proto_server_event_session();
-  hdr.type = PROTO_MT_EVENT_BASE_GAMEOVER;
-  proto_session_hdr_marshall(s, &hdr);
-  proto_session_body_marshall_char(s, c);
-  proto_server_post_event();
-  
-  return 1;
-}
-
-int do_gameboard_event()
-{
-  Proto_Session *s;
-  Proto_Msg_Hdr hdr;
-
-  s = proto_server_event_session();
-  hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
-  proto_session_hdr_marshall(s, &hdr);
-  
-  int i;
-  for (i=0; i<strlen(TicTacToe.board); i++){
-    proto_session_body_marshall_char(s, TicTacToe.board[i]);
-  }
-  
-  proto_server_post_event();
-
-  return 1;
-}
-
-//returns winning player if game is over, NULL otherwise
-char check_for_win(){
-  char *b = TicTacToe.board;
-  if ((b[0] == b[1]) && (b[1] == b[2])){
-    return b[1];
-  }
-  else if ((b[3] == b[4]) && (b[4] == b[5])){
-    return b[4];
-  }
-  else if ((b[6] == b[7]) && (b[7] == b[8])){
-    return b[7];
-  }
-  else if ((b[0] == b[3]) && (b[3] == b[6])){
-    return b[3];
-  }
-  else if ((b[1] == b[4]) && (b[4] == b[7])){
-    return b[4];
-  }
-  else if ((b[2] == b[5]) && (b[5] == b[8])){
-    return b[5];
-  }
-  else if ((b[0] == b[4]) && (b[4] == b[8])){
-    return b[4];
-  }
-  else if ((b[2] == b[4]) && (b[4] == b[6])){
-    return b[4];
-  }
-  else{
-    return NULL;
-  }
-
-}
 
 /****
  *    END TIC TAC TOE code.
