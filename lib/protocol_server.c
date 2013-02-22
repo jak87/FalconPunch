@@ -380,7 +380,16 @@ tictactoe_move_handler(Proto_Session *s){
 
 }
 
+static int
+do_gameboard_event(Proto_Session *s)
+{
 
+
+
+
+
+
+}
 
 /****
  *    END TIC TAC TOE code.
@@ -401,8 +410,8 @@ proto_server_init(void)
 
   // initialize TicTacToe global struct to zeros	
   bzero(&TicTacToe, sizeof(TicTacToe));
-
-  TicTacToe.board = "123456789";
+  TicTacToe.board = (char *) malloc(10*sizeof(char));
+  strcpy(TicTacToe.board, "123456789");
 
   int i;
   int rc;
