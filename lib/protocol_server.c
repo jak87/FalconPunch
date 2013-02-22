@@ -320,7 +320,7 @@ tictactoe_hello_handler(Proto_Session *s)
     symbol = 'X';
   } else if (playerYfd == 0 || playerYfd == s->fd) {
     TicTacToe.players[1] = s->fd;
-    symbol = 'Y';
+    symbol = 'O';
   } else {
     symbol = '_';
   }
@@ -360,9 +360,10 @@ tictactoe_move_handler(Proto_Session *s){
         *space = 'X';
       }
       else if (fd==TicTacToe.players[1]){
-        *space = 'Y';
+        *space = 'O';
       }
       TicTacToe.hasTurn = !TicTacToe.hasTurn;
+      do_gameboard_event();
     }
   }
   else{
@@ -381,14 +382,23 @@ tictactoe_move_handler(Proto_Session *s){
 }
 
 static int
-do_gameboard_event(Proto_Session *s)
+do_gameboard_event()
 {
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
 
+  s = proto_server_event_session();
+  hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
+  proto_session_hdr_marshall(s, &hdr);
+  
+  int i;
+  for (i=0; i<strlen(TicTacToe.board); i++){
+    proto_session_body_marshall_char(s, TicTacToe.board[i]);
+  }
+  
+  proto_server_post_event();
 
-
-
-
-
+  return 1;
 }
 
 /****
