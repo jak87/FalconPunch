@@ -173,11 +173,6 @@ proto_server_post_event(void)
     if (Proto_Server.EventSession.fd != -1) {
       num--;
       // try to send the message, without resetting it
-      /************************************************
-       *                                              *
-       *********THIS IS THE ERROR!!!*******************
-       *                                              * 
-       ************************************************/
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 	// must have lost an event connection
 	close(Proto_Server.EventSession.fd);
@@ -440,16 +435,18 @@ tictactoe_move_handler(Proto_Session *s){
   
   char c;
   proto_session_body_unmarshall_char(s,0,&c);
+  printf("Alright, this is what the server got: %d\n",c);
   if ('0'<c && c<='9'){
     // Gets the exact location where that char should be
-    char space = TicTacToe.board[(int)c - 47];
+    char space = TicTacToe.board[(int)c - 49];
     if (space != 'X' && space != 'O') {
       if (fd == TicTacToe.players[0]) {
-        TicTacToe.board[(int)c - 47] = 'X';
+        TicTacToe.board[(int)c - 49] = 'X';
       }
       else if (fd==TicTacToe.players[1]) {
-        TicTacToe.board[(int)c - 47] = 'O';
+        TicTacToe.board[(int)c - 49] = 'O';
       }
+      printf("The board now looks like this: %s\n",TicTacToe.board);
       TicTacToe.hasTurn = !TicTacToe.hasTurn;
       /******************************************************
        * THIS CODE IS CURRENTLY NOT FUNCTIONING CORRECTLY!

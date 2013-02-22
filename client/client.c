@@ -57,9 +57,12 @@ clientInit(Client *C)
 static int
 update_event_handler(Proto_Session *s)
 {
-  Client *C = proto_session_get_data(s);
+  //Client *C = proto_session_get_data(s);
+  char * buf = s->rbuf;
 
-  fprintf(stderr, "%s: called, like a boss.\n", __func__);
+  //fprintf(stderr, "%s: called, like a boss.\n", __func__);
+  printf("%c|%c|%c\n-----\n%c|%c|%c\n-----\n%c|%c|%c\n",
+    buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7],buf[8]);
   return 1;
 }
 
