@@ -283,13 +283,13 @@ proto_session_send_msg(Proto_Session *s, int reset)
   // write request
   rc = net_writen(s->fd, &(s->shdr), sizeof(Proto_Msg_Hdr));
   if(rc < 0) {
-    fprintf(stderr, "net_writen failed!");
+    fprintf(stderr, "net_writen failed for header!");
     return rc;
   }
 
   rc = net_writen(s->fd, s->sbuf, s->slen);
   if(rc < 0) {
-    fprintf(stderr, "net_writen failed!");
+    fprintf(stderr, "net_writen failed for body!");
     return rc;
   }
 

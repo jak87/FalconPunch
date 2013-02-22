@@ -73,12 +73,13 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
       return -1;
     }
     proto_session_set_data(proto_client_event_session(C->ph), C);
-#if 0
+
     if (h != NULL) {
+      fprintf(stderr, "trying to add update handler");
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE, 
 				     h);
     }
-#endif
+
     return 1;
   }
   return 0;

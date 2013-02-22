@@ -105,6 +105,7 @@ proto_server_record_event_subscriber(int fd, int *num)
     *num = Proto_Server.EventLastSubscriber;
     Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber] = fd;
     Proto_Server.EventLastSubscriber++;
+    Proto_Server.EventNumSubscribers++;
     rc = 1;
   } else {
     int i;
@@ -112,6 +113,7 @@ proto_server_record_event_subscriber(int fd, int *num)
       if (Proto_Server.EventSubscribers[i]==-1) {
 	*num=i;
 	Proto_Server.EventSubscribers[i] = fd;
+        Proto_Server.EventNumSubscribers++;
 	rc=1;
       }
     }
@@ -162,7 +164,11 @@ proto_server_post_event(void)
 
   i = 0;
   num = Proto_Server.EventNumSubscribers;
+
+  fprintf(stderr, "Server will send updates to %i subscribers\n\n", num);
+
   while (num) {
+    fprintf(stderr, "Send update to subscriber\n");
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
     if (Proto_Server.EventSession.fd != -1) {
       num--;
@@ -330,6 +336,8 @@ int do_gameboard_event()
     proto_session_body_marshall_char(s, TicTacToe.board[i]);
   }
   
+  fprintf(stderr, "\n\n\nABOUT TO CALL proto_server_post_event\n\n\n");
+
   proto_server_post_event();
 
   return 1;
