@@ -66,6 +66,19 @@ update_event_handler(Proto_Session *s)
   return 1;
 }
 
+static int
+gameover_event_handler(Proto_Session *s)
+{
+//  Proto_Client_Handle pch = ((Client *) proto_session_get_data(s))->ph;
+
+  char winner;
+  proto_session_body_unmarshall_char(s, 0, &winner);
+
+  fprintf(stderr, "GAME OVER! Winner is %c", winner);
+
+  return 1;
+}
+
 
 int 
 startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
@@ -82,6 +95,9 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE, 
 				     h);
     }
+    //also add handler for game over
+    proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_GAMEOVER, gameover_event_handler);
+
 
     return 1;
   }
