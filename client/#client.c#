@@ -57,6 +57,7 @@ clientInit(Client *C)
 static int
 update_event_handler(Proto_Session *s)
 {
+  printf("Yo.");
   Client *C = proto_session_get_data(s);
 
   fprintf(stderr, "%s: called", __func__);
@@ -73,12 +74,13 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
       return -1;
     }
     proto_session_set_data(proto_client_event_session(C->ph), C);
-#if 0
+
     if (h != NULL) {
+      fprintf(stderr, "trying to add update handler");
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE, 
 				     h);
     }
-#endif
+
     return 1;
   }
   return 0;
@@ -86,16 +88,17 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 
 
 int
-prompt(int menu) 
+prompt(char * buf, int menu, char * player) 
 {
-  static char MenuString[] = "\nclient> ";
-  int ret;
-  int c=0;
+  int ret = 1;
 
-  if (menu) printf("%s", MenuString);
+  if (menu) printf("\n%c> ", *player);
   fflush(stdout);
-  c = getchar();
-  return c;
+  if (fgets(buf, STRLEN, stdin) == NULL) {
+    fprintf(stderr, "fgets error in prompt\n");
+    ret = 0;
+  }
+  return ret;
 }
 
 
@@ -113,7 +116,7 @@ game_process_reply(Client *C)
   return 1;
 }
 
-
+/*
 int 
 doRPCCmd(Client *C, char c) 
 {
@@ -141,8 +144,9 @@ doRPCCmd(Client *C, char c)
   printf("%s: rc=0x%x\n", __func__, rc);
   if (rc == 0xdeadbeef) rc=1;
   return rc;
-}
+  }*/
 
+ /*
 int
 doRPC(Client *C)
 {
@@ -150,52 +154,70 @@ doRPC(Client *C)
   char c;
 
   printf("enter (h|m<c>|g): ");
+  getchar();
   scanf("%c", &c);
   rc=doRPCCmd(C,c);
 
   printf("doRPC: rc=0x%x\n", rc);
 
   return rc;
-}
+  }*/
 
 
 int 
-docmd(Client *C, char cmd)
+docmd(Client *C, char * buf)
 {
   int rc = 1;
+  int temp = 0;
 
-  switch (cmd) {
-  case 'd':
-    proto_debug_on();
-    break;
-  case 'D':
-    proto_debug_off();
-    break;
-  case 'r':
-    rc = doRPC(C);
-    break;
-  case 'q':
-    rc=-1;
-    break;
-  case '\n':
-    rc=1;
-    break;
-  default:
-    printf("Unkown Command\n");
+  char cmd[STRLEN];
+  sscanf(buf, "%s", cmd);
+  
+  // need to send request to disconnect
+  if (strcmp(cmd,"disconnect") == 0) return -1;
+  
+  // display board
+  else if (strcmp(cmd,"\n") == 0) return -1;
+
+  else if (cmd[0] == '[') {
+    if (cmd[1] > '0' && cmd[1] <= '9') {
+      temp = proto_client_move(C->ph, cmd[1]);
+      if (temp == 1)
+	printf("You claimed %c!",cmd[1]);
+      else if (temp == -2)
+	printf("It's not your turn!");
+      else if (temp == -3)
+	printf("That space is already taken!");
+      else
+	printf("Strange Error");
+    }
+    else {
+      printf("Error, invalid move\n");
+    }
   }
+
+  else if (strcmp(cmd,"where") == 0)
+    printf("host: %s, port: %d\n", globals.host, globals.port);
+
+  // disconnect first
+  else if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"q") == 0) return -1;
+  
+  else
+    printf("Nice try, guy. %s isn't a command...\n", cmd);
+
   return rc;
 }
 
 void *
-shell(void *arg)
+shell(void *arg, char * player)
 {
   Client *C = arg;
-  char c;
+  char buf[STRLEN];
   int rc;
   int menu=1;
 
   while (1) {
-    if ((c=prompt(menu))!=0) rc=docmd(C, c);
+    if (prompt(buf, menu, player) != 0) rc=docmd(C, buf);
     if (rc<0) break;
     if (rc==1) menu=1; else menu=0;
   }
@@ -242,18 +264,62 @@ initGlobals(int argc, char **argv)
 
 }
 
+/*
+ * Shell that runs before a connection is established
+ */
+int
+initialShell(void * arg) {
+  char buf[STRLEN];
+  char readBuf[STRLEN];
+  int ip1=0, ip2=0, ip3=0, ip4=0, port=0;
+  while(1) {
+    printf("\nclient>");
+    fflush(stdout);
+    bzero(buf,sizeof(buf));
+    bzero(readBuf,sizeof(readBuf));
+
+    if (fgets(readBuf, sizeof(readBuf), stdin) == NULL) {
+      fprintf(stderr, "ERROR: fgets error\n");
+      return;
+    }
+    sscanf(readBuf, "%s", buf);
+
+    if (strcmp("q",buf) == 0) return 0;
+
+    if (strcmp("connect",buf) == 0) {
+      bzero(buf,sizeof(buf));
+      if (sscanf(readBuf, "%s%d.%d.%d.%d:%d", buf, &ip1, &ip2, &ip3, &ip4, &port) != 6) {
+        bzero(buf,sizeof(buf));
+        if (sscanf(readBuf, "%s%d", buf, &port) == 2) {
+          strncpy(globals.host, "localhost", STRLEN);
+					globals.port = port;
+          return 1;
+        }
+        printf("connect takes args <ip:port>, or <port> if you want to default to localh\
+ost");
+      }
+      else {
+        sprintf(globals.host, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+        return 1;
+      }
+    } 
+
+    else printf("Must first connect to a network! (Or quit with 'q')");
+  }
+}
+
 int 
 main(int argc, char **argv)
 {
-  proto_debug_on();
   Client c;
-
-  initGlobals(argc, argv);
 
   if (clientInit(&c) < 0) {
     fprintf(stderr, "ERROR: clientInit failed\n");
     return -1;
-  }    
+  }
+	
+  bzero(&globals, sizeof(globals));
+  if (initialShell(&c) == 0) return 0;
 
   // ok startup our connection to the server
   if (startConnection(&c, globals.host, globals.port, update_event_handler)<0) {
@@ -261,7 +327,12 @@ main(int argc, char **argv)
     return -1;
   }
 
-  shell(&c);
+  char* symbol = malloc(sizeof(char));
+
+  proto_client_hello(c.ph, symbol);
+  printf("You are player %c!", *symbol);
+
+  shell(&c,symbol);
 
   return 0;
 }

@@ -59,7 +59,7 @@ update_event_handler(Proto_Session *s)
 {
   Client *C = proto_session_get_data(s);
 
-  fprintf(stderr, "%s: called", __func__);
+  fprintf(stderr, "%s: called, like a boss.\n", __func__);
   return 1;
 }
 

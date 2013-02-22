@@ -117,8 +117,10 @@ proto_client_event_dispatcher(void * arg)
   for (;;) {
     if (proto_session_rcv_msg(s)==1) {
       mt = proto_session_hdr_unmarshall_type(s);
+      printf("WE GOT US A LIVE ONE! %d\n",mt);
       if (mt > PROTO_MT_EVENT_BASE_RESERVED_FIRST && 
 	  mt < PROTO_MT_EVENT_BASE_RESERVED_LAST) {
+	mt=mt - PROTO_MT_EVENT_BASE_RESERVED_FIRST - 1;
 	hdlr = c->base_event_handlers[mt];
 	if (hdlr(s)<0) goto leave;
       }

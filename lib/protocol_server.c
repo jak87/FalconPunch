@@ -173,6 +173,11 @@ proto_server_post_event(void)
     if (Proto_Server.EventSession.fd != -1) {
       num--;
       // try to send the message, without resetting it
+      /************************************************
+       *                                              *
+       *********THIS IS THE ERROR!!!*******************
+       *                                              * 
+       ************************************************/
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 	// must have lost an event connection
 	close(Proto_Server.EventSession.fd);
@@ -325,19 +330,23 @@ int do_gameover_event(char c){
 int do_gameboard_event()
 {
   Proto_Session *s;
-  Proto_Msg_Hdr hdr;
+  Proto_Msg_Hdr hdr; 
 
   s = proto_server_event_session();
+  bzero(&hdr, sizeof(s));
   hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
   proto_session_hdr_marshall(s, &hdr);
   
   int i;
+  proto_session_body_marshall_bytes(s,9,TicTacToe.board);
+  /*
   for (i=0; i<strlen(TicTacToe.board); i++){
     proto_session_body_marshall_char(s, TicTacToe.board[i]);
-  }
+    }*/
   
   //fprintf(stderr, "\n\n\nABOUT TO CALL proto_server_post_event\n\n\n");
 
+  //proto_session_send_msg(s,1);
   proto_server_post_event();
 
   return 1;
@@ -452,7 +461,7 @@ tictactoe_move_handler(Proto_Session *s){
        * AT THE MOMENT, HOWEVER.
        ******************************************************
        * ALL THIS IS COMMENTED OUT
-       ******************************************************
+       ******************************************************/
       do_gameboard_event();
       char c = check_for_win();
       if (c)
@@ -463,7 +472,7 @@ tictactoe_move_handler(Proto_Session *s){
       {
 	do_gameover_event('D');
       }
-      *******************************************************/
+      /*******************************************************/
     }
     else {
       // This means that the space on the board is already taken
