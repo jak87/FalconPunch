@@ -32,6 +32,7 @@
 struct Globals {
   char host[STRLEN];
   PortType port;
+  char player;
 } globals;
 
 
@@ -61,7 +62,7 @@ update_event_handler(Proto_Session *s)
   char * buf = s->rbuf;
 
   //fprintf(stderr, "%s: called, like a boss.\n", __func__);
-  printf("%c|%c|%c\n-----\n%c|%c|%c\n-----\n%c|%c|%c\n",
+  printf("\n%c | %c | %c\n--+---+--\n%c | %c | %c\n--+---+--\n%c | %c | %c\n",
     buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7],buf[8]);
   return 1;
 }
@@ -74,7 +75,18 @@ gameover_event_handler(Proto_Session *s)
   char winner;
   proto_session_body_unmarshall_char(s, 0, &winner);
 
-  fprintf(stderr, "GAME OVER! Winner is %c", winner);
+  if (winner == globals.player)
+  {
+    fprintf(stderr, "Game Over: You win\n");
+  }
+  else if (winner == 'D')
+  {
+    fprintf(stderr, "Game Over: Draw\n");
+  }
+  else
+  {
+    fprintf(stderr, "Game Over: You lose\n");
+  }
 
   return 1;
 }
@@ -91,7 +103,7 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
     proto_session_set_data(proto_client_event_session(C->ph), C);
 
     if (h != NULL) {
-      fprintf(stderr, "trying to add update handler");
+
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE, 
 				     h);
     }
@@ -106,11 +118,11 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 
 
 int
-prompt(char * buf, int menu, char * player) 
+prompt(char * buf, int menu)
 {
   int ret = 1;
 
-  if (menu) printf("\n%c> ", *player);
+  if (menu) printf("\n%c> ", globals.player);
   fflush(stdout);
   if (fgets(buf, STRLEN, stdin) == NULL) {
     fprintf(stderr, "fgets error in prompt\n");
@@ -134,52 +146,6 @@ game_process_reply(Client *C)
   return 1;
 }
 
-/*
-int 
-doRPCCmd(Client *C, char c) 
-{
-  int rc=-1;
-
-  switch (c) {
-  case 'h':  
-    {
-      rc = proto_client_hello(C->ph);
-      printf("hello: rc=%x\n", rc);
-      if (rc > 0) game_process_reply(C);
-    }
-    break;
-  case 'm':
-    scanf("%c", &c);
-    rc = proto_client_move(C->ph, c);
-    break;
-  case 'g':
-    rc = proto_client_goodbye(C->ph);
-    break;
-  default:
-    printf("%s: unknown command %c\n", __func__, c);
-  }
-  // NULL MT OVERRIDE ;-)
-  printf("%s: rc=0x%x\n", __func__, rc);
-  if (rc == 0xdeadbeef) rc=1;
-  return rc;
-  }*/
-
- /*
-int
-doRPC(Client *C)
-{
-  int rc;
-  char c;
-
-  printf("enter (h|m<c>|g): ");
-  getchar();
-  scanf("%c", &c);
-  rc=doRPCCmd(C,c);
-
-  printf("doRPC: rc=0x%x\n", rc);
-
-  return rc;
-  }*/
 
 
 int 
@@ -197,21 +163,16 @@ docmd(Client *C, char * buf)
   // display board
   else if (strcmp(cmd,"\n") == 0) return -1;
 
-  else if (cmd[0] == '[') {
-    if (cmd[1] > '0' && cmd[1] <= '9') {
-      temp = proto_client_move(C->ph, cmd[1]);
+  else if (cmd[0] > '0' && cmd[0] <= '9') {
+      temp = proto_client_move(C->ph, cmd[0]);
       if (temp == 1)
-	printf("You claimed %c!",cmd[1]);
+	    printf("You claimed %c!", cmd[0]);
       else if (temp == -2)
-	printf("It's not your turn!");
+	    printf("It's not your turn!");
       else if (temp == -3)
-	printf("That space is already taken!");
+	    printf("That space is already taken!");
       else
-	printf("Strange Error");
-    }
-    else {
-      printf("Error, invalid move\n");
-    }
+	    printf("Strange Error");
   }
 
   else if (strcmp(cmd,"where") == 0)
@@ -227,7 +188,7 @@ docmd(Client *C, char * buf)
 }
 
 void *
-shell(void *arg, char * player)
+shell(void *arg)
 {
   Client *C = arg;
   char buf[STRLEN];
@@ -235,7 +196,7 @@ shell(void *arg, char * player)
   int menu=1;
 
   while (1) {
-    if (prompt(buf, menu, player) != 0) rc=docmd(C, buf);
+    if (prompt(buf, menu) != 0) rc=docmd(C, buf);
     if (rc<0) break;
     if (rc==1) menu=1; else menu=0;
   }
@@ -298,7 +259,7 @@ initialShell(void * arg) {
 
     if (fgets(readBuf, sizeof(readBuf), stdin) == NULL) {
       fprintf(stderr, "ERROR: fgets error\n");
-      return;
+      return 0;
     }
     sscanf(readBuf, "%s", buf);
 
@@ -345,12 +306,14 @@ main(int argc, char **argv)
     return -1;
   }
 
-  char* symbol = malloc(sizeof(char));
+//  char* symbol = malloc(sizeof(char));
 
-  proto_client_hello(c.ph, symbol);
-  printf("You are player %c!", *symbol);
+  proto_client_hello(c.ph, &(globals.player));
+  printf("Connected to <%s:%i>: You are %c's", globals.host, globals.port, globals.player);
 
-  shell(&c,symbol);
+//  globals.player = *symbol;
+
+  shell(&c);
 
   return 0;
 }
