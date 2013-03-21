@@ -43,7 +43,7 @@ doUpdateClients(void)
   return 1;
 }
 
-struct {
+typedef struct {
   int x;
   int y;
   char type;
