@@ -28,6 +28,8 @@
 #include "../lib/protocol_server.h"
 #include "../lib/protocol_utils.h"
 
+#define MAX_BOARD_SIZE 1000
+
 int 
 doUpdateClients(void)
 {
@@ -40,6 +42,23 @@ doUpdateClients(void)
   proto_server_post_event();  
   return 1;
 }
+
+struct {
+  int x;
+  int y;
+  char type;
+  short team;
+} Cell;
+
+struct {
+  Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
+  int total_wall;
+  int total_floor;
+  int total_jail;
+  int total_home;
+} Board;
+
+
 
 char MenuString[] =
   "d/D-debug on/off u-update clients q-quit";
