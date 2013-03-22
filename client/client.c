@@ -172,7 +172,7 @@ docmd(Client *C, char * buf)
 	n = 'h';
       else
 	n = 'H';
-      proto_client_maze_info(C->ph, n);
+      printf("%d\n", proto_client_maze_info(C->ph, n));
     } else {
       printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
     }
@@ -185,22 +185,22 @@ docmd(Client *C, char * buf)
 	n = 'j';
       else
 	n = 'J';
-      proto_client_maze_info(C->ph, n);
+      printf("%d\n",proto_client_maze_info(C->ph, n));
     } else {
       printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
     }
   }
 
   else if (strcmp(cmd,"numwall") == 0) {
-    proto_client_maze_info(C->ph, '#');
+    printf("%d\n", proto_client_maze_info(C->ph, '#'));
   }
 
   else if (strcmp(cmd,"numfloor") == 0) {
-    proto_client_maze_info(C->ph, ' ');
+    printf("%d\n", proto_client_maze_info(C->ph, ' '));
   }
 
   else if (strcmp(cmd,"dim") == 0) {
-    proto_client_maze_info(C->ph, 'd');
+    printf("%d\n", proto_client_maze_info(C->ph, 'd'));
   }
 
   else if (strcmp(cmd,"cinfo") == 0) {
