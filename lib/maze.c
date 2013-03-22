@@ -19,27 +19,34 @@ int loadBoard(){
   int j = 0;
   while(fgets(buf, MAX_BOARD_SIZE, map) != NULL){
     int mid = strlen(buf)/2;
+    Board.size = mid*2;
     for (j = 0; buf[j]; j++){
       Board.cells[i][j] = (Cell *) malloc(sizeof(Cell));
       switch(buf[j]){
       case ' ': //floor cell
-	Board.cells[i][j]->type = ' ';
-	break;
+        Board.cells[i][j]->type = ' ';
+        Board.total_floor++;
+        break;
       case '#': //wall cell
-	Board.cells[i][j]->type = '#';
-	break;
+        Board.cells[i][j]->type = '#';
+        Board.total_wall++;
+	    break;
       case 'h': //team1 home cell
-	Board.cells[i][j]->type = 'h';
-	break;
+        Board.cells[i][j]->type = 'h';
+        Board.total_h++;
+        break;
       case 'H': //team 2 home cell
-	Board.cells[i][j]->type = 'H';
-	break;
+        Board.cells[i][j]->type = 'H';
+        Board.total_H++;
+        break;
       case 'j': //team 1 jail cell
-	Board.cells[i][j]->type = 'j';
-	break;
+        Board.cells[i][j]->type = 'j';
+        Board.total_j++;
+        break;
       case 'J': //team 2 jail cell
-	Board.cells[i][j]->type = 'J';
-	break;
+        Board.cells[i][j]->type = 'J';
+        Board.total_J++;
+        break;
       case '\n':
 	continue;
       default: //unknown character

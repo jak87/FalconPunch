@@ -32,6 +32,7 @@
 #include "protocol.h"
 #include "protocol_utils.h"
 #include "protocol_server.h"
+#include "maze.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
 
@@ -57,7 +58,7 @@ struct {
 struct {
   int		players[2];
   int		hasTurn;
-  int           moveCount;
+  int       moveCount;
   char *	board;
 } TicTacToe;
 
@@ -419,76 +420,53 @@ tictactoe_hello_handler(Proto_Session *s)
 }
 
 static int
-tictactoe_move_handler(Proto_Session *s){
+game_maze_info_handler(Proto_Session *s)
+{
   int rc=1;
   Proto_Msg_Hdr h;
 
-  fprintf(stderr, "tictactoe_move_handler: invoked for session:\n");
-  proto_session_dump(s);
-
   FDType fd = s->fd;
 
-  if (fd != TicTacToe.players[TicTacToe.hasTurn]){
-    rc = -2; //not your turn
-    goto out;
-  }
-  
   char c;
   proto_session_body_unmarshall_char(s,0,&c);
-  printf("Alright, this is what the server got: %d\n",c);
-  if ('0'<c && c<='9'){
-    // Gets the exact location where that char should be
-    char space = TicTacToe.board[(int)c - 49];
-    if (space != 'X' && space != 'O') {
-      if (fd == TicTacToe.players[0]) {
-        TicTacToe.board[(int)c - 49] = 'X';
-      }
-      else if (fd==TicTacToe.players[1]) {
-        TicTacToe.board[(int)c - 49] = 'O';
-      }
-      printf("The board now looks like this: %s\n",TicTacToe.board);
-      TicTacToe.hasTurn = !TicTacToe.hasTurn;
-      /******************************************************
-       * THIS CODE IS CURRENTLY NOT FUNCTIONING CORRECTLY!
-       * THE ERROR OCCURS WHEN IT ATTEMPTS TO SEND THE BODY OF
-       * THE MESSAGE IN PROTO_SERVER_POST_EVENT. IT SUCCESSFULLY
-       * WRITES THE HEADER APPARENTLY, BUT THE PROGRAM SEGFAULTS
-       * WHEN IT TRIES TO WRITE THE OTHER. STILL NOT SURE WHY.
-       * THE PROGRAMS WORKS SO FAR WITHOUT CALLING THESE METHODS
-       * AT THE MOMENT, HOWEVER.
-       ******************************************************
-       * ALL THIS IS COMMENTED OUT
-       ******************************************************/
-      do_gameboard_event();
-      char c = check_for_win();
-      if (c)
-      {
-	do_gameover_event(c);
-      }
-      else if (++TicTacToe.moveCount >= 9)
-      {
-	do_gameover_event('D');
-      }
-      /*******************************************************/
-    }
-    else {
-      // This means that the space on the board is already taken
-      rc = -3;
-    }
-  }
-  else{
-    rc = -1; //requested move is invalid;
+
+  int value;
+  switch (c)
+  {
+    case 'j':
+      value = Board.total_j;
+      break;
+    case 'J':
+	  value = Board.total_J;
+	  break;
+    case 'h':
+	  value = Board.total_h;
+	  break;
+    case 'H':
+	  value = Board.total_H;
+	  break;
+    case '#':
+	  value = Board.total_wall;
+	  break;
+    case ' ':
+	  value = Board.total_floor;
+	  break;
+    case 'd':
+	  value = Board.size;
+	  break;
+    default:
+      value = -1;
+      break;
   }
 
- out:
   bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_MOVE;
+  h.type = PROTO_MT_REP_BASE_GET_MAZE_INFO;
   proto_session_hdr_marshall(s, &h);
-  proto_session_body_marshall_int(s,rc);
-  
-  rc = proto_session_send_msg(s,1);
-  return rc;
+  proto_session_body_marshall_int(s, value);
 
+  rc = proto_session_send_msg(s,1);
+
+  return rc;
 }
 
 
@@ -510,6 +488,9 @@ proto_server_init(void)
 {
   fprintf(stderr, "proto_server_init\n");
 
+  // initialize Board to zeros
+  bzero(&Board, sizeof(Board));
+
   // initialize TicTacToe global struct to zeros	
   bzero(&TicTacToe, sizeof(TicTacToe));
   TicTacToe.board = (char *) malloc(10*sizeof(char));
@@ -528,8 +509,8 @@ proto_server_init(void)
       case PROTO_MT_REQ_BASE_HELLO:
         proto_server_set_req_handler(i, tictactoe_hello_handler);
         break;
-      case PROTO_MT_REQ_BASE_MOVE:
-	proto_server_set_req_handler(i, tictactoe_move_handler);
+      case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
+        proto_server_set_req_handler(i, game_maze_info_handler);
 	break;
       default:
         proto_server_set_req_handler(i, proto_server_mt_null_handler);

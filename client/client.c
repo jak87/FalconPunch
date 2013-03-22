@@ -153,15 +153,68 @@ docmd(Client *C, char * buf)
 {
   int rc = 1;
   int temp = 0;
+  int x = -1;
+  int y = -1;
+  int team = 0;
+  char n = ' ';
 
   char cmd[STRLEN];
   sscanf(buf, "%s", cmd);
   
-  // need to send request to disconnect
-  if (strcmp(cmd,"disconnect") == 0) return -1;
+  // Quits
+  if (strcmp(cmd,"quit") == 0 || (strcmp(cmd,"q") == 0)) return -1;
   
-  // display board
-  else if (strcmp(cmd,"\n") == 0) return -1;
+  // Displays the Number of Home Cells
+  else if (strcmp(cmd,"numhome") == 0) {
+    sscanf(buf, "%s%d", cmd, &team);
+    if (team == 1 || team == 2) {
+      if (team == 1)
+	n = 'h';
+      else
+	n = 'H';
+      printf("%d\n", proto_client_maze_info(C->ph, n));
+    } else {
+      printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
+    }
+  }
+
+  else if (strcmp(cmd,"numjail") == 0) {
+    sscanf(buf, "%s%d", cmd, &team);
+    if (team == 1 || team == 2) {
+      if (team == 1)
+	n = 'j';
+      else
+	n = 'J';
+      printf("%d\n",proto_client_maze_info(C->ph, n));
+    } else {
+      printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
+    }
+  }
+
+  else if (strcmp(cmd,"numwall") == 0) {
+    printf("%d\n", proto_client_maze_info(C->ph, '#'));
+  }
+
+  else if (strcmp(cmd,"numfloor") == 0) {
+    printf("%d\n", proto_client_maze_info(C->ph, ' '));
+  }
+
+  else if (strcmp(cmd,"dim") == 0) {
+    printf("%d\n", proto_client_maze_info(C->ph, 'd'));
+  }
+
+  else if (strcmp(cmd,"cinfo") == 0) {
+    sscanf(buf, "%s%d,%d", cmd, &x, &y);
+    if (x == -1 || y == -1) {
+      printf("Error, incorrect format! Please enter cinfo x,y\n");
+    } else {
+      proto_client_cell_info(C->ph, &x, &y);
+    }
+  }
+
+  else if (strcmp(cmd,"dump") == 0) {
+    proto_client_dump_maze(C->ph);
+  }
 
   else if (cmd[0] > '0' && cmd[0] <= '9') {
       temp = proto_client_move(C->ph, cmd[0]);
@@ -174,12 +227,6 @@ docmd(Client *C, char * buf)
       else
 	    printf("Strange Error");
   }
-
-  else if (strcmp(cmd,"where") == 0)
-    printf("host: %s, port: %d\n", globals.host, globals.port);
-
-  // disconnect first
-  else if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"q") == 0) return -1;
   
   else
     printf("Nice try, guy. %s isn't a command...\n", cmd);
@@ -263,7 +310,7 @@ initialShell(void * arg) {
     }
     sscanf(readBuf, "%s", buf);
 
-    if (strcmp("q",buf) == 0) return 0;
+    if (strcmp("quit",buf) == 0) return 0;
 
     if (strcmp("connect",buf) == 0) {
       bzero(buf,sizeof(buf));
@@ -271,7 +318,7 @@ initialShell(void * arg) {
         bzero(buf,sizeof(buf));
         if (sscanf(readBuf, "%s%d", buf, &port) == 2) {
           strncpy(globals.host, "localhost", STRLEN);
-					globals.port = port;
+	  globals.port = port;
           return 1;
         }
         printf("connect takes args <ip:port>, or <port> if you want to default to localh\
@@ -302,7 +349,7 @@ main(int argc, char **argv)
 
   // ok startup our connection to the server
   if (startConnection(&c, globals.host, globals.port, update_event_handler)<0) {
-    fprintf(stderr, "ERROR: startConnection failed\n");
+    fprintf(stderr, "ERROR: Connection failed\n");
     return -1;
   }
 
