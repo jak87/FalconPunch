@@ -258,6 +258,64 @@ proto_client_move(Proto_Client_Handle ch, char data)
   return rc;
 }
 
+extern int
+proto_client_maze_info(Proto_Client_Handle ch, char type) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_GET_MAZE_INFO);
+  proto_session_body_marshall_char(s, type);
+  rc = proto_session_rpc(s);
+
+  if (rc == 1)
+    proto_session_body_unmarshall_int(s, 0, &rc);
+  else
+    c->session_lost_handler(s);
+
+  return rc;
+}
+
+extern int
+proto_client_cell_info(Proto_Client_Handle ch, int x, int y) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_GET_CELL_INFO);
+  proto_session_body_marshall_int(s, x);
+  proto_session_body_marshall_int(s, y);
+  rc = proto_session_rpc(s);
+
+  if (rc == 1)
+    proto_session_body_unmarshall_int(s, 0, &rc);
+  else
+    c->session_lost_handler(s);
+
+  return rc;
+}
+
+
+extern int
+proto_client_dump_maze(Proto_Client_Handle ch) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_GET_CELL_INFO);
+  rc = proto_session_rpc(s);
+
+  if (rc == 1)
+    proto_session_body_unmarshall_int(s, 0, &rc);
+  else
+    c->session_lost_handler(s);
+
+  return rc;
+}
+
 extern int 
 proto_client_goodbye(Proto_Client_Handle ch)
 {
