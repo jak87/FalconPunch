@@ -1,0 +1,32 @@
+Capture the Flag game specification
+Maze Cell Types
+	1) Floor cells
+		a) Owned by a team for purposes of tagging. Players are immune to tagging on a floor cell owned by his/her team.
+		b) Cells may be occupied by at most one player
+	2) Wall cells
+		a) Players may not pass through or occupy wall cells
+	3) Home cells
+		a) Players enter the game on home cells
+		b) Flag spawns in enemy home
+	4) Jail cells
+		a) Players may not leave jail area unless freed, described below.
+Player Attributes/States
+	1) Position
+	2) In a position to be immune to tagging (leaving jail, in friendly territory)
+	3) Unique player ID
+	4) Holding flag
+Player Actions
+	1) Move (and direction)
+		a) Moving controls other corollary actions i.e. tagging a player by moving into their square, and picking up the flag
+Win Conditions
+	Scoring a point occurs when you return the enemy flag across the midpoint into friendly territory. There are three win conditions:
+	1) Be first team to reach three points
+	2) Have more points than the other team after 10 minute time limit
+	3) Have all enemy players in jail
+If the time limit is reached and teams have an equal score, the game ends in a draw.
+Other Game Semantics
+	1) Flags spawn in the team owner’s home territory.
+	2) Flags immediately return to home territory if the carrying player is tagged
+	3) To prevent game-breaking flag defense, players staying within a 10 cell radius of their home for more than 15 seconds will be teleported to jail
+	4) Any tagged player is teleported to jail
+	5) If a player moves into enemy jail, all players inside are freed. Players returning from jail are immune to being tagged, but will be teleported back to jail if they don’t return to their territory within 30 seconds.
