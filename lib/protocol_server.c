@@ -423,14 +423,13 @@ static int
 game_maze_info_handler(Proto_Session *s)
 {
   int rc=1;
+  char c;
+  int value = -1;
   Proto_Msg_Hdr h;
 
-  FDType fd = s->fd;
-
-  char c;
+  // read in character to see what info the client wants
   proto_session_body_unmarshall_char(s,0,&c);
 
-  int value;
   switch (c)
   {
     case 'j':
@@ -469,6 +468,59 @@ game_maze_info_handler(Proto_Session *s)
   return rc;
 }
 
+/**
+ * Expects 2 integers for x, y
+ * Returns
+ */
+static int
+game_cell_info_handler(Proto_Session *s)
+{
+  int rc=1;
+  Proto_Msg_Hdr h;
+  int x, y;
+
+  proto_session_body_unmarshall_int(s, 0, &x);
+  proto_session_body_unmarshall_int(s, 0, &y);
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_GET_CELL_INFO;
+  proto_session_hdr_marshall(s, &h);
+
+  if (x < 0 || x >= Board.size || y < 0 || y > Board.size)
+  {
+    // if cell coordinates are invalid, return 'i'
+    proto_session_body_marshall_char(s, 'i');
+  }
+  else
+  {
+    proto_session_body_marshall_char(s, tolower(Board.cells[x][y]->type));
+    proto_session_body_marshall_int(s, Board.cells[x][y]->team);
+    // for now, all cells are unoccupied
+    proto_session_body_marshall_int(s, 0);
+  }
+
+  rc = proto_session_send_msg(s,1);
+
+  return rc;
+}
+
+
+static int
+game_dump_handler(Proto_Session *s)
+{
+  int rc=1;
+  Proto_Msg_Hdr h;
+
+  dump();
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_DUMP;
+  proto_session_hdr_marshall(s, &h);
+
+  rc = proto_session_send_msg(s,1);
+
+  return rc;
+}
 
 
 /****
@@ -511,7 +563,13 @@ proto_server_init(void)
         break;
       case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
         proto_server_set_req_handler(i, game_maze_info_handler);
-	break;
+        break;
+      case PROTO_MT_REQ_BASE_GET_CELL_INFO:
+        proto_server_set_req_handler(i, game_cell_info_handler);
+        break;
+      case PROTO_MT_REQ_BASE_DUMP:
+        proto_server_set_req_handler(i, game_dump_handler);
+        break;
       default:
         proto_server_set_req_handler(i, proto_server_mt_null_handler);
         break;

@@ -305,7 +305,7 @@ proto_client_dump_maze(Proto_Client_Handle ch) {
   Proto_Client *c = ch;
 
   s = &(c->rpc_session);
-  marshall_mtonly(s, PROTO_MT_REQ_BASE_GET_CELL_INFO);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_DUMP);
   rc = proto_session_rpc(s);
 
   if (rc == 1)
