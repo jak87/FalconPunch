@@ -24,11 +24,12 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <poll.h>
+#include <string.h>
 #include "../lib/types.h"
 #include "../lib/protocol_server.h"
 #include "../lib/protocol_utils.h"
+#include "../lib/maze.h"
 
-#define MAX_BOARD_SIZE 1000
 
 int 
 doUpdateClients(void)
@@ -43,25 +44,9 @@ doUpdateClients(void)
   return 1;
 }
 
-typedef struct {
-  int x;
-  int y;
-  char type;
-  short team;
-} Cell;
-
-struct {
-  Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-  int total_wall;
-  int total_floor;
-  int total_jail;
-  int total_home;
-} Board;
-
-
 
 char MenuString[] =
-  "d/D-debug on/off u-update clients q-quit";
+  "d/D-debug on/off u-update clients q-quit l-Load Map p-Print Map";
 
 int 
 docmd(char cmd)
@@ -80,6 +65,12 @@ docmd(char cmd)
     break;
   case 'q':
     rc=-1;
+    break;
+  case 'l':
+    rc = loadBoard();
+    break;
+  case 'p':
+    dump();
     break;
   case '\n':
   case ' ':
