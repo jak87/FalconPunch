@@ -13,7 +13,7 @@
 int loadBoard(){
   int rc = 1;
   FILE* map = fopen(MAP_PATH, "r");
-  if (map==NULL){rc = -1; goto out;}
+  if (map==NULL){rc = -1; return rc;}
   char buf[MAX_BOARD_SIZE];
   int i = 0;
   int j = 0;
@@ -44,7 +44,8 @@ int loadBoard(){
 	continue;
       default: //unknown character
 	rc = -2;
-	goto out;
+	fclose(map);
+	return rc;
       }
       Board.cells[i][j]->x = i;
       Board.cells[i][j]->y = j;
@@ -52,9 +53,7 @@ int loadBoard(){
     }
     i++;
   }
-
-
- out:
+  fclose(map);
   return rc;
 }
 
