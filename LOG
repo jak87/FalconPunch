@@ -107,7 +107,8 @@ Attendees: Ben, Svetlin, Jack
 Questions:
 --
 Decisions:
-1) Made it so that the server loads the gamemap
+1) Made it so that the server loads the gamemap from the command line
+2) Made it so ASCII map only dumps to server stdout
 Todo:
 --
 Comments/Notes:
