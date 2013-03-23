@@ -34,18 +34,23 @@ int loadBoard(){
       case 'h': //team1 home cell
         Board.cells[i][j]->type = 'h';
         Board.total_h++;
+	// Since it's also a floor cell
+	Board.total_floor++;
         break;
       case 'H': //team 2 home cell
         Board.cells[i][j]->type = 'H';
         Board.total_H++;
+	Board.total_floor++;
         break;
       case 'j': //team 1 jail cell
         Board.cells[i][j]->type = 'j';
         Board.total_j++;
+	Board.total_floor++;
         break;
       case 'J': //team 2 jail cell
         Board.cells[i][j]->type = 'J';
         Board.total_J++;
+	Board.total_floor++;
         break;
       case '\n':
 	continue;

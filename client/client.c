@@ -122,7 +122,7 @@ prompt(char * buf, int menu)
 {
   int ret = 1;
 
-  if (menu) printf("\n%c> ", globals.player);
+  if (menu) printf("\nPlayer> ");
   fflush(stdout);
   if (fgets(buf, STRLEN, stdin) == NULL) {
     fprintf(stderr, "fgets error in prompt\n");
@@ -157,6 +157,7 @@ docmd(Client *C, char * buf)
   int y = -1;
   int team = 0;
   char n = ' ';
+  int cinfo_buf[] = {0, 0, 0};
 
   char cmd[STRLEN];
   sscanf(buf, "%s", cmd);
@@ -173,9 +174,10 @@ docmd(Client *C, char * buf)
       else
 	n = 'H';
       printf("%d\n", proto_client_maze_info(C->ph, n));
-    } else {
+    } else if (team == 0)
+      printf("Please enter a number (team 1 or 2) after numhome!\n");
+    else
       printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
-    }
   }
 
   else if (strcmp(cmd,"numjail") == 0) {
@@ -186,9 +188,10 @@ docmd(Client *C, char * buf)
       else
 	n = 'J';
       printf("%d\n",proto_client_maze_info(C->ph, n));
-    } else {
+    } else if (team == 0)
+      printf("Please enter a number (Team 1 or 2) after numjail!\n");
+    else
       printf("Team %d is not a correct team! Enter 1 or 2!\n", team);
-    }
   }
 
   else if (strcmp(cmd,"numwall") == 0) {
@@ -200,7 +203,8 @@ docmd(Client *C, char * buf)
   }
 
   else if (strcmp(cmd,"dim") == 0) {
-    printf("%d\n", proto_client_maze_info(C->ph, 'd'));
+    temp = proto_client_maze_info(C->ph, 'd');
+    printf("Dimensions: %d x %d\n", temp, temp);
   }
 
   else if (strcmp(cmd,"cinfo") == 0) {
@@ -208,7 +212,27 @@ docmd(Client *C, char * buf)
     if (x == -1 || y == -1) {
       printf("Error, incorrect format! Please enter cinfo x,y\n");
     } else {
-      proto_client_cell_info(C->ph, &x, &y);
+      proto_client_cell_info(C->ph, x, y, cinfo_buf);
+      if (cinfo_buf[0] == 0 || cinfo_buf == 'i') {
+	printf("Coordinates out of bounds\n");
+	return rc;
+      }
+      printf("Cell info at (%d,%d):\nType: ", x, y);
+      if (cinfo_buf[0] == 'h')
+	printf("Home\n");
+      else if (cinfo_buf[0] == 'j')
+	printf("Jail\n");
+      else if (cinfo_buf[0] == '#')
+	printf("Wall\n");
+      else if (cinfo_buf[0] == ' ')
+	printf("Floor\n");
+      else
+	printf("Error in cinfo!\n");
+      printf("Team: %d\nOccupied: ", cinfo_buf[1]);
+      if (cinfo_buf[2] == 1)
+	printf("Yes\n");
+      else
+	printf("No\n");
     }
   }
 
@@ -226,6 +250,18 @@ docmd(Client *C, char * buf)
 	    printf("That space is already taken!");
       else
 	    printf("Strange Error");
+  }
+
+  else if (strcmp(cmd,"h") == 0) {
+    printf("Command options:\n");
+    printf("Display number of home cells: numhome <1 or 2>\n");
+    printf("Display number of jail cells: numjail <1 or 2>\n");
+    printf("Display number of wall cells: numwall\n");
+    printf("Display number of floor cells (this includes home/jail cells): numfloor\n");
+    printf("Display dimensions of the maze: dim\n");
+    printf("Display cell info: cinfo <x,y>\n");
+    printf("Dump the maze in ASCII text to the server: dump\n");
+    printf("Quit: quit (or just q)\n");
   }
   
   else
@@ -310,7 +346,7 @@ initialShell(void * arg) {
     }
     sscanf(readBuf, "%s", buf);
 
-    if (strcmp("quit",buf) == 0) return 0;
+    if (strcmp("quit",buf) == 0 || strcmp("q",buf) == 0) return 0;
 
     if (strcmp("connect",buf) == 0) {
       bzero(buf,sizeof(buf));
@@ -356,7 +392,8 @@ main(int argc, char **argv)
 //  char* symbol = malloc(sizeof(char));
 
   proto_client_hello(c.ph, &(globals.player));
-  printf("Connected to <%s:%i>: You are %c's", globals.host, globals.port, globals.player);
+  printf("Connected to <%s:%i>\n", globals.host, globals.port);
+  printf("For command options, please type 'h'\n");
 
 //  globals.player = *symbol;
 

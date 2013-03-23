@@ -101,3 +101,19 @@ Comments/Notes:
 -protocol_server can successfully assign X and O to players
 -protocol_server can successfully register moves (though this is
  done at low-level encoding - should be able to make better)
+
+3/22/13
+Attendees: Ben, Svetlin, Jack
+Questions:
+--
+Decisions:
+1) Made it so that the server loads the gamemap
+Todo:
+--
+Comments/Notes:
+-Gameboard required 202 x 202 array, even though it seems as though
+it should be 200 x 200. Not sure why.
+-Can only load the map if server is run from its local directory!
+Cannot figure out why this is the case unfortunately.
+-Everything seems to be working otherwise.
+-Created a text file documenting our architecture and game layout.

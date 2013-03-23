@@ -277,9 +277,10 @@ proto_client_maze_info(Proto_Client_Handle ch, char type) {
   return rc;
 }
 
-extern int
-proto_client_cell_info(Proto_Client_Handle ch, int x, int y) {
-  int rc;
+extern int *
+proto_client_cell_info(Proto_Client_Handle ch, int x, int y, int * buf) {
+  int team, oc, rc;
+  char cell_type;
   Proto_Session *s;
   Proto_Client *c = ch;
 
@@ -289,12 +290,22 @@ proto_client_cell_info(Proto_Client_Handle ch, int x, int y) {
   proto_session_body_marshall_int(s, y);
   rc = proto_session_rpc(s);
 
-  if (rc == 1)
-    proto_session_body_unmarshall_int(s, 0, &rc);
+  if (rc == 1) {
+    proto_session_body_unmarshall_char(s, 0, &cell_type);
+    if(cell_type == 'i')
+      return buf;
+    proto_session_body_unmarshall_int(s, sizeof(char), &team);
+    proto_session_body_unmarshall_int(s, sizeof(char) + sizeof(int), &oc);
+
+    buf[0] = (int)cell_type;
+    buf[1] = team;
+    buf[2] = oc;
+  }
+
   else
     c->session_lost_handler(s);
 
-  return rc;
+  return;
 }
 
 

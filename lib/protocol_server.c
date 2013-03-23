@@ -480,7 +480,7 @@ game_cell_info_handler(Proto_Session *s)
   int x, y;
 
   proto_session_body_unmarshall_int(s, 0, &x);
-  proto_session_body_unmarshall_int(s, 0, &y);
+  proto_session_body_unmarshall_int(s, sizeof(int), &y);
 
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_GET_CELL_INFO;

@@ -118,7 +118,7 @@ main(int argc, char **argv)
   if (proto_server_init()<0) {
     fprintf(stderr, "ERROR: failed to initialize proto_server subsystem\n");
     exit(-1);
-  }
+  } 
 
   fprintf(stderr, "RPC Port: %d, Event Port: %d\n", proto_server_rpcport(), 
 	  proto_server_eventport());
