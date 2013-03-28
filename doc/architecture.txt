@@ -1,13 +1,32 @@
 Architecture Specifications:
 
-Each client is a player that connects to the game. The client will obtain a copy of the map at the start in order to detect collisions before making movements so that it will choose an appropriate move before the server allows the player to move (though the server will still double-check; it will simply save the server from doing extra work).
+Each client is a player that connects to the game. The client will obtain a copy of the map at the start in order to 
+detect collisions before making movements so that it will choose an appropriate move before the server allows the 
+player to move (though the server will still double-check; it will simply save the server from doing extra work).
 
-Clients are in charge of directing a player through the map to obtain a flag in the enemy team's home base without touching any opposing team member in enemy territory. They are rarely trusted with game decisions; otherwise, the game becomes very easy to hack. Each client is provided information on his own player as well as the cells surrounding him, though he has no means of changing this information (it is instead consistently updated depending on his position in the maze).
+Clients are in charge of directing a player through the map to obtain a flag in the enemy team's home base without 
+touching any opposing team member in enemy territory. They are rarely trusted with game decisions; otherwise, the 
+game becomes very easy to hack. Each client is provided information on his own player as well as the cells surrounding 
+him, though he has no means of changing this information (it is instead consistently updated depending on his position 
+in the maze).
 
-Clients are not expected to enforce most game rules. The server will be responsible for determining what occurs when the player moves in a specific way, since the client will have to send a request for every move that it makes. This does put a lot of pressure on the server, but it also makes cheating much more difficult.
+Clients are not expected to enforce most game rules. The server will be responsible for determining what occurs when 
+the player moves in a specific way, since the client will have to send a request for every move that it makes. This 
+does put a lot of pressure on the server, but it also makes cheating much more difficult.
  
-The server contains most of the game. The map is loaded into the server before it sends a copy to each player subscribed to it. The server also contains information on player locations and flag locations, and is responsible for for spawning players in their respective home cells after a round finishes (or as they come in during the middle of a round). 
+The server contains most of the game. The map is loaded into the server before it sends a copy to each player subscribed
+to it. The server also contains information on player locations and flag locations, and is responsible for for spawning 
+players in their respective home cells after a round finishes (or as they come in during the middle of a round). 
 
-A request is made to the server every time a player attempts to move, and the server will either reply that it succeeded and move them, or else it will report some error that describes what transpired (e.g. they collided with another unit, resulting in a) no movement if the unit was a friend, b) removal of the unit if it was an enemy in friendly  territory, or c) teleportation to jail if it was an enemy in enemy territory). If the server must reply that the player is attempting to walk into a wall cell, then there is an issue since the client should be responsible for checking for that, so hacking should be looked into.
+A request is made to the server every time a player attempts to move, and the server will either reply that it succeeded
+and move them, or else it will report some error that describes what transpired (e.g. they collided with another unit, 
+resulting in a) no movement if the unit was a friend, b) removal of the unit if it was an enemy in friendly  territory, 
+or c) teleportation to jail if it was an enemy in enemy territory). If the server must reply that the player is 
+attempting to walk into a wall cell, then there is an issue since the client should be responsible for checking for 
+that, so hacking should be looked into.
 
-The server is admittedly responsible for the majority of game operations at this point. This may have to change if performance suffers too much, and more control may be relinquished to clients; however, this is the ideal that we'll strive towards. As it stands however, scalability of the game will be limited, as the server will likely struggle to keep up with an increasing amount of players. Performance may also suffer because of this, but cheating will be kept in check.
+The server is admittedly responsible for the majority of game operations at this point. This may have to change if 
+performance suffers too much, and more control may be relinquished to clients; however, this is the ideal that we'll 
+strive towards. As it stands however, scalability of the game will be limited, as the server will likely struggle to 
+keep up with an increasing amount of players. Performance may also suffer because of this, but cheating will be kept 
+in check.
