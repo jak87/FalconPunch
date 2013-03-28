@@ -11,8 +11,7 @@ him, though he has no means of changing this information (it is instead consiste
 in the maze).
 
 Clients are not expected to enforce most game rules. The server will be responsible for determining what occurs when 
-the player moves in a specific way, since the client will have to send a request for every move that it makes. This 
-does put a lot of pressure on the server, but it also makes cheating much more difficult.
+the player moves in a specific way, since the client will have to send a request for every move that it makes.
  
 The server contains most of the game. The map is loaded into the server before it sends a copy to each player subscribed
 to it. The server also contains information on player locations and flag locations, and is responsible for for spawning 
@@ -28,5 +27,5 @@ that, so hacking should be looked into.
 The server is admittedly responsible for the majority of game operations at this point. This may have to change if 
 performance suffers too much, and more control may be relinquished to clients; however, this is the ideal that we'll 
 strive towards. As it stands however, scalability of the game will be limited, as the server will likely struggle to 
-keep up with an increasing amount of players. Performance may also suffer because of this, but cheating will be kept 
-in check.
+keep up with an increasing amount of players. Performance may also suffer because of this, but it makes synchonization
+easier.
