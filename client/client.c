@@ -213,7 +213,7 @@ docmd(Client *C, char * buf)
       printf("Error, incorrect format! Please enter cinfo x,y\n");
     } else {
       proto_client_cell_info(C->ph, x, y, cinfo_buf);
-      if (cinfo_buf[0] == 0 || cinfo_buf == 'i') {
+      if (cinfo_buf[0] == 0 || cinfo_buf[0] == 'i') {
 	printf("Coordinates out of bounds\n");
 	return rc;
       }
@@ -240,17 +240,6 @@ docmd(Client *C, char * buf)
     proto_client_dump_maze(C->ph);
   }
 
-  else if (cmd[0] > '0' && cmd[0] <= '9') {
-      temp = proto_client_move(C->ph, cmd[0]);
-      if (temp == 1)
-	    printf("You claimed %c!", cmd[0]);
-      else if (temp == -2)
-	    printf("It's not your turn!");
-      else if (temp == -3)
-	    printf("That space is already taken!");
-      else
-	    printf("Strange Error");
-  }
 
   else if (strcmp(cmd,"h") == 0) {
     printf("Command options:\n");
@@ -391,7 +380,6 @@ main(int argc, char **argv)
 
 //  char* symbol = malloc(sizeof(char));
 
-  proto_client_hello(c.ph, &(globals.player));
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");
 

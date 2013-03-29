@@ -210,53 +210,7 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
 }
 
 
-extern int 
-proto_client_hello(Proto_Client_Handle ch, char* playerSymbol)
-{
-  int rc;
-  Proto_Session *s;
-  Proto_Client *c = ch;
 
-  s = &(c->rpc_session);
-  // marshall
-
-  marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
-
-  rc = proto_session_rpc(s);
-
-  if (rc==1) {
-    proto_session_body_unmarshall_char(s, 0, playerSymbol);
-  } else {
-    c->session_lost_handler(s);
-  }
-  
-  return rc;
-}
-
-extern int 
-proto_client_move(Proto_Client_Handle ch, char data)
-{
-  int rc;
-  Proto_Session *s;
-  Proto_Client *c = ch;
-
-  s = &(c->rpc_session);
-  // marshall
-
-  marshall_mtonly(s, PROTO_MT_REQ_BASE_MOVE);
-  proto_session_body_marshall_char(s, data);
-
-  rc = proto_session_rpc(s);
-
-  if (rc==1) {
-    proto_session_body_unmarshall_int(s, 0, &rc);
-  }
-  else {
-    c->session_lost_handler(s);
-  }
-  
-  return rc;
-}
 
 extern int
 proto_client_maze_info(Proto_Client_Handle ch, char type) {
@@ -305,7 +259,7 @@ proto_client_cell_info(Proto_Client_Handle ch, int x, int y, int * buf) {
   else
     c->session_lost_handler(s);
 
-  return;
+  return rc;
 }
 
 

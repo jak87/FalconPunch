@@ -55,13 +55,6 @@ struct {
 				       PROTO_MT_REQ_BASE_RESERVED_FIRST-1];
 } Proto_Server;
 
-struct {
-  int		players[2];
-  int		hasTurn;
-  int       moveCount;
-  char *	board;
-} TicTacToe;
-
 extern PortType proto_server_rpcport(void) { return Proto_Server.RPCPort; }
 extern PortType proto_server_eventport(void) { return Proto_Server.EventPort; }
 extern Proto_Session *
@@ -305,119 +298,15 @@ proto_server_mt_null_handler(Proto_Session *s)
 }
 
 
-/**** TIC TAC TOE code.
- *    Figure out how to separete game logic and handlers from server code. 
- ****/
-
-int do_gameover_event(char c){
-
-  Proto_Session *s;
-  Proto_Msg_Hdr hdr;
-  
-  s = proto_server_event_session();
-  hdr.type = PROTO_MT_EVENT_BASE_GAMEOVER;
-  proto_session_hdr_marshall(s, &hdr);
-  proto_session_body_marshall_char(s, c);
-  proto_server_post_event();
-  
-  return 1;
-}
-
-int do_gameboard_event()
-{
-  Proto_Session *s;
-  Proto_Msg_Hdr hdr; 
-
-  s = proto_server_event_session();
-  bzero(&hdr, sizeof(s));
-  hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
-  proto_session_hdr_marshall(s, &hdr);
-  
-  int i;
-  proto_session_body_marshall_bytes(s,9,TicTacToe.board);
-  /*
-  for (i=0; i<strlen(TicTacToe.board); i++){
-    proto_session_body_marshall_char(s, TicTacToe.board[i]);
-    }*/
-  
-  //fprintf(stderr, "\n\n\nABOUT TO CALL proto_server_post_event\n\n\n");
-
-  //proto_session_send_msg(s,1);
-  proto_server_post_event();
-
-  return 1;
-}
-
-//returns winning player if game is over, NULL otherwise
-char check_for_win(){
-  char *b = TicTacToe.board;
-  if ((b[0] == b[1]) && (b[1] == b[2])){
-    return b[1];
-  }
-  else if ((b[3] == b[4]) && (b[4] == b[5])){
-    return b[4];
-  }
-  else if ((b[6] == b[7]) && (b[7] == b[8])){
-    return b[7];
-  }
-  else if ((b[0] == b[3]) && (b[3] == b[6])){
-    return b[3];
-  }
-  else if ((b[1] == b[4]) && (b[4] == b[7])){
-    return b[4];
-  }
-  else if ((b[2] == b[5]) && (b[5] == b[8])){
-    return b[5];
-  }
-  else if ((b[0] == b[4]) && (b[4] == b[8])){
-    return b[4];
-  }
-  else if ((b[2] == b[4]) && (b[4] == b[6])){
-    return b[4];
-  }
-  else{
-    return NULL;
-  }
-
-}
 
 
 
 
-static int 
-tictactoe_hello_handler(Proto_Session *s)
-{
-  int rc=1;
-  Proto_Msg_Hdr h;
-  
-  fprintf(stderr, "tictactoe_hello_handler: invoked for session:\n");
-  proto_session_dump(s);
 
-  char symbol = 'X';
+/**
+ * GAME specific code. Move it out of proto_server
+ */
 
-  int playerXfd = TicTacToe.players[0];
-  int playerYfd = TicTacToe.players[1];
-
-  if (playerXfd == 0 || playerXfd == s->fd) {
-    TicTacToe.players[0] = s->fd;
-    symbol = 'X';
-  } else if (playerYfd == 0 || playerYfd == s->fd) {
-    TicTacToe.players[1] = s->fd;
-    symbol = 'O';
-  } else {
-    symbol = '_';
-  }
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_HELLO;
-  proto_session_hdr_marshall(s, &h);
- 
-  proto_session_body_marshall_char(s, symbol);
-
-  rc=proto_session_send_msg(s,1);
-
-  return rc;
-}
 
 static int
 game_maze_info_handler(Proto_Session *s)
@@ -543,11 +432,6 @@ proto_server_init(void)
   // initialize Board to zeros
   bzero(&Board, sizeof(Board));
 
-  // initialize TicTacToe global struct to zeros	
-  bzero(&TicTacToe, sizeof(TicTacToe));
-  TicTacToe.board = (char *) malloc(10*sizeof(char));
-  strcpy(TicTacToe.board, "123456789");
-
   int i;
   int rc;
 
@@ -558,9 +442,6 @@ proto_server_init(void)
   for (i=PROTO_MT_REQ_BASE_RESERVED_FIRST+1; 
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
     switch (i) {
-      case PROTO_MT_REQ_BASE_HELLO:
-        proto_server_set_req_handler(i, tictactoe_hello_handler);
-        break;
       case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
         proto_server_set_req_handler(i, game_maze_info_handler);
         break;
