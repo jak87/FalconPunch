@@ -212,7 +212,7 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
 
 
 extern int
-proto_client_hello(Proto_Client_Handle ch, Board *boardPtr)
+proto_client_hello(Proto_Client_Handle ch)
 {
   int rc = 1;
   Proto_Session *s;
@@ -224,7 +224,7 @@ proto_client_hello(Proto_Client_Handle ch, Board *boardPtr)
 
   if (rc == 1)
   {
-	maze_unmarshall_board(s, 0, boardPtr);
+	maze_unmarshall_board(s, 0);
   }
   else
   {

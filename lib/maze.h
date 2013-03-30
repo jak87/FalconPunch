@@ -1,3 +1,10 @@
+#ifndef __DAGAME_MAZE_H__
+#define __DAGAME_MAZE_H__
+
+#include "net.h"
+#include "protocol.h"
+#include "protocol_session.h"
+
 #define MAX_BOARD_SIZE 202
 #define MAP_PATH "../lib/daGame.map"
 
@@ -23,8 +30,10 @@ int loadBoard();
 
 void dump();
 
-extern int maze_marshall_cell(Proto_Session *s, Cell *cell);
-extern int maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell);
+int maze_marshall_cell(Proto_Session *s, Cell *cell);
+int maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell);
 
-extern int maze_marshall_board(Proto_Session *s, Board *board);
-extern int maze_unmarshall_board(Proto_Session *s, int offset, Board *board);
+int maze_marshall_board(Proto_Session *s);
+int maze_unmarshall_board(Proto_Session *s, int offset);
+
+#endif

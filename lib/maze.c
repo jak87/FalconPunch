@@ -1,7 +1,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "net.h"
+#include "protocol.h"
+#include "protocol_session.h"
 #include "maze.h"
+
 
 ////////////////////////////////////
 //
@@ -32,13 +36,13 @@ extern int
 maze_marshall_cell(Proto_Session *s, Cell *cell)
 {
   int rc = 1;
-  rc = proto_session_marshall_int(s, cell->x);
+  rc = proto_session_body_marshall_int(s, cell->x);
   if (rc != 1) return rc;
-  rc = proto_session_marshall_int(s, cell->y);
+  rc = proto_session_body_marshall_int(s, cell->y);
   if (rc != 1) return rc;
-  rc = proto_session_marshall_char(s, cell->type);
+  rc = proto_session_body_marshall_char(s, cell->type);
   if (rc != 1) return rc;
-  rc = proto_session_marshall_short(s, cell->team);
+  rc = proto_session_body_marshall_short(s, cell->team);
   return rc;
 }
 

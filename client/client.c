@@ -33,7 +33,6 @@
 struct Globals {
   char host[STRLEN];
   PortType port;
-  Board board;
 } globals;
 
 
@@ -76,18 +75,7 @@ gameover_event_handler(Proto_Session *s)
   char winner;
   proto_session_body_unmarshall_char(s, 0, &winner);
 
-  if (winner == globals.player)
-  {
-    fprintf(stderr, "Game Over: You win\n");
-  }
-  else if (winner == 'D')
-  {
-    fprintf(stderr, "Game Over: Draw\n");
-  }
-  else
-  {
-    fprintf(stderr, "Game Over: You lose\n");
-  }
+  fprintf(stderr, "Game Over\n");
 
   return 1;
 }
@@ -379,7 +367,7 @@ main(int argc, char **argv)
     return -1;
   }
 
-  proto_client_hello(c.ph, &(globals.board));
+  proto_client_hello(c.ph);
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");
