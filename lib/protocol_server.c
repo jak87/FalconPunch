@@ -412,16 +412,20 @@ game_dump_handler(Proto_Session *s)
 }
 
 
-/****
- *    END TIC TAC TOE code.
- ****/
+static int
+hello_handler(Proto_Session *s)
+{
+  int rc=1;
+  Proto_Msg_Hdr h;
 
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_HELLO;
+  proto_session_hdr_marshall(s, &h);
+  proto_session_body_marshall_bytes(s,sizeof(Board.cells),Board.cells);
 
-
-
-
-
-
+  rc = proto_session_send_msg(s,1);
+  return rc;
+}
 
 
 extern int
