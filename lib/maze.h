@@ -1,4 +1,5 @@
 #define MAX_BOARD_SIZE 202
+#define MAP_PATH "../lib/daGame.map"
 
 typedef struct {
   int x;
