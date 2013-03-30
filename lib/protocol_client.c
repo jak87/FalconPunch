@@ -225,6 +225,7 @@ proto_client_hello(Proto_Client_Handle ch)
   if (rc == 1)
   {
 	maze_unmarshall_board(s, 0);
+	fprintf(stderr, "got a cell from the board");
   }
   else
   {

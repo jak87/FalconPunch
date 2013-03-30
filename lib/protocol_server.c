@@ -505,6 +505,9 @@ proto_server_init(void)
   for (i=PROTO_MT_REQ_BASE_RESERVED_FIRST+1; 
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
     switch (i) {
+      case PROTO_MT_REQ_BASE_HELLO:
+		proto_server_set_req_handler(i, hello_handler);
+		break;
       case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
         proto_server_set_req_handler(i, game_maze_info_handler);
         break;

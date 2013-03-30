@@ -359,6 +359,8 @@ main(int argc, char **argv)
   }
 	
   bzero(&globals, sizeof(globals));
+  bzero(&Board, sizeof(Board));
+
   if (initialShell(&c) == 0) return 0;
 
   // ok startup our connection to the server

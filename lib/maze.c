@@ -37,8 +37,10 @@ maze_marshall_cell(Proto_Session *s, Cell *cell)
 {
   int rc = 1;
   rc = proto_session_body_marshall_int(s, cell->x);
+  fprintf(stderr, "\n\nMarshalling cell->x: %d", cell->x);
   if (rc != 1) return rc;
   rc = proto_session_body_marshall_int(s, cell->y);
+  fprintf(stderr, "\n\nMarshalling cell->y: %d", cell->y);
   if (rc != 1) return rc;
   rc = proto_session_body_marshall_char(s, cell->type);
   if (rc != 1) return rc;
@@ -62,6 +64,7 @@ maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
 extern int
 maze_marshall_board(Proto_Session *s)
 {
+  fprintf(stderr, "\n\nAbout to marshall board\n\n");
   return maze_marshall_cell(s, &(Board.cells[0][0]));
 }
 
