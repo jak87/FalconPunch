@@ -32,8 +32,6 @@
 #include "protocol_utils.h"
 #include "protocol_client.h"
 
-
-
 typedef struct {
   Proto_Session rpc_session;
   Proto_Session event_session;
@@ -261,6 +259,7 @@ proto_client_cell_info(Proto_Client_Handle ch, int x, int y, int * buf) {
 
   return rc;
 }
+
 
 extern int
 proto_client_dump_maze(Proto_Client_Handle ch) {
