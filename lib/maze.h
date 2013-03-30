@@ -22,3 +22,9 @@ struct {
 int loadBoard();
 
 void dump();
+
+extern int maze_marshall_cell(Proto_Session *s, Cell *cell);
+extern int maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell);
+
+extern int maze_marshall_board(Proto_Session *s, Board *board);
+extern int maze_unmarshall_board(Proto_Session *s, int offset, Board *board);

@@ -31,6 +31,7 @@
 #include "protocol.h"
 #include "protocol_utils.h"
 #include "protocol_client.h"
+#include "maze.h"
 
 
 
@@ -210,6 +211,27 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
 }
 
 
+extern int
+proto_client_hello(Proto_Client_Handle ch, Board *boardPtr)
+{
+  int rc = 1;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
+  rc = proto_session_rpc(s);
+
+  if (rc == 1)
+  {
+	maze_unmarshall_board(s, 0, boardPtr);
+  }
+  else
+  {
+    c->session_lost_handler(s);
+  }
+  return rc;
+}
 
 
 extern int
