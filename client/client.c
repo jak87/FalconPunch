@@ -26,13 +26,14 @@
 #include "../lib/types.h"
 #include "../lib/protocol_client.h"
 #include "../lib/protocol_utils.h"
+#include "../lib/maze.h"
 
 #define STRLEN 81
 
 struct Globals {
   char host[STRLEN];
   PortType port;
-  char player;
+  Board board;
 } globals;
 
 
@@ -378,12 +379,10 @@ main(int argc, char **argv)
     return -1;
   }
 
-//  char* symbol = malloc(sizeof(char));
+  proto_client_hello(c.ph, &(globals.board));
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");
-
-//  globals.player = *symbol;
 
   shell(&c);
 
