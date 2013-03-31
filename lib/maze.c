@@ -43,8 +43,10 @@ maze_marshall_cell(Proto_Session *s, Cell *cell)
   fprintf(stderr, "\n\nMarshalling cell->y: %d", cell->y);
   if (rc != 1) return rc;
   rc = proto_session_body_marshall_char(s, cell->type);
+  fprintf(stderr, "\n\nMarshalling cell->type: %c", cell->type);
   if (rc != 1) return rc;
-  rc = proto_session_body_marshall_short(s, cell->team);
+  rc = proto_session_body_marshall_int(s, cell->team);
+  fprintf(stderr, "\n\nMarshalling cell->team: %d\n\n", cell->team);
   return rc;
 }
 
@@ -52,12 +54,16 @@ extern int
 maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
 {
   offset = proto_session_body_unmarshall_int(s, offset, &(cell->x));
+  fprintf(stderr, "\n\nUnmarshalling to cell->x: %d", cell->x);
   if (offset < 0) return offset;
   offset = proto_session_body_unmarshall_int(s, offset, &(cell->y));
+  fprintf(stderr, "\n\nUnmarshalling to cell->y: %d", cell->y);
   if (offset < 0) return offset;
   offset = proto_session_body_unmarshall_char(s, offset, &(cell->type));
+  fprintf(stderr, "\n\nUnmarshalling to cell->type: %c", cell->type);
   if (offset < 0) return offset;
-  offset = proto_session_body_unmarshall_short(s, offset, &(cell->team));
+  offset = proto_session_body_unmarshall_int(s, offset, &(cell->team));
+  fprintf(stderr, "\n\nUnmarshalling to cell->team: %d\n\n", cell->team);
   return offset;
 }
 
@@ -65,7 +71,7 @@ extern int
 maze_marshall_board(Proto_Session *s)
 {
   fprintf(stderr, "\n\nAbout to marshall board\n\n");
-  return maze_marshall_cell(s, &(Board.cells[0][0]));
+  return maze_marshall_cell(s, Board.cells[0][0]);
 }
 
 extern int

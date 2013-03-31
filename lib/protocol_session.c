@@ -208,28 +208,6 @@ proto_session_body_unmarshall_int(Proto_Session *s, int offset, int *v)
 }
 
 extern int 
-proto_session_body_marshall_short(Proto_Session *s, short v)
-{
-  if (s && ((s->slen + sizeof(short)) < PROTO_SESSION_BUF_SIZE)) {
-    *((short *)(s->sbuf + s->slen)) = htonl(v);
-    s->slen+=sizeof(short);
-    return 1;
-  }
-  return -1;
-}
-
-extern int 
-proto_session_body_unmarshall_short(Proto_Session *s, int offset, short *v)
-{
-  if (s && ((s->rlen  - (offset + sizeof(short))) >=0 )) {
-    *v = *((short *)(s->rbuf + offset));
-    *v = htonl(*v);
-    return offset + sizeof(short);
-  }
-  return -1;
-}
-
-extern int 
 proto_session_body_marshall_char(Proto_Session *s, char v)
 {
   if (s && ((s->slen + sizeof(char)) < PROTO_SESSION_BUF_SIZE)) {
