@@ -6,7 +6,7 @@
 #include "protocol_session.h"
 
 #define MAX_BOARD_SIZE 202
-#define MAP_PATH "../lib/daGame.map"
+#define MAP_PATH "../lib/daGame_small.map"
 
 typedef struct {
   int x;
