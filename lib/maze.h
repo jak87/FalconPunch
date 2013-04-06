@@ -12,7 +12,7 @@ typedef struct {
   int x;
   int y;
   char type;
-  short team;
+  int team;
 } Cell;
 
 struct {

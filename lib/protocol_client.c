@@ -64,6 +64,7 @@ proto_client_set_session_lost_handler(Proto_Client_Handle ch, Proto_MT_Handler h
 {
   Proto_Client *c = ch;
   c->session_lost_handler = h;
+  return 1;
 }
 
 extern int
@@ -225,7 +226,7 @@ proto_client_hello(Proto_Client_Handle ch)
   if (rc == 1)
   {
 	maze_unmarshall_board(s, 0);
-	fprintf(stderr, "got a cell from the board");
+	dump();
   }
   else
   {

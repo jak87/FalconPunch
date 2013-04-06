@@ -6,76 +6,100 @@
 #include "protocol_session.h"
 #include "maze.h"
 
-
-////////////////////////////////////
-//
-//@param mapPath: location in filesystem of map
-//@return: -1 on file open error, -2 on invalid char in map, 1 normally
-////////////////////////////////////
-
-/////////////////////////////////////
-//
-//
-//
-////////////////////////////////////
 void dump(){
-  int i=0;
-  int j=0;
-  char buf[MAX_BOARD_SIZE];
-  char c = '\0';
-  for (i=0;i<MAX_BOARD_SIZE && Board.cells[i][0];i++){
-    memcpy(buf, &c, sizeof(buf));
-    for (j=0; j<MAX_BOARD_SIZE && Board.cells[i][j];j++){
-      buf[j] = Board.cells[i][j]->type;
+  printf("Board size: %i\n", Board.size);
+  int x, y;
+
+  for (y = 0; y < Board.size; y++)
+  {
+    for (x = 0; x < Board.size; x++)
+    {
+      printf("%c", Board.cells[y][x]->type);
     }
-    printf("%s\n", buf);
+    printf("\n");
   }
 }
 
 extern int
 maze_marshall_cell(Proto_Session *s, Cell *cell)
 {
-  int rc = 1;
-  rc = proto_session_body_marshall_int(s, cell->x);
-  //fprintf(stderr, "\n\nMarshalling cell->x: %d", cell->x);
+  int rc = proto_session_body_marshall_int(s, cell->x);
   if (rc != 1) return rc;
+
   rc = proto_session_body_marshall_int(s, cell->y);
-  //fprintf(stderr, "\n\nMarshalling cell->y: %d", cell->y);
   if (rc != 1) return rc;
+
   rc = proto_session_body_marshall_char(s, cell->type);
-  //fprintf(stderr, "\n\nMarshalling cell->type: %c", cell->type);
   if (rc != 1) return rc;
+
   rc = proto_session_body_marshall_int(s, cell->team);
-  //fprintf(stderr, "\n\nMarshalling cell->team: %d\n\n", cell->team);
   return rc;
 }
 
 extern int
 maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
 {
-  offset = proto_session_body_unmarshall_int(s, offset, &(cell->x));
-  //fprintf(stderr, "\n\nUnmarshalling to cell->x: %d", cell->x);
+  int x, y, team;
+  char type;
+
+  offset = proto_session_body_unmarshall_int(s, offset, &x);
   if (offset < 0) return offset;
-  offset = proto_session_body_unmarshall_int(s, offset, &(cell->y));
-  //fprintf(stderr, "\n\nUnmarshalling to cell->y: %d", cell->y);
+
+  offset = proto_session_body_unmarshall_int(s, offset, &y);
   if (offset < 0) return offset;
-  offset = proto_session_body_unmarshall_char(s, offset, &(cell->type));
-  //fprintf(stderr, "\n\nUnmarshalling to cell->type: %c", cell->type);
+
+  offset = proto_session_body_unmarshall_char(s, offset, &type);
   if (offset < 0) return offset;
-  offset = proto_session_body_unmarshall_int(s, offset, &(cell->team));
-  //fprintf(stderr, "\n\nUnmarshalling to cell->team: %d\n\n", cell->team);
+
+  offset = proto_session_body_unmarshall_int(s, offset, &team);
+  if (offset < 0) return offset;
+
+  // After all the primitives are unmarshalled correctly,
+  // allocate a new cell, and put it's pointer in the board
+  Board.cells[x][y] = (Cell *) malloc(sizeof(Cell));
+
+  // Populate the values
+  Board.cells[x][y]->x = x;
+  Board.cells[x][y]->y = y;
+  Board.cells[x][y]->type = type;
+  Board.cells[x][y]->team = team;
+
   return offset;
 }
 
 extern int
 maze_marshall_board(Proto_Session *s)
 {
-  //fprintf(stderr, "\n\nAbout to marshall board\n\n");
-  return maze_marshall_cell(s, Board.cells[0][0]);
+  int rc = proto_session_body_marshall_int(s, Board.size);
+  if (rc != 1) return rc;
+
+  int x,y;
+  for (y = 0; y < Board.size; y++)
+  {
+    for (x = 0; x < Board.size; x++)
+    {
+      rc = maze_marshall_cell(s, Board.cells[y][x]);
+      if (rc != 1) return rc;
+    }
+  }
+
+  return rc;
 }
 
 extern int
 maze_unmarshall_board(Proto_Session *s, int offset)
 {
-  return maze_unmarshall_cell(s, offset, &(Board.cells[0][0]));
+  offset = proto_session_body_unmarshall_int(s, offset, &(Board.size));
+  if (offset < 0) return offset;
+
+  int x,y;
+  for (y = 0; y < Board.size; y++)
+  {
+    for (x = 0; x < Board.size; x++)
+    {
+      offset = maze_unmarshall_cell(s, offset, Board.cells[y][x]);
+      if (offset < 0) return offset;
+    }
+  }
+  return offset;
 }
