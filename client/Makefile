@@ -23,7 +23,7 @@ targets = client
 include ../config.mk
 
 client_objs = $(objs)
-libs = $(DAGAMELIB) -lpthread
+libs = $(DAGAMELIB) -lpthread -lSDL
 
 client: $(client_objs) $(DAGAMELIBARCHIVE)
 	gcc $(CFLAGS) -o $@ $(client_objs) $(libs) 
