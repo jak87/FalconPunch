@@ -23,10 +23,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <pthread.h>
 #include "../lib/types.h"
 #include "../lib/protocol_client.h"
 #include "../lib/protocol_utils.h"
 #include "../lib/maze.h"
+#include "../lib/tty.h"
+#include "../lib/uistandalone.h"
 
 #define STRLEN 81
 
@@ -35,6 +39,7 @@ struct Globals {
   PortType port;
 } globals;
 
+UI *ui;
 
 typedef struct ClientState  {
   int data;
@@ -135,7 +140,75 @@ game_process_reply(Client *C)
   return 1;
 }
 
+extern sval
+ui_keypress(UI *ui, SDL_KeyboardEvent *e)
+{
+  SDLKey sym = e->keysym.sym;
+  SDLMod mod = e->keysym.mod;
 
+  if (e->type == SDL_KEYDOWN) {
+    if (sym == SDLK_LEFT && mod == KMOD_NONE) {
+      fprintf(stderr, "%s: move left\n", __func__);
+      return ui_dummy_left(ui);
+    }
+    if (sym == SDLK_RIGHT && mod == KMOD_NONE) {
+      fprintf(stderr, "%s: move right\n", __func__);
+      return ui_dummy_right(ui);
+    }
+    if (sym == SDLK_UP && mod == KMOD_NONE)  {  
+      fprintf(stderr, "%s: move up\n", __func__);
+      return ui_dummy_up(ui);
+    }
+    if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
+      fprintf(stderr, "%s: move down\n", __func__);
+      return ui_dummy_down(ui);
+    }
+    if (sym == SDLK_r && mod == KMOD_NONE)  {  
+      fprintf(stderr, "%s: dummy pickup red flag\n", __func__);
+      return ui_dummy_pickup_red(ui);
+    }
+    if (sym == SDLK_g && mod == KMOD_NONE)  {   
+      fprintf(stderr, "%s: dummy pickup green flag\n", __func__);
+      return ui_dummy_pickup_green(ui);
+    }
+    if (sym == SDLK_j && mod == KMOD_NONE)  {   
+      fprintf(stderr, "%s: dummy jail\n", __func__);
+      return ui_dummy_jail(ui);
+    }
+    if (sym == SDLK_n && mod == KMOD_NONE)  {   
+      fprintf(stderr, "%s: dummy normal state\n", __func__);
+      return ui_dummy_normal(ui);
+    }
+    if (sym == SDLK_t && mod == KMOD_NONE)  {   
+      fprintf(stderr, "%s: dummy toggle team\n", __func__);
+      return ui_dummy_toggle_team(ui);
+    }
+    if (sym == SDLK_i && mod == KMOD_NONE)  {   
+      fprintf(stderr, "%s: dummy inc player id \n", __func__);
+      return ui_dummy_inc_id(ui);
+    }
+    if (sym == SDLK_q) return -1;
+    if (sym == SDLK_z && mod == KMOD_NONE) return ui_zoom(ui, 1);
+    if (sym == SDLK_z && mod & KMOD_SHIFT ) return ui_zoom(ui,-1);
+    if (sym == SDLK_LEFT && mod & KMOD_SHIFT) return ui_pan(ui,-1,0);
+    if (sym == SDLK_RIGHT && mod & KMOD_SHIFT) return ui_pan(ui,1,0);
+    if (sym == SDLK_UP && mod & KMOD_SHIFT) return ui_pan(ui, 0,-1);
+    if (sym == SDLK_DOWN && mod & KMOD_SHIFT) return ui_pan(ui, 0,1);
+    else {
+      fprintf(stderr, "%s: key pressed: %d\n", __func__, sym); 
+    }
+  } else {
+    fprintf(stderr, "%s: key released: %d\n", __func__, sym);
+  }
+  return 1;
+}
+
+int launch(){
+  tty_init(STDIN_FILENO);
+  ui_init(&(ui));
+  ui_main_loop(ui,320,320);
+
+}
 
 int 
 docmd(Client *C, char * buf)
@@ -229,6 +302,9 @@ docmd(Client *C, char * buf)
     proto_client_dump_maze(C->ph);
   }
 
+  else if(strcmp(cmd, "launch") == 0){
+    launch();
+  }
 
   else if (strcmp(cmd,"h") == 0) {
     printf("Command options:\n");
