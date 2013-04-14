@@ -215,23 +215,52 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
 extern int
 proto_client_hello(Proto_Client_Handle ch)
 {
-  int rc = 1;
+  int i = 0, rc = 1;
   Proto_Session *s;
   Proto_Client *c = ch;
-
   s = &(c->rpc_session);
-  marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
-  rc = proto_session_rpc(s);
 
-  if (rc == 1)
-  {
-	maze_unmarshall_board(s, 0);
-	dump();
+  printf("Loading...\n");
+
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
+  proto_session_body_marshall_int(s,i);
+  rc = proto_session_rpc(s);
+  
+    if (rc == 1)
+      {
+	maze_unmarshall_row(s, 0, i);
+	//printf("unmarshalled row %d!\n", i);  
+	//maze_unmarshall_board(s,0);
+	//dump();
+      }
+    else
+	{
+	  printf("this happened\n");
+	  c->session_lost_handler(s);
+	}
+    
+
+  for (i = 1; i < Board.size; i++) {
+  
+    proto_session_reset_send(s);
+    marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
+    proto_session_body_marshall_int(s,i);
+    rc = proto_session_rpc(s);
+
+    if (rc == 1)
+	{
+	  maze_unmarshall_row(s, 0, i);
+	  //printf("unmarshalled row %d!\n", i);  
+	  //maze_unmarshall_board(s,0);
+	  //dump();
+	}
+      else
+	{
+	  printf("this happened\n");
+	  c->session_lost_handler(s);
+	}
   }
-  else
-  {
-    c->session_lost_handler(s);
-  }
+  dump();
   return rc;
 }
 
