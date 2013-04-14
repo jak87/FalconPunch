@@ -79,10 +79,15 @@ maze_marshall_row(Proto_Session *s, int section) {
 
   int rc = 1;
 
-  int x;
-  for (x = 0; x < Board.size; x++) {
-    rc = maze_marshall_cell(s, Board.cells[section][x]);
-    if(rc != 1) return rc;
+  int x,y;
+
+  //printf("Marshalling rows %d through %d\n",(section*20),((section+1)*20));
+  for (y = section*20; y < (section+1)*20 && y < Board.size; y++) {
+    //printf("Marshalling row %d\n",y);
+    for (x = 0; x < Board.size; x++) {
+      rc = maze_marshall_cell(s, Board.cells[y][x]);
+      if(rc != 1) return rc;
+    }
   }
 
   return rc;
@@ -92,16 +97,20 @@ maze_marshall_row(Proto_Session *s, int section) {
 extern int
 maze_unmarshall_row(Proto_Session *s, int offset, int section) {
 
-  int x;
+  int x,y;
 
   if (section == 0) {
     offset = proto_session_body_unmarshall_int(s, offset, &(Board.size));
     if (offset < 0) return offset;
   }
 
-  for (x = 0; x < Board.size; x++) {
-    offset = maze_unmarshall_cell(s, offset, Board.cells[section][x]);
-    if (offset < 0) return offset;
+  //printf("Unmarshalling rows %d through %d\n", (section*20), ((section+1)*20));
+  for (y = section*20; y < (section+1)*20 && y < Board.size; y++) {
+    //printf("Unmarshalling row %d\n",y);
+    for (x = 0; x < Board.size; x++) {
+      offset = maze_unmarshall_cell(s, offset, Board.cells[y][x]);
+      if (offset < 0) return offset;
+    }
   }
 
   return offset;
