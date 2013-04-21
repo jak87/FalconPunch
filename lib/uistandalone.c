@@ -32,7 +32,8 @@
 
 /* Forward declaration of some dummy player code */
 static void dummyPlayer_init(UI *ui);
-static void dummyPlayer_paint(UI *ui, SDL_Rect *t);
+static void dummyPlayer_paint(UI *ui);
+
 
 #define SPRITE_H 32
 #define SPRITE_W 32
@@ -53,6 +54,9 @@ struct UI_Player_Struct {
   SDL_Surface *img;
   uval base_clip_x;
   SDL_Rect clip;
+  //pixel offset for centering camera
+  int x;
+  int y;
 };
 typedef struct UI_Player_Struct UI_Player;
 
@@ -65,6 +69,8 @@ struct DummyPlayerDesc {
   int team;
   int state;
 } dummyPlayer;
+
+typedef struct DummyPlayerDesc Player;
 
 static inline SDL_Surface *
 ui_player_img(UI *ui, int team)
@@ -323,9 +329,7 @@ draw_cell(UI *ui, SPRITE_INDEX si, SDL_Rect *t, SDL_Surface *s)
     SDL_BlitSurface(ts, NULL, s, t);
 }
 
-static sval
-ui_paintmap(UI *ui) 
-{
+static sval ui_center_on_player(UI *ui){
   //find player, center camera if within bounds of map
   int player_x = dummyPlayer.x * ui->tile_w;
   int player_y = dummyPlayer.y * ui->tile_h;
@@ -333,30 +337,62 @@ ui_paintmap(UI *ui)
   ui->camera.x = player_x - ui->camera.w / 2;
   ui->camera.y = player_y - ui->camera.h / 2;
 
+  dummyPlayer.uip->x = ui->camera.w/2;
+  dummyPlayer.uip->y = ui->camera.h/2;
+
+  int edge;
+
   if(ui->camera.x < 0){
+    dummyPlayer.uip->x += ui->camera.x;
     ui->camera.x = 0;
   }
   if(ui->camera.y < 0){
+    dummyPlayer.uip->y += ui->camera.y;
     ui->camera.y = 0;
   }
-  if(ui->camera.x > (ui->fullMap->w - ui->camera.w)){
-    ui->camera.x = (ui->fullMap->w - ui->camera.w);
+  if(ui->camera.x > (edge = ui->fullMap->w - ui->camera.w)){
+    dummyPlayer.uip->x += ui->camera.x - edge;
+    ui->camera.x = edge;
   }
-  if(ui->camera.y > (ui->fullMap->h - ui->camera.h)){
-    ui->camera.y = (ui->fullMap->h - ui->camera.h);
+  if(ui->camera.y > (edge = ui->fullMap->h - ui->camera.h)){
+    dummyPlayer.uip->y += ui->camera.y - edge;
+    ui->camera.y = edge;
   }
+}
+
+static sval
+ui_paintmap(UI *ui) 
+{
 
   SDL_BlitSurface(ui->fullMap, &ui->camera, ui->screen, NULL);
-
-  SDL_Rect t;
-  t.y = 0; t.x = 0; t.h = ui->tile_h; t.w = ui->tile_w;
-  dummyPlayer_paint(ui, &t);
+  dummyPlayer_paint(ui);
 
   SDL_UpdateRect(ui->screen, 0, 0, ui->screen->w, ui->screen->h);
   return 1;
 }
 
 static void ui_update_fullMap(UI *ui){
+  
+}
+
+static sval ui_init_fullMap(UI *ui){
+  //create RGB surface
+  int h = Board.size * SPRITE_H;
+  int w = Board.size * SPRITE_W;
+  SDL_PixelFormat *fmt;
+  fmt = ui->screen->format;
+  ui->fullMap = SDL_CreateRGBSurface(SDL_SWSURFACE,
+				     h,
+				     w,
+				     ui->depth,
+				     fmt->Rmask, fmt->Gmask,
+				     fmt->Bmask, fmt->Amask);
+  if(ui->fullMap == NULL){
+    fprintf(stderr, "Error Creating fullMap: %s\n", SDL_GetError());
+    return -1;
+  }
+
+  //Write map to surface
   SDL_Rect t;
   int i = 0; int j = 0;
   t.y = 0; t.x = 0; t.h = ui->tile_h; t.w = ui->tile_w; 
@@ -393,24 +429,6 @@ static void ui_update_fullMap(UI *ui){
     i++;
     j=0;
   }
-}
-
-static sval ui_init_fullMap(UI *ui){
-  int h = Board.size * SPRITE_H;
-  int w = Board.size * SPRITE_W;
-  SDL_PixelFormat *fmt;
-  fmt = ui->screen->format;
-  ui->fullMap = SDL_CreateRGBSurface(SDL_SWSURFACE,
-				     h,
-				     w,
-				     ui->depth,
-				     fmt->Rmask, fmt->Gmask,
-				     fmt->Bmask, fmt->Amask);
-  if(ui->fullMap == NULL){
-    fprintf(stderr, "Error Creating fullMap: %s\n", SDL_GetError());
-    return -1;
-  }
-  ui_update_fullMap(ui);
 }
 
 static sval
@@ -605,19 +623,22 @@ dummyPlayer_init(UI *ui)
 }
 
 static void 
-dummyPlayer_paint(UI *ui, SDL_Rect *t)
+dummyPlayer_paint(UI *ui)
 {
+  SDL_Rect t;
+  t.h = ui->tile_h; t.w = ui->tile_w;
   pthread_mutex_lock(&dummyPlayer.lock);
-    t->y = dummyPlayer.y * t->h; t->x = dummyPlayer.x * t->w;
+    t.y = dummyPlayer.uip->y; t.x =dummyPlayer.uip->x;
     dummyPlayer.uip->clip.x = dummyPlayer.uip->base_clip_x +
       pxSpriteOffSet(dummyPlayer.team, dummyPlayer.state);
-    SDL_BlitSurface(dummyPlayer.uip->img, &dummyPlayer.uip->clip, ui->screen, t);
+    SDL_BlitSurface(dummyPlayer.uip->img, &dummyPlayer.uip->clip, ui->screen, &t);
   pthread_mutex_unlock(&dummyPlayer.lock);
 }
 
 int
 ui_dummy_left(UI *ui)
 {
+  ui_center_on_player(ui);
   pthread_mutex_lock(&dummyPlayer.lock);
   if(Board.cells[dummyPlayer.y][dummyPlayer.x-1]->type != '#'){  
     dummyPlayer.x--;
@@ -629,6 +650,7 @@ ui_dummy_left(UI *ui)
 int
 ui_dummy_right(UI *ui)
 {
+  ui_center_on_player(ui);
   pthread_mutex_lock(&dummyPlayer.lock);
   if(Board.cells[dummyPlayer.y][dummyPlayer.x+1]->type != '#'){  
     dummyPlayer.x++;
@@ -640,6 +662,7 @@ ui_dummy_right(UI *ui)
 int
 ui_dummy_down(UI *ui)
 {
+  ui_center_on_player(ui);
   pthread_mutex_lock(&dummyPlayer.lock);
   if(Board.cells[dummyPlayer.y+1][dummyPlayer.x]->type != '#'){  
     dummyPlayer.y++;
@@ -651,6 +674,7 @@ ui_dummy_down(UI *ui)
 int
 ui_dummy_up(UI *ui)
 {
+  ui_center_on_player(ui);
   pthread_mutex_lock(&dummyPlayer.lock);
   if(Board.cells[dummyPlayer.y-1][dummyPlayer.x]->type != '#'){  
     dummyPlayer.y--;
