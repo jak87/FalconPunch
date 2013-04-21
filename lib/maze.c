@@ -1,10 +1,11 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "net.h"
 #include "protocol.h"
 #include "protocol_session.h"
 #include "maze.h"
+
+
+#include <stdlib.h>
+#include <stdio.h>
 
 void dump(){
   printf("Board size: %i\n", Board.size);

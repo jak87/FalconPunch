@@ -20,6 +20,8 @@
 * THE SOFTWARE.
 *****************************************************************************/
 
+#include "net.h"
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -30,7 +32,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include "net.h"
+
 
 extern int
 net_listen(FDType fd) 

@@ -46,7 +46,7 @@ doUpdateClients(void)
 
 
 char MenuString[] =
-  "d/D-debug on/off u-update clients q-quit l-Load Map p-Print Map";
+  "d/D-debug on/off\nu-update clients\nq-quit\nl-Load Map\np-Print Map\nt-Test game logic\n";
 
 int 
 docmd(char cmd)
@@ -67,17 +67,21 @@ docmd(char cmd)
     rc=-1;
     break;
   case 'l':
-    rc = loadBoard();
+    rc = game_init();
     break;
   case 'p':
     dump();
     break;
+//  case 't':
+//    test_game_control();
+//    break;
   case '\n':
   case ' ':
     rc=1;
     break;
   default:
-    printf("Unkown Command\n");
+    printf("Unknown Command\n");
+    break;
   }
   return rc;
 }
@@ -114,11 +118,12 @@ shell(void *arg)
 int
 main(int argc, char **argv)
 {
+
   proto_debug_on();
   if (proto_server_init()<0) {
     fprintf(stderr, "ERROR: failed to initialize proto_server subsystem\n");
     exit(-1);
-  } 
+  }
 
   fprintf(stderr, "RPC Port: %d, Event Port: %d\n", proto_server_rpcport(), 
 	  proto_server_eventport());
@@ -127,7 +132,7 @@ main(int argc, char **argv)
     fprintf(stderr, "ERROR: failed to start rpc loop\n");
     exit(-1);
   }
-    
+
   shell(NULL);
 
   return 0;

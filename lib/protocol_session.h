@@ -22,6 +22,9 @@
 * THE SOFTWARE.
 *****************************************************************************/
 
+//#include "net.h"
+#include "protocol.h"
+
 #define PROTO_SESSION_BUF_SIZE (4096 * 16)
 
 // There is some redundancy here in the lengths

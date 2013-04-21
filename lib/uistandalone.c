@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "types.h"
 #include "uistandalone.h"
+#include "net.h"
 #include "maze.h"
 
 /* A lot of this code comes from http://www.libsdl.org/cgi/docwiki.cgi */
