@@ -230,7 +230,7 @@ load_sprites(UI *ui)
   
   temp = SDL_LoadBMP(UI_TEAMA_BMP);
   if (temp == NULL) { 
-    fprintf(stderr, "ERROR: loading teama.bmp: %s", SDL_GetError()); 
+    fprintf(stderr, "ERROR: loading teama.bmp: %s\n", SDL_GetError()); 
     return -1;
   }
   ui->sprites[TEAMA_S].img = SDL_DisplayFormat(temp);
@@ -620,7 +620,7 @@ int
 ui_dummy_left(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.x-1][dummyPlayer.y]->type != '#'){  
+  if(Board.cells[dummyPlayer.y][dummyPlayer.x-1]->type != '#'){  
     dummyPlayer.x--;
   }
   pthread_mutex_unlock(&dummyPlayer.lock);
@@ -631,7 +631,7 @@ int
 ui_dummy_right(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.x+1][dummyPlayer.y]->type != '#'){  
+  if(Board.cells[dummyPlayer.y][dummyPlayer.x+1]->type != '#'){  
     dummyPlayer.x++;
   }
   pthread_mutex_unlock(&dummyPlayer.lock);
@@ -642,7 +642,7 @@ int
 ui_dummy_down(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.x][dummyPlayer.y+1]->type != '#'){  
+  if(Board.cells[dummyPlayer.y+1][dummyPlayer.x]->type != '#'){  
     dummyPlayer.y++;
   }
   pthread_mutex_unlock(&dummyPlayer.lock);
@@ -653,7 +653,7 @@ int
 ui_dummy_up(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.x][dummyPlayer.y-1]->type != '#'){  
+  if(Board.cells[dummyPlayer.y-1][dummyPlayer.x]->type != '#'){  
     dummyPlayer.y--;
   }
   pthread_mutex_unlock(&dummyPlayer.lock);

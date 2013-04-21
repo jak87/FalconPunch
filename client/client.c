@@ -207,7 +207,6 @@ int launch(){
   tty_init(STDIN_FILENO);
   ui_init(&(ui));
   ui_main_loop(ui,320,320);
-
 }
 
 int 

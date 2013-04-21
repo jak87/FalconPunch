@@ -475,15 +475,16 @@ game_dump_handler(Proto_Session *s)
 static int
 hello_handler(Proto_Session *s)
 {
-  int rc=1;
+  int i, rc=1;
   Proto_Msg_Hdr h;
+  proto_session_body_unmarshall_int(s,0,&i);
 
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_HELLO;
   proto_session_hdr_marshall(s, &h);
-  maze_marshall_board(s);
-
-
+  
+  maze_marshall_row(s,i);
+  //printf("Marshalling Row %d\n", i);
 
   rc = proto_session_send_msg(s,1);
   return rc;
