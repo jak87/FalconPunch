@@ -490,6 +490,23 @@ hello_handler(Proto_Session *s)
   return rc;
 }
 
+static int
+new_player_handler(Proto_Session *s)
+{
+  int rc=1;
+  Proto_Msg_Hdr h;
+  // nothing to unmarshall.
+
+  // create a new player on a team that has fewer players.
+  Player* p = game_create_player(2);
+  // remember the id of the connection
+  p->fd = s->fd;
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
+  proto_session_hdr_marshall(s, &h);
+  player_marshall(s, p);
+}
 
 extern int
 proto_server_init(void)
@@ -511,6 +528,9 @@ proto_server_init(void)
     switch (i) {
       case PROTO_MT_REQ_BASE_HELLO:
 		proto_server_set_req_handler(i, hello_handler);
+		break;
+      case PROTO_MT_REQ_BASE_NEW_PLAYER:
+		proto_server_set_req_handler(i, new_player_handler);
 		break;
       case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
         proto_server_set_req_handler(i, game_maze_info_handler);

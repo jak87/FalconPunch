@@ -71,7 +71,7 @@ struct DummyPlayerDesc {
   int state;
 } dummyPlayer;
 
-typedef struct DummyPlayerDesc Player;
+//typedef struct DummyPlayerDesc Player;
 
 static inline SDL_Surface *
 ui_player_img(UI *ui, int team)

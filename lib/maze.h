@@ -2,6 +2,7 @@
 #define __DAGAME_MAZE_H__
 
 #include "protocol_session.h"
+#include "player.h"
 
 #define MAX_BOARD_SIZE 202
 //#define MAP_PATH "../lib/daGame_small.map"
@@ -12,12 +13,12 @@ typedef struct {
   int y;
   char type;
   int team;
+  Player* occupant;
 } Cell;
 
 struct {
   Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-  Cell* h_cells[MAX_BOARD_SIZE * MAX_BOARD_SIZE/2];
-  Cell* H_cells[MAX_BOARD_SIZE * MAX_BOARD_SIZE/2];
+  Cell* home_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
   int total_wall;
   int total_floor;
   int total_j;

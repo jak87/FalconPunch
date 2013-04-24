@@ -444,7 +444,11 @@ main(int argc, char **argv)
     return -1;
   }
 
+  // connect to the server
   proto_client_hello(c.ph);
+
+  // register as a new player
+  proto_client_new_player(c.ph);
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");

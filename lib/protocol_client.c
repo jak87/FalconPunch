@@ -249,6 +249,30 @@ proto_client_hello(Proto_Client_Handle ch)
   return rc;
 }
 
+extern int
+proto_client_new_player(Proto_Client_Handle ch)
+{
+  int rc = 1;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+  s = &(c->rpc_session);
+
+  printf("Requesting to create a new player...\n\n");
+
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_NEW_PLAYER);
+
+  rc = proto_session_rpc(s);
+
+  if (rc != 1)
+  {
+	  c->session_lost_handler(s);
+	  return rc;
+  }
+
+  // TODO: unmarshall player
+
+}
+
 
 extern int
 proto_client_maze_info(Proto_Client_Handle ch, char type) {

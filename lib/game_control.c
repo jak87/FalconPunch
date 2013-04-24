@@ -5,6 +5,7 @@
 #include "player.h"
 #include "game_control.h"
 
+#include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,13 +39,13 @@ extern int game_load_board()
 	break;
 	  case 'h': //team1 home cell
 	Board.cells[i][j]->type = 'h';
-	Board.h_cells[Board.total_h] = Board.cells[i][j];
+	Board.home_cells[0][Board.total_h] = Board.cells[i][j];
 	Board.total_floor++;
 	Board.total_h++;
 	break;
 	  case 'H': //team2 home cell
 	Board.cells[i][j]->type = 'H';
-	Board.h_cells[Board.total_H] = Board.cells[i][j];
+	Board.home_cells[1][Board.total_H] = Board.cells[i][j];
 	Board.total_floor++;
 	Board.total_H++;
 	break;
@@ -83,38 +84,73 @@ extern void game_init()
   game_load_board();
 
   GameState.gameStatus = 0;
+  GameState.numPlayers[0] = 0;
+  GameState.numPlayers[1] = 0;
 }
 
 /**
- * Set player start position and update corresponding board
+ * Set player position in the given cell. Assuming cell is empty.
+ * Updates the cell's pointers and the player's coordinates.
+ * Should be locked by whoever calls this method.
  */
-void game_set_player_position(Player* p)
+void game_set_player_position(Player* p, Cell* c)
 {
-
+  p->x = c->x;
+  p->y = c->y;
+  c->occupant = p;
 }
 
 /**
- * Assign player to a team. Set starting position.
+ * Set starting position of a newly created player
  */
-void game_player_init(Player* p, int team)
+void game_set_player_start_position(Player* p)
 {
+  int i;
+  srand(time(NULL));
+
+  while (1)
+  {
+    // we'll be in trouble if no home cell is available...
+    // assuming total_h = total_H
+    i = rand() % Board.total_h;
+
+    // TODO: lock stuff
+    if (Board.home_cells[p->team][i]->occupant == 0)
+    {
+      game_set_player_position(p, Board.home_cells[p->team][i]);
+    }
+  }
 
 }
 
 extern Player* game_create_player(int team)
 {
-  int i;
+  int i, playerTeam;
   Player* p = malloc(sizeof(Player));
+
+  if (team < 2)
+	  playerTeam = team;
+  else
+	  // if team 1 has less players, set playerTeam to 1. 0 otherwise
+	  playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
 
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
-    if (GameState.players[0][i] == 0 && (team == 0 || team == 1))
+    if (GameState.players[playerTeam][i] == 0)
     {
-      // team 1 has slot i available
+      // slot i is available for the new player.
+      GameState.players[playerTeam][i] = p;
+      GameState.numPlayers[playerTeam]++;
+      // assign id. 2 players can have the same id, as long as they
+      // are on different teams
+      p->id = i;
+      p->team = playerTeam;
     }
   }
 
-  //put player on the first unoccupied cell 'h'
+  //put player on the first unoccupied cell in its home territory
+  game_set_player_start_position(p);
+
   return p;
 }
 

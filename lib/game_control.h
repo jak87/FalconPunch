@@ -12,6 +12,7 @@
 struct {
   Player* players[2][MAX_NUM_PLAYERS];
   int gameStatus;
+  int numPlayers[2];
 } GameState;
 
 extern int game_load_board();
@@ -23,8 +24,8 @@ extern int game_load_board();
 extern void game_init();
 
 /**
- * Create a player in the game. If team is 0, assign the player to
- * the team with less players. If team is 1 or 2, assign the player
+ * Create a player in the game. If team is 2, assign the player to
+ * the team with less players. If team is 0 or 1, assign the player
  * to that team.
  */
 extern Player* game_create_player(int team);
