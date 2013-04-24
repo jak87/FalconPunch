@@ -116,8 +116,11 @@ void game_set_player_start_position(Player* p)
 
     // TODO: lock stuff
     // Should be if == -1 or something, since 0 can be a player ID???
+
     // Actually, shouldn't this be if == NULL since the occupant 
     // is a player struct, not an int?
+
+    // Changed it to == NULL for the moment. Seems to work.
     //if (Board.home_cells[p->team][i]->occupant == 0)
     if (Board.home_cells[p->team][i]->occupant == NULL)
     {
@@ -140,6 +143,8 @@ extern Player* game_create_player(int team)
 	  // if team 1 has less players, set playerTeam to 1. 0 otherwise
 	  playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
 
+  // Old code (Didn't stop if a space was found, could be changed
+  // so it works but I just created a while loop below
   /*
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
@@ -155,6 +160,7 @@ extern Player* game_create_player(int team)
     }
   }*/
 
+  // New code (Uses same if statement)
   i = 0;
   while (GameState.players[playerTeam][i] == 1 && i < MAX_NUM_PLAYERS)
     i++;
@@ -174,8 +180,9 @@ extern Player* game_create_player(int team)
     return p;
   }
 
-  printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
-  printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
+  // Checking to make sure everything worked
+  //printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
+  //printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
 
   //put player on the first unoccupied cell in its home territory
   game_set_player_start_position(p);
