@@ -22,7 +22,7 @@
 * THE SOFTWARE.
 *****************************************************************************/
 
-#include <stdio.h>;
+#include <stdio.h>
 
 typedef int FDType;
 typedef int PortType;

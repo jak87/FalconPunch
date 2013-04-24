@@ -31,12 +31,14 @@
 #include "../lib/maze.h"
 #include "../lib/tty.h"
 #include "../lib/uistandalone.h"
+#include "../lib/player.h"
 
 #define STRLEN 81
 
 struct Globals {
   char host[STRLEN];
   PortType port;
+  Player *player;
 } globals;
 
 UI *ui;
@@ -448,7 +450,10 @@ main(int argc, char **argv)
   proto_client_hello(c.ph);
 
   // register as a new player
-  proto_client_new_player(c.ph);
+  if(proto_client_new_player(c.ph,globals.player) < 1) {
+    fprintf(stderr, "ERROR: Couldn't create new player\n");
+    return -1;
+  }
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");

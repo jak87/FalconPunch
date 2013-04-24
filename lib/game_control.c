@@ -105,19 +105,25 @@ void game_set_player_position(Player* p, Cell* c)
  */
 void game_set_player_start_position(Player* p)
 {
-  int i;
+  int i,success = 0;
   srand(time(NULL));
 
-  while (1)
+  while (success == 0)
   {
     // we'll be in trouble if no home cell is available...
     // assuming total_h = total_H
     i = rand() % Board.total_h;
 
     // TODO: lock stuff
-    if (Board.home_cells[p->team][i]->occupant == 0)
+    // Should be if == -1 or something, since 0 can be a player ID???
+    // Actually, shouldn't this be if == NULL since the occupant 
+    // is a player struct, not an int?
+    //if (Board.home_cells[p->team][i]->occupant == 0)
+    if (Board.home_cells[p->team][i]->occupant == NULL)
     {
       game_set_player_position(p, Board.home_cells[p->team][i]);
+      success = 1;
+      printf("Player position = Board.home_cells[%d][%d]\n\n",p->team,i);
     }
   }
 
@@ -125,7 +131,7 @@ void game_set_player_start_position(Player* p)
 
 extern Player* game_create_player(int team)
 {
-  int i, playerTeam;
+  int i=0, playerTeam;
   Player* p = malloc(sizeof(Player));
 
   if (team < 2)
@@ -134,6 +140,7 @@ extern Player* game_create_player(int team)
 	  // if team 1 has less players, set playerTeam to 1. 0 otherwise
 	  playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
 
+  /*
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
     if (GameState.players[playerTeam][i] == 0)
@@ -146,7 +153,29 @@ extern Player* game_create_player(int team)
       p->id = i;
       p->team = playerTeam;
     }
+  }*/
+
+  i = 0;
+  while (GameState.players[playerTeam][i] == 1 && i < MAX_NUM_PLAYERS)
+    i++;
+
+  if (GameState.players[playerTeam][i] == 0)
+    {
+      // slot i is available for the new player.
+      GameState.players[playerTeam][i] = p;
+      GameState.numPlayers[playerTeam]++;
+      // assign id. 2 players can have the same id, as long as they
+      // are on different teams
+      p->id = i;
+      p->team = playerTeam;
+    }
+  else {
+    printf("ERROR, GAME FULL!\n");
+    return p;
   }
+
+  printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
+  printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
 
   //put player on the first unoccupied cell in its home territory
   game_set_player_start_position(p);

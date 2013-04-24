@@ -32,7 +32,7 @@
 #include "protocol_utils.h"
 #include "protocol_client.h"
 #include "maze.h"
-
+#include "player.h"
 
 
 typedef struct {
@@ -250,7 +250,7 @@ proto_client_hello(Proto_Client_Handle ch)
 }
 
 extern int
-proto_client_new_player(Proto_Client_Handle ch)
+proto_client_new_player(Proto_Client_Handle ch, Player * p)
 {
   int rc = 1;
   Proto_Session *s;
@@ -268,8 +268,13 @@ proto_client_new_player(Proto_Client_Handle ch)
 	  c->session_lost_handler(s);
 	  return rc;
   }
+  else 
+  {
+    rc = player_unmarshall(s,0,&p);
+  }
 
-  // TODO: unmarshall player
+  if (rc < 0) printf("Player_unmarshall Error!\n");
+  return rc;
 
 }
 

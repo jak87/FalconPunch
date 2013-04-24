@@ -38,8 +38,10 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player *player)
   offset = proto_session_body_unmarshall_int(s, offset, &y);
   if (offset < 0) return offset;
 
+  /*
   printf("\nNew Player:\nID = %d\nTeam = %d\nState = %d\n(x,y) = (%d,%d)\n",
 	 id,team,state,x,y);
+  */
 
   player->id = id;
   player->team = team;

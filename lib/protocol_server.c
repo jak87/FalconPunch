@@ -497,15 +497,22 @@ new_player_handler(Proto_Session *s)
   Proto_Msg_Hdr h;
   // nothing to unmarshall.
 
+  printf("Creating new player...\n");
   // create a new player on a team that has fewer players.
   Player* p = game_create_player(2);
+  printf("Establishing player ID...\n");
   // remember the id of the connection
   p->fd = s->fd;
 
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
+  printf("Marshalling the player...\n");
   player_marshall(s, p);
+
+  printf("Sending...\n");
+  rc = proto_session_send_msg(s,1);
+  return rc;
 }
 
 extern int
