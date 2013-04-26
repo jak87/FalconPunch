@@ -308,63 +308,33 @@ proto_server_mt_null_handler(Proto_Session *s)
  * GAME specific code. Move it out of proto_server
  */
 
-//int loadBoard() {
-//  int rc = 1;
-//  FILE* map = fopen(MAP_PATH, "r");
-//  if(map == NULL) {rc = -1; return rc; }
-//  char buf[MAX_BOARD_SIZE];
-//  int i = 0;
-//  int j = 0;
-//  while(fgets(buf, MAX_BOARD_SIZE, map) != NULL) {
-//    int mid = strlen(buf)/2;
-//    Board.size = mid*2;
-//    for (j=0; buf[j]; j++) {
-//      Board.cells[i][j] = (Cell *) malloc(sizeof(Cell));
-//      switch(buf[j]) {
-//      case ' ': //floor cell
-//	Board.cells[i][j]->type = ' ';
-//	Board.total_floor++;
-//	break;
-//      case '#': //wall cell
-//	Board.cells[i][j]->type = '#';
-//	Board.total_wall++;
-//	break;
-//      case 'h': //team1 home cell
-//	Board.cells[i][j]->type = 'h';
-//	Board.total_floor++;
-//	Board.total_h++;
-//	break;
-//      case 'H': //team2 home cell
-//	Board.cells[i][j]->type = 'H';
-//	Board.total_floor++;
-//	Board.total_H++;
-//	break;
-//      case 'j': //team1 jail cell
-//	Board.cells[i][j]->type = 'j';
-//	Board.total_floor++;
-//	Board.total_j++;
-//	break;
-//      case 'J': //team2 jail cell
-//	Board.cells[i][j]->type = 'J';
-//	Board.total_floor++;
-//	Board.total_J++;
-//	break;
-//      case '\n':
-//	continue;
-//      default: //unknown
-//	rc = -2;
-//	fclose(map);
-//	return rc;
-//      }
-//      Board.cells[i][j]->x = i;
-//      Board.cells[i][j]->y = j;
-//      Board.cells[i][j]->team = (j<mid) ? 1 : 2;
-//    }
-//    i++;
-//  }
-//  fclose(map);
-//  return rc;
-//}
+static int do_send_players_state()
+{
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
+
+  s = proto_server_event_session();
+  bzero(&hdr, sizeof(s));
+  hdr.type = PROTO_MT_EVENT_BASE_UPDATE_PLAYERS;
+  proto_session_hdr_marshall(s, &hdr);
+
+  //TODO: lock, handle errors
+
+  int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
+
+  int i;
+  for (i = 0; i < MAX_NUM_PLAYERS; i++)
+  {
+    if (GameState.players[0][i] != NULL)
+      player_marshall(s, GameState.players[0][i]);
+    if (GameState.players[1][i] != NULL)
+      player_marshall(s, GameState.players[1][i]);
+  }
+
+  proto_server_post_event();
+
+  return 1;
+}
 
 
 
@@ -509,6 +479,9 @@ new_player_handler(Proto_Session *s)
 
   rc = proto_session_send_msg(s,1);
   printf("Created player!");
+
+  do_send_players_state();
+
   return rc;
 }
 

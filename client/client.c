@@ -100,7 +100,7 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 
     if (h != NULL) {
 
-      proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE, 
+      proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE_PLAYERS,
 				     h);
     }
     //also add handler for game over

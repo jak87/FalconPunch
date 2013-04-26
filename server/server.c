@@ -37,8 +37,10 @@ doUpdateClients(void)
   Proto_Session *s;
   Proto_Msg_Hdr hdr;
 
+  // Well, this does nothing really....
+
   s = proto_server_event_session();
-  hdr.type = PROTO_MT_EVENT_BASE_UPDATE;
+  hdr.type = PROTO_MT_EVENT_BASE_UPDATE_PLAYERS;
   proto_session_hdr_marshall(s, &hdr);
   proto_server_post_event();  
   return 1;
