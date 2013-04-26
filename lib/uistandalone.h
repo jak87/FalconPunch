@@ -23,6 +23,7 @@
 *****************************************************************************/
 
 #include <SDL/SDL.h>   /* All SDL apps need this */
+#include "types.h"
 
 typedef enum { 
   TEAMA_S=0, TEAMB_S, FLOOR_S, REDWALL_S, GREENWALL_S, LOGO_S, JACKHAMMER_S, REDFLAG_S, GREENFLAG_S, NUM_S 
@@ -59,6 +60,12 @@ struct UI_Struct {
 
 typedef struct UI_Struct UI;
 
+struct UI_Player_Struct {
+  SDL_Surface *img;
+  uval base_clip_x;
+  SDL_Rect clip;
+};
+typedef struct UI_Player_Struct UI_Player;
 
 sval ui_zoom(UI *ui, sval fac);
 sval ui_pan(UI *ui, sval xdir, sval ydir);
@@ -71,15 +78,15 @@ void ui_init(UI **ui);
 
 
 // DUMMY TEST CALLS
-int ui_dummy_left(UI *ui);
-int ui_dummy_right(UI *ui); 
-int ui_dummy_down(UI *ui);
-int ui_dummy_up(UI *ui);
-int ui_dummy_normal(UI *ui);
-int ui_dummy_pickup_red(UI *ui);
-int ui_dummy_pickup_green(UI *ui);
-int ui_dummy_jail(UI *ui);
-int ui_dummy_toggle_team(UI *ui);
-int ui_dummy_inc_id(UI *ui);
+int ui_left(UI *ui);
+int ui_right(UI *ui); 
+int ui_down(UI *ui);
+int ui_up(UI *ui);
+//int ui_dummy_normal(UI *ui);
+//int ui_dummy_pickup_red(UI *ui);
+//int ui_dummy_pickup_green(UI *ui);
+//int ui_dummy_jail(UI *ui);
+//int ui_dummy_toggle_team(UI *ui);
+//int ui_dummy_inc_id(UI *ui);
 
 #endif

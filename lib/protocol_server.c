@@ -337,7 +337,6 @@ static int do_send_players_state()
 }
 
 
-
 static int
 game_maze_info_handler(Proto_Session *s)
 {
