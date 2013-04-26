@@ -2,6 +2,7 @@
 #define __DAGAME_PLAYER_H__
 
 #include "net.h"
+#include "uistandalone.h"
 
 typedef struct {
   int id;
@@ -10,6 +11,7 @@ typedef struct {
   int team;
   int state;
   FDType fd;
+  UI_Player * uip;
 } Player;
 
 
