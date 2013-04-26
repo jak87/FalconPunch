@@ -321,6 +321,7 @@ static int do_send_players_state()
   //TODO: lock, handle errors
 
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
+  proto_session_body_marshall_int(s, totalPlayers);
 
   int i;
   for (i = 0; i < MAX_NUM_PLAYERS; i++)

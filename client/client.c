@@ -40,7 +40,7 @@
 struct Globals {
   char host[STRLEN];
   PortType port;
-  Player *player;
+  Player player;
 } globals;
 
 UI *ui;
@@ -69,36 +69,29 @@ update_event_handler(Proto_Session *s)
 
   // n is the number of players that will be sent
   int rc = 1, n=0, offset, i;
-  Player *p;
-  printf("Entering proto_client_player_update_handler\n");
+  Player p;
+  //printf("Entering proto_client_player_update_handler\n");
   offset = proto_session_body_unmarshall_int(s,0,&n);
-  printf("Receiving %d players\n");\
+  //printf("Receiving %d players\n",n);		\
 
   for(i = 0; i < n; i++) {
     offset = player_unmarshall(s,offset,&p);
     if (offset < 0)
       return offset;
-    printf("Successfully unmarshalled player[%d][%d]\n",p->team,p->id);
-    ClientGameState.players[p->team][p->id] = p;
-    printf("Successfully stored player[%d][%d]\n",p->team,p->id);
+    ClientGameState.players[p.team][p.id] = &p;
+
+    
+    printf("\nUpdated player [%d][%d]!\n",p.team,p.id);
+    printf("x = %d, y = %d, state = %d\n\n",
+    	   ClientGameState.players[p.team][p.id]->x,
+    	   ClientGameState.players[p.team][p.id]->y,
+    	   ClientGameState.players[p.team][p.id]->state);
+    
   }
-  printf("success!\n");
+  //printf("success!\n");
 
-  return rc;
-}
-
-/*
-static int
-update_event_handler(Proto_Session *s)
-{
-  //Client *C = proto_session_get_data(s);
-  char * buf = s->rbuf;
-
-  //fprintf(stderr, "%s: called, like a boss.\n", __func__);
-  printf("\n%c | %c | %c\n--+---+--\n%c | %c | %c\n--+---+--\n%c | %c | %c\n",
-    buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7],buf[8]);
   return 1;
-  }*/
+}
 
 static int
 gameover_event_handler(Proto_Session *s)
@@ -129,8 +122,13 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE_PLAYERS,
 				     h);
     }
+
+    printf("Set event handler\n");
+
     //also add handler for game over
     proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_GAMEOVER, gameover_event_handler);
+
+    printf("Set gameover handler\n");
 
 
     return 1;
@@ -335,6 +333,7 @@ docmd(Client *C, char * buf)
 
   else if (strcmp(cmd,"h") == 0) {
     printf("Command options:\n");
+    printf("Launch the ui: launch\n");
     printf("Display number of home cells: numhome <1 or 2>\n");
     printf("Display number of jail cells: numjail <1 or 2>\n");
     printf("Display number of wall cells: numwall\n");
@@ -361,6 +360,8 @@ shell(void *arg)
 
   while (1) {
     if (prompt(buf, menu) != 0) rc=docmd(C, buf);
+    else rc = -1;
+    
     if (rc<0) break;
     if (rc==1) menu=1; else menu=0;
   }
@@ -476,7 +477,7 @@ main(int argc, char **argv)
   proto_client_hello(c.ph);
 
   // register as a new player
-  if(proto_client_new_player(c.ph,globals.player) < 1) {
+  if(proto_client_new_player(c.ph,&(globals.player)) < 1) {
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }

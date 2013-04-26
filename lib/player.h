@@ -15,7 +15,7 @@ typedef struct {
 } Player;
 
 
-int player_marshall(Proto_Session *s, Player *player);
-int player_unmarshall(Proto_Session *s, int offset, Player *player);
+int player_marshall(Proto_Session *s, Player * player);
+int player_unmarshall(Proto_Session *s, int offset, Player * player);
 
 #endif

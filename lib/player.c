@@ -1,7 +1,7 @@
 #include "protocol_session.h"
 #include "player.h"
 
-extern int player_marshall(Proto_Session *s, Player *player)
+extern int player_marshall(Proto_Session *s, Player * player)
 {
   int rc = proto_session_body_marshall_int(s, player->id);
   if (rc != 1) return rc;
@@ -19,7 +19,7 @@ extern int player_marshall(Proto_Session *s, Player *player)
   return rc;
 }
 
-extern int player_unmarshall(Proto_Session *s, int offset, Player *player)
+extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
 {
   int id,team,state,x,y;
 
@@ -38,8 +38,8 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player *player)
   offset = proto_session_body_unmarshall_int(s, offset, &y);
   if (offset < 0) return offset;
 
-  printf("\nNew Player:\nID = %d\nTeam = %d\nState = %d\n(x,y) = (%d,%d)\n",
-	 id,team,state,x,y);
+  //printf("New Player:\nID = %d\nTeam = %d\nState = %d\n(x,y) = (%d,%d)\n",
+  //	 id,team,state,x,y);
 
   player->id = id;
   player->team = team;

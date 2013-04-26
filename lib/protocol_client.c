@@ -258,7 +258,7 @@ proto_client_new_player(Proto_Client_Handle ch, Player * p)
   Proto_Client *c = ch;
   s = &(c->rpc_session);
 
-  printf("Requesting to create a new player...\n\n");
+  //printf("Requesting to create a new player...\n\n");
 
   marshall_mtonly(s, PROTO_MT_REQ_BASE_NEW_PLAYER);
 
@@ -271,8 +271,10 @@ proto_client_new_player(Proto_Client_Handle ch, Player * p)
   }
   else 
   {
-    rc = player_unmarshall(s,0,&p);
+    rc = player_unmarshall(s,0,p);
   }
+
+  //printf("new player id = %d, team = %d\n",p->id,p->team);
 
   if (rc < 0) printf("Player_unmarshall Error!\n");
   return rc;
@@ -299,7 +301,7 @@ proto_client_maze_info(Proto_Client_Handle ch, char type) {
   return rc;
 }
 
-extern int *
+extern int
 proto_client_cell_info(Proto_Client_Handle ch, int x, int y, int * buf) {
   int team, oc, rc;
   char cell_type;
@@ -315,7 +317,7 @@ proto_client_cell_info(Proto_Client_Handle ch, int x, int y, int * buf) {
   if (rc == 1) {
     proto_session_body_unmarshall_char(s, 0, &cell_type);
     if(cell_type == 'i')
-      return buf;
+      return -1;
     proto_session_body_unmarshall_int(s, sizeof(char), &team);
     proto_session_body_unmarshall_int(s, sizeof(char) + sizeof(int), &oc);
 
