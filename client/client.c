@@ -413,11 +413,11 @@ initialShell(void * arg) {
 	  globals.port = port;
           return 1;
         }
-        printf("connect takes args <ip:port>, or <port> if you want to default to localh\
-ost");
+        printf("connect takes args <ip:port>, or <port> if you want to default to localhost");
       }
       else {
         sprintf(globals.host, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+	globals.port = port;
         return 1;
       }
     } 

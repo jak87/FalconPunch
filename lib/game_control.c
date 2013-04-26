@@ -141,31 +141,14 @@ extern Player* game_create_player(int team)
 	  playerTeam = team;
   else
 	  // if team 1 has less players, set playerTeam to 1. 0 otherwise
-	  playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
-
-  // Old code (Didn't stop if a space was found, could be changed
-  // so it works but I just created a while loop below
-  /*
-  for (i = 0; i < MAX_NUM_PLAYERS; i++)
-  {
-    if (GameState.players[playerTeam][i] == 0)
-    {
-      // slot i is available for the new player.
-      GameState.players[playerTeam][i] = p;
-      GameState.numPlayers[playerTeam]++;
-      // assign id. 2 players can have the same id, as long as they
-      // are on different teams
-      p->id = i;
-      p->team = playerTeam;
-    }
-  }*/
+    playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
 
   // New code (Uses same if statement)
   i = 0;
-  while (GameState.players[playerTeam][i] == 1 && i < MAX_NUM_PLAYERS)
+  while (GameState.players[playerTeam][i] != NULL && i < MAX_NUM_PLAYERS)
     i++;
 
-  if (GameState.players[playerTeam][i] == 0)
+  if (GameState.players[playerTeam][i] == NULL)
     {
       // slot i is available for the new player.
       GameState.players[playerTeam][i] = p;
