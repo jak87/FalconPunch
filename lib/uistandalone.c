@@ -24,16 +24,22 @@
 #include <stdlib.h> /* for exit() */
 #include <pthread.h>
 #include <assert.h>
-#include "types.h"
 #include "uistandalone.h"
 #include "net.h"
 #include "maze.h"
+#include "player.h"
+
+struct{
+  Player *player;
+} globals;
 
 /* A lot of this code comes from http://www.libsdl.org/cgi/docwiki.cgi */
 
 /* Forward declaration of some dummy player code */
-static void dummyPlayer_init(UI *ui);
-static void dummyPlayer_paint(UI *ui);
+static void ui_player_init(UI *ui);
+static void paint_players(UI *ui);
+static void test_player_init();
+
 
 
 #define SPRITE_H 32
@@ -50,28 +56,6 @@ static void dummyPlayer_paint(UI *ui);
 #define UI_JACKHAMMER_BMP "../lib/shovel.bmp"
 
 typedef enum {UI_SDLEVENT_UPDATE, UI_SDLEVENT_QUIT} UI_SDL_Event;
-
-struct UI_Player_Struct {
-  SDL_Surface *img;
-  uval base_clip_x;
-  SDL_Rect clip;
-  //pixel offset for centering camera
-  int x;
-  int y;
-};
-typedef struct UI_Player_Struct UI_Player;
-
-//Dummy Player for testing
-struct DummyPlayerDesc {
-  pthread_mutex_t lock;
-  UI_Player *uip;
-  int id;
-  int x, y;
-  int team;
-  int state;
-} dummyPlayer;
-
-//typedef struct DummyPlayerDesc Player;
 
 static inline SDL_Surface *
 ui_player_img(UI *ui, int team)
@@ -331,32 +315,24 @@ draw_cell(UI *ui, SPRITE_INDEX si, SDL_Rect *t, SDL_Surface *s)
 }
 
 static sval ui_center_on_player(UI *ui){
-  //find player, center camera if within bounds of map
-  int player_x = dummyPlayer.x * ui->tile_w;
-  int player_y = dummyPlayer.y * ui->tile_h;
+  int player_x = globals.player->x * ui->tile_w;
+  int player_y = globals.player->y * ui->tile_h;
 
   ui->camera.x = player_x - ui->camera.w / 2;
   ui->camera.y = player_y - ui->camera.h / 2;
 
-  dummyPlayer.uip->x = ui->camera.w/2;
-  dummyPlayer.uip->y = ui->camera.h/2;
-
   int edge;
 
   if(ui->camera.x < 0){
-    dummyPlayer.uip->x += ui->camera.x;
     ui->camera.x = 0;
   }
   if(ui->camera.y < 0){
-    dummyPlayer.uip->y += ui->camera.y;
     ui->camera.y = 0;
   }
   if(ui->camera.x > (edge = ui->fullMap->w - ui->camera.w)){
-    dummyPlayer.uip->x += ui->camera.x - edge;
     ui->camera.x = edge;
   }
   if(ui->camera.y > (edge = ui->fullMap->h - ui->camera.h)){
-    dummyPlayer.uip->y += ui->camera.y - edge;
     ui->camera.y = edge;
   }
 }
@@ -366,7 +342,7 @@ ui_paintmap(UI *ui)
 {
 
   SDL_BlitSurface(ui->fullMap, &ui->camera, ui->screen, NULL);
-  dummyPlayer_paint(ui);
+  paint_players(ui);
 
   SDL_UpdateRect(ui->screen, 0, 0, ui->screen->w, ui->screen->h);
   return 1;
@@ -588,8 +564,10 @@ ui_main_loop(UI *ui, uval h, uval w)
 
   ui_init_sdl(ui, h, w, 32);
 
-  dummyPlayer_init(ui);
+  test_player_init(ui);
 
+  ui_player_init(ui);
+  ui_center_on_player(ui);
   ui_paintmap(ui);
    
   
@@ -614,16 +592,31 @@ ui_init(UI **ui)
 
 }
 
-static void 
-dummyPlayer_init(UI *ui) 
-{
-  pthread_mutex_init(&(dummyPlayer.lock), NULL);
-  dummyPlayer.id = 0;
-  dummyPlayer.x = 1; dummyPlayer.y = 1; dummyPlayer.team = 0; dummyPlayer.state = 0;
-  ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team); 
+static void
+ui_player_init(UI *ui){
+  ui_uip_init(ui, &(globals.player->uip), globals.player->id, globals.player->team);
 }
 
-static void 
+static void
+test_player_init(){
+  globals.player = (Player*) malloc(sizeof(Player));
+  globals.player->id = 1;
+  globals.player->x = 104;
+  globals.player->y = 190;
+  globals.player->team = 1;
+  globals.player->state = 0;
+}
+
+/*static void 
+dummyPlayer_init(UI *ui) 
+{
+    pthread_mutex_init(&(dummyPlayer.lock), NULL);
+    dummyPlayer.id = 0;
+    dummyPlayer.x = 1; dummyPlayer.y = 1; dummyPlayer.team = 0; dummyPlayer.state = 0;
+  ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team); 
+  //}*/
+
+/*static void 
 dummyPlayer_paint(UI *ui)
 {
   SDL_Rect t;
@@ -634,57 +627,77 @@ dummyPlayer_paint(UI *ui)
       pxSpriteOffSet(dummyPlayer.team, dummyPlayer.state);
     SDL_BlitSurface(dummyPlayer.uip->img, &dummyPlayer.uip->clip, ui->screen, &t);
   pthread_mutex_unlock(&dummyPlayer.lock);
+  }*/
+
+static void
+paint_players(UI *ui)
+{
+  SDL_Rect t;
+  t.h = ui->tile_h; t.w = ui->tile_w; t.y = 0; t.x = 0;
+  int start_x = ui->camera.x / t.w;
+  int x = start_x;
+  int start_y = ui->camera.y / t.h;
+  
+  //this is just for testing to make sure im on the right track
+  Player * player;
+  player = globals.player;
+  t.y = (player->y - start_y) * t.h;
+  t.x = (player->x - start_x) * t.w;
+  player->uip->clip.x = player->uip->base_clip_x +
+    pxSpriteOffSet(player->team, player->state);
+  SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
+  
 }
 
 int
-ui_dummy_left(UI *ui)
+ui_left(UI *ui)
 {
-  ui_center_on_player(ui);
-  pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.y][dummyPlayer.x-1]->type != '#'){  
-    dummyPlayer.x--;
+  //pthread_mutex_lock(&dummyPlayer.lock);
+  if(Board.cells[globals.player->y][globals.player->x-1]->type != '#'){  
+    globals.player->x--;
   }
-  pthread_mutex_unlock(&dummyPlayer.lock);
+  //pthread_mutex_unlock(&dummyPlayer.lock);
+  ui_center_on_player(ui);
   return 2;
 }
 
 int
-ui_dummy_right(UI *ui)
+ui_right(UI *ui)
 {
-  ui_center_on_player(ui);
-  pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.y][dummyPlayer.x+1]->type != '#'){  
-    dummyPlayer.x++;
+  //pthread_mutex_lock(&dummyPlayer.lock);
+  if(Board.cells[globals.player->y][globals.player->x+1]->type != '#'){  
+    globals.player->x++;
   }
-  pthread_mutex_unlock(&dummyPlayer.lock);
+  //pthread_mutex_unlock(&dummyPlayer.lock);
+  ui_center_on_player(ui);
   return 2;
 }
 
 int
-ui_dummy_down(UI *ui)
+ui_down(UI *ui)
 {
-  ui_center_on_player(ui);
-  pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.y+1][dummyPlayer.x]->type != '#'){  
-    dummyPlayer.y++;
+  //pthread_mutex_lock(&dummyPlayer.lock);
+  if(Board.cells[globals.player->y+1][globals.player->x]->type != '#'){  
+    globals.player->y++;
   }
-  pthread_mutex_unlock(&dummyPlayer.lock);
+  //pthread_mutex_unlock(&dummyPlayer.lock);
+  ui_center_on_player(ui);
   return 2;
 }
 
 int
-ui_dummy_up(UI *ui)
+ui_up(UI *ui)
 {
-  ui_center_on_player(ui);
-  pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[dummyPlayer.y-1][dummyPlayer.x]->type != '#'){  
-    dummyPlayer.y--;
+  //pthread_mutex_lock(&dummyPlayer.lock);
+  if(Board.cells[globals.player->y-1][globals.player->x]->type != '#'){  
+    globals.player->y--;
   }
-  pthread_mutex_unlock(&dummyPlayer.lock);
+  //pthread_mutex_unlock(&dummyPlayer.lock);
+  ui_center_on_player(ui);
   return 2;
 }
 
-int
+/*int
 ui_dummy_normal(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
@@ -700,26 +713,26 @@ ui_dummy_pickup_red(UI *ui)
     dummyPlayer.state = 1;
   pthread_mutex_unlock(&dummyPlayer.lock);
   return 2;
-}
+  }*/
 
-int
+ /*int
 ui_dummy_pickup_green(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
     dummyPlayer.state = 2;
   pthread_mutex_unlock(&dummyPlayer.lock);
   return 2;
-}
+  }*/
 
 
-int
+  /*int
 ui_dummy_jail(UI *ui)
 {
   pthread_mutex_lock(&dummyPlayer.lock);
     dummyPlayer.state = 3;
   pthread_mutex_unlock(&dummyPlayer.lock);
   return 2;
-}
+  }
 
 int
 ui_dummy_toggle_team(UI *ui)
@@ -742,4 +755,4 @@ ui_dummy_inc_id(UI *ui)
     ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team);
   pthread_mutex_unlock(&dummyPlayer.lock);
   return 2;
-}
+  }*/
