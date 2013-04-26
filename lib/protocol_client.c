@@ -33,6 +33,7 @@
 #include "protocol_client.h"
 #include "maze.h"
 #include "player.h"
+//#include "game_control.h"
 
 
 typedef struct {
