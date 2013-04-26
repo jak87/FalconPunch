@@ -32,6 +32,7 @@
 #include "../lib/tty.h"
 #include "../lib/uistandalone.h"
 #include "../lib/player.h"
+#include "../lib/game_control.h"
 
 #define STRLEN 81
 
@@ -61,7 +62,31 @@ clientInit(Client *C)
   return 1;
 }
 
+extern int
+update_event_handler(Proto_Session *s)
+{
 
+  // n is the number of players that will be sent
+  int rc = 1, n=0, offset, i;
+  Player *p;
+  printf("Entering proto_client_player_update_handler\n");
+  offset = proto_session_body_unmarshall_int(s,0,&n);
+  printf("Receiving %d players\n");\
+
+  for(i = 0; i < n; i++) {
+    offset = player_unmarshall(s,offset,&p);
+    if (offset < 0)
+      return offset;
+    printf("Successfully unmarshalled player[%d][%d]\n",p->team,p->id);
+    ClientGameState.players[p->team][p->id] = p;
+    printf("Successfully stored player[%d][%d]\n",p->team,p->id);
+  }
+  printf("success!\n");
+
+  return rc;
+}
+
+/*
 static int
 update_event_handler(Proto_Session *s)
 {
@@ -72,7 +97,7 @@ update_event_handler(Proto_Session *s)
   printf("\n%c | %c | %c\n--+---+--\n%c | %c | %c\n--+---+--\n%c | %c | %c\n",
     buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7],buf[8]);
   return 1;
-}
+  }*/
 
 static int
 gameover_event_handler(Proto_Session *s)

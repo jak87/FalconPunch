@@ -13,7 +13,7 @@ struct {
   Player* players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
-} GameState;
+} GameState, ClientGameState;
 
 extern int game_load_board();
 
