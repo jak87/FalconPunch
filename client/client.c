@@ -483,11 +483,11 @@ main(int argc, char **argv)
   }
 
   // connect to the server
-  globals.connection_id = proto_client_hello(c.ph);
+  proto_client_hello(c.ph);
   printf("My id is %d!\n", globals.connection_id);
 
   // register as a new player
-  if(proto_client_new_player(c.ph,&(globals.player)) < 1) {
+  if(proto_client_new_player(c.ph,&(globals.player),&(globals.connection_id)) < 1) {
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }

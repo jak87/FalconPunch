@@ -495,10 +495,9 @@ hello_handler(Proto_Session *s)
   h.type = PROTO_MT_REP_BASE_HELLO;
   proto_session_hdr_marshall(s, &h);
   
-  proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
-  //maze_marshall_row(s,i);
+  maze_marshall_row(s,i);
 
-  printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
+  //printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
 
   rc = proto_session_send_msg(s,1);
   return rc;
@@ -519,6 +518,7 @@ new_player_handler(Proto_Session *s)
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
+  proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
   player_marshall(s, p);
 
   rc = proto_session_send_msg(s,1);
