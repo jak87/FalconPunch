@@ -216,7 +216,7 @@ do_generic_dummy_rpc(Proto_Client_Handle ch, Proto_Msg_Types mt)
 extern int
 proto_client_hello(Proto_Client_Handle ch)
 {
-  int i = 0, rc = 1;
+  int i = 0, rc = 1, offset = 0;
   Proto_Session *s;
   Proto_Client *c = ch;
   s = &(c->rpc_session);
@@ -227,11 +227,10 @@ proto_client_hello(Proto_Client_Handle ch)
   proto_session_body_marshall_int(s,i);
   rc = proto_session_rpc(s);
   
-  /*
-  if (rc == 1)
-      maze_unmarshall_row(s, 0, i);
+  if (rc == 1) 
+    maze_unmarshall_row(s, offset, i);
   else
-      c->session_lost_handler(s);
+    c->session_lost_handler(s);
   
   if (Board.size / 20 > 0) {
     for (i = 1; i < Board.size / 20; i++) {
@@ -247,20 +246,15 @@ proto_client_hello(Proto_Client_Handle ch)
 	  c->session_lost_handler(s);
     }
   }
-  dump(); */
-
-  if (rc == 1)
-    proto_session_body_unmarshall_int(s,0,&i);
-  else
-      c->session_lost_handler(s);
+  //dump(); 
 
   return i;
 }
 
 extern int
-proto_client_new_player(Proto_Client_Handle ch, Player * p)
+proto_client_new_player(Proto_Client_Handle ch, Player * p, int * id)
 {
-  int rc = 1;
+  int rc = 1, offset = 0;
   Proto_Session *s;
   Proto_Client *c = ch;
   s = &(c->rpc_session);
@@ -278,7 +272,8 @@ proto_client_new_player(Proto_Client_Handle ch, Player * p)
   }
   else 
   {
-    rc = player_unmarshall(s,0,p);
+    offset = proto_session_body_unmarshall_int(s,0,&id);
+    rc = player_unmarshall(s,offset,p);
   }
 
   //printf("new player id = %d, team = %d\n",p->id,p->team);
