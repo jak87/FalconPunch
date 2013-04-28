@@ -4,12 +4,6 @@
 /**
  * Move directions
  */
-typedef enum  {
-  LEFT,
-  RIGHT,
-  UP,
-  DOWN
-} Move;
 
 
 #endif

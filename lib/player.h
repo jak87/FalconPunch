@@ -10,9 +10,23 @@ typedef struct {
   int y;
   int team;
   int state;
+  int flag;
+  int shovel;
   FDType fd;
   UI_Player * uip;
 } Player;
+
+typedef enum  {
+  MOVE_LEFT,
+  MOVE_RIGHT,
+  MOVE_UP,
+  MOVE_DOWN
+} Player_Move;
+
+typedef enum {
+  PLAYER_FREE,
+  PLAYER_JAILED
+} Player_State;
 
 
 int player_marshall(Proto_Session *s, Player * player);

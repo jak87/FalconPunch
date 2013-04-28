@@ -38,6 +38,6 @@ extern Player* game_create_player(int team);
  *
  * Return 1 if anything in the game state changed. 0 otherwise.
  */
-extern int game_move_player(Player* p, int direction);
+extern int game_move_player(Player* p, Player_Move direction);
 
 #endif

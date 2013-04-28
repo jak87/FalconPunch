@@ -51,11 +51,13 @@ extern int game_load_board()
 	break;
 	  case 'j': //team1 jail cell
 	Board.cells[i][j]->type = 'j';
+	Board.jail_cells[0][Board.total_j] = Board.cells[i][j];
 	Board.total_floor++;
 	Board.total_j++;
 	break;
 	  case 'J': //team2 jail cell
 	Board.cells[i][j]->type = 'J';
+	Board.jail_cells[1][Board.total_J] = Board.cells[i][j];
 	Board.total_floor++;
 	Board.total_J++;
 	break;
@@ -93,8 +95,13 @@ extern void game_init()
  * Updates the cell's pointers and the player's coordinates.
  * Should be locked by whoever calls this method.
  */
-void game_set_player_position(Player* p, Cell* c)
+void game_set_player_position(Player* p, Cell* c, int updateOldCell)
 {
+  if (updateOldCell)
+  {
+    Cell* oldCell = Board.cells[p->x][p->y];
+    oldCell->occupant = NULL;
+  }
   p->x = c->x;
   p->y = c->y;
   c->occupant = p;
@@ -124,12 +131,35 @@ void game_set_player_start_position(Player* p)
     //if (Board.home_cells[p->team][i]->occupant == 0)
     if (Board.home_cells[p->team][i]->occupant == NULL)
     {
-      game_set_player_position(p, Board.home_cells[p->team][i]);
+      // update position pointers consistently, 3rd parameter is NULL because
+      // this is a new player and wasn't in any cell before now.
+      game_set_player_position(p, Board.home_cells[p->team][i], 0);
       success = 1;
       printf("Player position = Board.home_cells[%d][%d]\n\n",p->team,i);
     }
   }
 
+}
+
+void game_set_player_jail_position(Player* p)
+{
+  int i, success = 0;
+  srand(time(NULL));
+
+  while (success == 0)
+  {
+    // we'll be in trouble if no jail cell is available...
+    // assuming total_j = total_J
+    i = rand() % Board.total_j;
+
+    // TODO: lock stuff
+
+    if (Board.jail_cells[p->team][i]->occupant == NULL)
+    {
+      game_set_player_position(p, Board.jail_cells[p->team][i], 1);
+      success = 1;
+    }
+  }
 }
 
 extern Player* game_create_player(int team)
@@ -173,7 +203,127 @@ extern Player* game_create_player(int team)
   return p;
 }
 
-extern int game_move_player(Player * p, int direction)
+Cell* findCellForMove(int x, int y, Player_Move direction)
 {
+  int newX, newY;
+  newX = x;
+  newY = y;
+
+  switch (direction)
+  {
+	case MOVE_LEFT:
+	  newX++;
+	  break;
+	case MOVE_RIGHT:
+	  newX--;
+	  break;
+	case MOVE_UP:
+	  newY--;
+	  break;
+	case MOVE_DOWN:
+	  newY++;
+	  break;
+  }
+
+  return Board.cells[newX][newY];
+}
+
+
+/**
+ * A player tries to move into a wall
+ */
+int game_move_into_wall(Player* p, Cell* newCell)
+{
+  if (newCell->destructable && p->shovel != 0)
+  {
+    // TODO: change new cell type
+    // TODO: return shovel to its place
+    game_set_player_position(p, newCell, 1);
+    return 1;
+  }
   return 0;
+}
+
+void game_free_jailed_players(int team)
+{
+  int i;
+  for (i = 0; i < MAX_NUM_PLAYERS; i++)
+  {
+    if (GameState.players[team][i] != NULL && GameState.players[team][i]->state == PLAYER_JAILED)
+    {
+      // TODO: handle other state (freed player cannot be tagged and cannot pick up stuff until it goes back)
+      GameState.players[team][i]->state = PLAYER_FREE;
+    }
+  }
+}
+
+void game_jail_player(Player* p)
+{
+  game_set_player_jail_position(p);
+  p->state = PLAYER_JAILED;
+}
+
+/**
+ * Handle collision of 2 players. Assumptions:
+ * - GameState is locked
+ * - Cell newCell is occupied by a player
+ */
+int game_collide_players(Player* p, Cell* newCell)
+{
+  Player* otherPlayer = newCell->occupant;
+
+  // Do nothing if colliding with player on the same team
+  if (p->team == otherPlayer->team)
+    return 0;
+
+  // If the other guy is in enemy territory, tag him
+  if (otherPlayer->team != newCell->team)
+  {
+    game_jail_player(otherPlayer);
+    set_player_position(p, newCell, 1);
+    return 1;
+  }
+  // If you are on enemy territory, you are screwed
+  Cell* oldCell = Board.cells[p->x][p->y];
+  if (p->team != oldCell->team)
+  {
+    game_jail_player(p);
+    return 1;
+  }
+
+  // This would happen if enemy players run into each other at the edge
+  // between the two sides. Both players are on home territory, so no one
+  // moves.
+  return 0;
+}
+
+extern int game_move_player(Player* p, Player_Move direction)
+{
+  int didMove;
+
+  //TODO: lock
+
+  // calculate new position from current position and direction
+  Cell* newCell = findCellForMove(p->x, p->y, direction);
+
+  // if new cell is a wall, check if we can destroy it.
+  if (newCell->type == '#')
+  {
+    return game_move_into_wall(p, newCell);
+  }
+  // if new cell contains another player, handle the collision.
+  else if (newCell->occupant != NULL)
+  {
+    return game_collide_players(p, newCell);
+  }
+  // if a free player enters its
+  else if (p->state != PLAYER_JAILED && ((p->team == 0 && newCell->type == 'j')
+	                                  || (p->team == 1 && newCell->type == 'J')))
+  {
+    game_free_jailed_players(p->team);
+  }
+
+  // All other cases, just move
+  game_set_player_position(p, newCell, 1);
+  return 1;
 }
