@@ -448,7 +448,7 @@ game_move_handler(Proto_Session *s)
   proto_session_body_unmarshall_int(s, offset, &direction);
 
   // find the server version of this player
-  Player* serverPlayer = GameState.players[clientPlayer->team][clientPlayer->id];
+  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
 
   int value = game_move_player(serverPlayer, (Player_Move) direction);
 
