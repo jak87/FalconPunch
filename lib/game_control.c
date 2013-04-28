@@ -152,8 +152,6 @@ void game_set_player_jail_position(Player* p)
     // assuming total_j = total_J
     i = rand() % Board.total_j;
 
-    // TODO: lock stuff
-
     if (Board.jail_cells[p->team][i]->occupant == NULL)
     {
       game_set_player_position(p, Board.jail_cells[p->team][i], 1);
@@ -299,7 +297,7 @@ int game_collide_players(Player* p, Cell* newCell)
 
 extern int game_move_player(Player* p, Player_Move direction)
 {
-  int didMove;
+  int didMove = 0;
 
   //TODO: lock
 
@@ -309,21 +307,28 @@ extern int game_move_player(Player* p, Player_Move direction)
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
   {
-    return game_move_into_wall(p, newCell);
+    didMove = game_move_into_wall(p, newCell);
   }
   // if new cell contains another player, handle the collision.
   else if (newCell->occupant != NULL)
   {
-    return game_collide_players(p, newCell);
+    didMove = game_collide_players(p, newCell);
   }
   // if a free player enters its
   else if (p->state != PLAYER_JAILED && ((p->team == 0 && newCell->type == 'j')
 	                                  || (p->team == 1 && newCell->type == 'J')))
   {
+    game_set_player_position(p, newCell, 1);
     game_free_jailed_players(p->team);
+    didMove = 1;
+  }
+  else
+  {
+    // All other cases, just move
+    game_set_player_position(p, newCell, 1);
+    didMove = 1;
   }
 
-  // All other cases, just move
-  game_set_player_position(p, newCell, 1);
-  return 1;
+  //TODO: unlock
+  return didMove;
 }
