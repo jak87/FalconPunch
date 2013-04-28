@@ -173,6 +173,7 @@ proto_server_post_event(void)
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
+	printf("Lost the event connection!\n");
 	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
       } 
       // FIXME: add ack message here to ensure that game is updated 
@@ -247,6 +248,7 @@ proto_server_rpc_listen(void *arg)
       pthread_create(&tid, NULL, &proto_server_req_dispatcher,
 		     (void *)connfd);
     }
+    printf("AH!\n");
   }
 }
 
@@ -298,9 +300,19 @@ proto_server_mt_null_handler(Proto_Session *s)
   return rc;
 }
 
+extern void proto_disconnect() 
+{
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
 
-
-
+  s = proto_server_event_session();
+  bzero(&hdr, sizeof(s));
+  hdr.type = PROTO_MT_EVENT_BASE_DISCONNECT;
+  proto_session_hdr_marshall(s, &hdr);
+   
+  printf("Posting disconnect event!\n");
+  proto_server_post_event();
+}
 
 
 
@@ -441,6 +453,36 @@ game_dump_handler(Proto_Session *s)
   return rc;
 }
 
+static int
+goodbye_handler(Proto_Session *s)
+{
+  Player p;
+  int fd_id, offset;
+
+  // Gets the id in the EventSubscriber array first, then the player info
+  offset = proto_session_body_unmarshall_int(s,0,&fd_id);
+  if (offset > 0)
+    player_unmarshall(s,offset,&p);
+  else
+    printf("Error!\n");
+
+  // Adjust the gamestate accordingly
+  GameState.players[p.team][p.id] = NULL;
+  GameState.numPlayers[p.team]--;
+
+  // Adjust the EventSubscribers
+  pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
+  
+  Proto_Server.EventSubscribers[fd_id] = -1;
+  Proto_Server.EventNumSubscribers--;\
+
+  pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
+
+  // Update the players
+  do_send_players_state();
+
+  return -1;
+}
 
 static int
 hello_handler(Proto_Session *s)
@@ -453,8 +495,10 @@ hello_handler(Proto_Session *s)
   h.type = PROTO_MT_REP_BASE_HELLO;
   proto_session_hdr_marshall(s, &h);
   
-  maze_marshall_row(s,i);
-  //printf("Marshalling Row %d\n", i);
+  proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
+  //maze_marshall_row(s,i);
+
+  printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
 
   rc = proto_session_send_msg(s,1);
   return rc;
@@ -504,11 +548,11 @@ proto_server_init(void)
        i<PROTO_MT_REQ_BASE_RESERVED_LAST; i++) {
     switch (i) {
       case PROTO_MT_REQ_BASE_HELLO:
-		proto_server_set_req_handler(i, hello_handler);
-		break;
+	proto_server_set_req_handler(i, hello_handler);
+	break;
       case PROTO_MT_REQ_BASE_NEW_PLAYER:
-		proto_server_set_req_handler(i, new_player_handler);
-		break;
+	proto_server_set_req_handler(i, new_player_handler);
+	break;
       case PROTO_MT_REQ_BASE_GET_MAZE_INFO:
         proto_server_set_req_handler(i, game_maze_info_handler);
         break;
@@ -518,6 +562,9 @@ proto_server_init(void)
       case PROTO_MT_REQ_BASE_DUMP:
         proto_server_set_req_handler(i, game_dump_handler);
         break;
+      case PROTO_MT_REQ_BASE_GOODBYE:
+	proto_server_set_req_handler(i, goodbye_handler);
+	break;
       default:
         proto_server_set_req_handler(i, proto_server_mt_null_handler);
         break;

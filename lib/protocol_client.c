@@ -227,6 +227,7 @@ proto_client_hello(Proto_Client_Handle ch)
   proto_session_body_marshall_int(s,i);
   rc = proto_session_rpc(s);
   
+  /*
   if (rc == 1)
       maze_unmarshall_row(s, 0, i);
   else
@@ -246,8 +247,14 @@ proto_client_hello(Proto_Client_Handle ch)
 	  c->session_lost_handler(s);
     }
   }
-  dump();
-  return rc;
+  dump(); */
+
+  if (rc == 1)
+    proto_session_body_unmarshall_int(s,0,&i);
+  else
+      c->session_lost_handler(s);
+
+  return i;
 }
 
 extern int
@@ -351,9 +358,35 @@ proto_client_dump_maze(Proto_Client_Handle ch) {
 }
 
 extern int 
-proto_client_goodbye(Proto_Client_Handle ch)
+proto_client_goodbye(Proto_Client_Handle ch, int id, Player * p)
 {
-  return do_generic_dummy_rpc(ch,PROTO_MT_REQ_BASE_GOODBYE);  
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_GOODBYE);
+
+  proto_session_body_marshall_int(s,id);
+  player_marshall(s,p);
+
+  rc = proto_session_rpc(s);
+
+  close(&(c->rpc_session.fd)); 
+  close(&(c->event_session.fd));
+
+  return rc;
 }
+
+extern void
+proto_client_disconnect(Proto_Client_Handle ch)
+{
+  Proto_Client *c = ch;
+  
+  close(&(c->rpc_session.fd));
+  close(&(c->event_session.fd));
+}
+  
+
 
 

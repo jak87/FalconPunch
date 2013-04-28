@@ -41,6 +41,7 @@ struct Globals {
   char host[STRLEN];
   PortType port;
   Player player;
+  int connection_id;
 } globals;
 
 UI *ui;
@@ -61,6 +62,14 @@ clientInit(Client *C)
     return -1;
   }
   return 1;
+}
+
+extern int
+disconnect_handler(Proto_Session *s)
+{
+  proto_client_disconnect();
+  printf("\nError: Server has disconnected you!\n");
+  exit(1);
 }
 
 extern int
@@ -122,13 +131,10 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
       proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE_PLAYERS,
 				     h);
     }
-
-    printf("Set event handler\n");
-
     //also add handler for game over
     proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_GAMEOVER, gameover_event_handler);
 
-    printf("Set gameover handler\n");
+    proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_DISCONNECT, disconnect_handler);
 
 
     return 1;
@@ -250,7 +256,10 @@ docmd(Client *C, char * buf)
   sscanf(buf, "%s", cmd);
   
   // Quits
-  if (strcmp(cmd,"quit") == 0 || (strcmp(cmd,"q") == 0)) return -1;
+  if (strcmp(cmd,"quit") == 0 || (strcmp(cmd,"q") == 0)) {
+    proto_client_goodbye(C->ph,globals.connection_id,&(globals.player));
+    return -1;
+  }
   
   // Displays the Number of Home Cells
   else if (strcmp(cmd,"numhome") == 0) {
@@ -474,7 +483,8 @@ main(int argc, char **argv)
   }
 
   // connect to the server
-  proto_client_hello(c.ph);
+  globals.connection_id = proto_client_hello(c.ph);
+  printf("My id is %d!\n", globals.connection_id);
 
   // register as a new player
   if(proto_client_new_player(c.ph,&(globals.player)) < 1) {

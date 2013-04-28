@@ -66,6 +66,7 @@ docmd(char cmd)
     rc = doUpdateClients();
     break;
   case 'q':
+    proto_disconnect();
     rc=-1;
     break;
   case 'l':
