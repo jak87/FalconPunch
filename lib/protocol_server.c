@@ -210,10 +210,15 @@ proto_server_req_dispatcher(void * arg)
 
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
+        printf("Received Message!\n");
         mt = proto_session_hdr_unmarshall_type(&s);
-
+	printf("Unmarshalled header!\n");
+	printf("mt = %d\n",mt);
+	if(mt < 1)
+	  goto leave;
 	hdlr = Proto_Server.base_req_handlers[mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1];
-
+	
+	printf("Got to hldr(&s) statement...\n");
 	if (hdlr(&s)<0) goto leave;
     } else {
       goto leave;
@@ -453,6 +458,25 @@ game_dump_handler(Proto_Session *s)
   return rc;
 }
 
+static void
+remove_player(int fd_id, Player * p) {
+  // Adjust the gamestate accordingly
+  GameState.players[p->team][p->id] = NULL;
+  GameState.numPlayers[p->team]--;
+
+  // Adjust the EventSubscribers
+  pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
+  
+  Proto_Server.EventSubscribers[fd_id] = -1;
+  Proto_Server.EventNumSubscribers--;\
+
+  pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
+
+  // Update the players
+  do_send_players_state();
+}
+
+
 static int
 goodbye_handler(Proto_Session *s)
 {
@@ -466,20 +490,7 @@ goodbye_handler(Proto_Session *s)
   else
     printf("Error!\n");
 
-  // Adjust the gamestate accordingly
-  GameState.players[p.team][p.id] = NULL;
-  GameState.numPlayers[p.team]--;
-
-  // Adjust the EventSubscribers
-  pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
-  
-  Proto_Server.EventSubscribers[fd_id] = -1;
-  Proto_Server.EventNumSubscribers--;\
-
-  pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
-
-  // Update the players
-  do_send_players_state();
+  remove_player(fd_id, &p);
 
   return -1;
 }
@@ -522,7 +533,7 @@ new_player_handler(Proto_Session *s)
   player_marshall(s, p);
 
   rc = proto_session_send_msg(s,1);
-  printf("Created player!");
+  //printf("Created player!");
 
   do_send_players_state();
 
