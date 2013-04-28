@@ -36,6 +36,7 @@ struct UI_Struct {
   int32_t depth;
   int32_t tile_h;
   int32_t tile_w;
+  short currentZoom;
 
   struct Sprite {
     SDL_Surface *img;
