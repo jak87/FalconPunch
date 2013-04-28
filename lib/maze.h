@@ -13,12 +13,14 @@ typedef struct {
   int y;
   char type;
   int team;
+  int destructable;
   Player* occupant;
 } Cell;
 
 struct {
   Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
   Cell* home_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
+  Cell* jail_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
   int total_wall;
   int total_floor;
   int total_j;
