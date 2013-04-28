@@ -10,11 +10,16 @@
 #define MAX_NUM_PLAYERS 5
 
 struct {
-  Player *me;
-  Player* players[2][MAX_NUM_PLAYERS];
+  Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
-} GameState, ClientGameState;
+} GameState;
+
+struct {
+  Player *me;
+  Player players[2][MAX_NUM_PLAYERS];
+  int gameStatus;
+} ClientGameState;
 
 extern int game_load_board();
 
