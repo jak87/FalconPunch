@@ -280,7 +280,7 @@ int game_collide_players(Player* p, Cell* newCell)
   if (otherPlayer->team != newCell->team)
   {
     game_jail_player(otherPlayer);
-    set_player_position(p, newCell, 1);
+    game_set_player_position(p, newCell, 1);
     return 1;
   }
   // If you are on enemy territory, you are screwed
