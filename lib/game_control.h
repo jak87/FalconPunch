@@ -10,6 +10,7 @@
 #define MAX_NUM_PLAYERS 5
 
 struct {
+  Player *me;
   Player* players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
