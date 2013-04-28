@@ -160,6 +160,47 @@ ui_putpixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
    } // switch
  }
 
+/*draws an inscribed circle of color c, based on rasterCircle from the
+ *wikipedia page for the midpoint circle algorithm
+ */
+static void
+ui_draw_circle(SDL_Surface *s, SDL_Rect *t, uint32_t c){
+  int x0 = t->x + (t->w/2);
+  int y0 = t->y + (t->h/2);
+  int radius = t->w/2 - 1;
+  int f = 1-radius;
+  int ddF_x = 1;
+  int ddF_y = -2*radius;
+  int x = 0;
+  int y = radius;
+  int i;
+  SDL_LockSurface(s);
+  ui_putpixel(s, x0, y0+radius, c);
+  ui_putpixel(s, x0, y0-radius, c);
+  ui_putpixel(s, x0+radius, y0, c);
+  ui_putpixel(s, x0-radius, y0, c);
+
+  while(x < y){
+    if(f >= 0){
+      y--;
+      ddF_y += 2;
+      f+= ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f+= ddF_x;
+    ui_putpixel(s, x0+x, y0+y, c);
+    ui_putpixel(s, x0-x, y0+y, c);
+    ui_putpixel(s, x0+x, y0-y, c);
+    ui_putpixel(s, x0-x, y0-y, c);
+    ui_putpixel(s, x0+y, y0+x, c);
+    ui_putpixel(s, x0-y, y0+x, c);
+    ui_putpixel(s, x0+y, y0-x, c);
+    ui_putpixel(s, x0-y, y0-x, c);
+  }
+  SDL_UnlockSurface(s);
+}
+
 static 
 sval splash(UI *ui)
 {
@@ -238,6 +279,7 @@ load_sprites(UI *ui)
 
   SDL_SetColorKey(ui->sprites[TEAMB_S].img, SDL_SRCCOLORKEY | SDL_RLEACCEL, 
 		  colorkey);
+
   temp = SDL_LoadBMP(UI_FLOOR_BMP);
   if (temp == NULL) {
     fprintf(stderr, "ERROR: loading floor.bmp %s\n", SDL_GetError()); 
@@ -303,38 +345,49 @@ load_sprites(UI *ui)
 
 
 inline static void
-draw_cell(UI *ui, SPRITE_INDEX si, SDL_Rect *t, SDL_Surface *s)
+draw_cell(UI *ui, SPRITE_INDEX si, SDL_Rect *t, SDL_Surface *s, uint32_t c)
 {
   SDL_Surface *ts=NULL;
   uint32_t tc;
 
   ts = ui->sprites[si].img;
 
-  if ( ts && t->h == SPRITE_H && t->w == SPRITE_W) 
+  if ( ts && t->h == SPRITE_H && t->w == SPRITE_W){ 
     SDL_BlitSurface(ts, NULL, s, t);
+  }
+  else{
+    SDL_FillRect(s, t, c);
+  }
 }
 
-static sval ui_center_on_player(UI *ui){
-  int player_x = globals.player->x * ui->tile_w;
-  int player_y = globals.player->y * ui->tile_h;
-
-  ui->camera.x = player_x - ui->camera.w / 2;
-  ui->camera.y = player_y - ui->camera.h / 2;
-
+static void
+ui_check_camera_edges(UI *ui){
   int edge;
-
+  int max_w = Board.size * ui->tile_w;
+  int max_h = Board.size * ui->tile_h;
   if(ui->camera.x < 0){
     ui->camera.x = 0;
   }
   if(ui->camera.y < 0){
     ui->camera.y = 0;
   }
-  if(ui->camera.x > (edge = ui->fullMap->w - ui->camera.w)){
+  if(ui->camera.x > (edge = max_w - ui->camera.w)){
     ui->camera.x = edge;
   }
-  if(ui->camera.y > (edge = ui->fullMap->h - ui->camera.h)){
+  if(ui->camera.y > (edge = max_h - ui->camera.h)){
     ui->camera.y = edge;
   }
+}
+
+static sval
+ui_center_on_player(UI *ui){
+  int player_x = globals.player->x * ui->tile_w;
+  int player_y = globals.player->y * ui->tile_h;
+
+  ui->camera.x = player_x - ui->camera.w / 2;
+  ui->camera.y = player_y - ui->camera.h / 2;
+
+  ui_check_camera_edges(ui);
 }
 
 static sval
@@ -349,7 +402,30 @@ ui_paintmap(UI *ui)
 }
 
 static void ui_update_fullMap(UI *ui){
-  
+  SDL_Rect t;
+  int i = 0; int j = 0;
+  t.y = 0; t.x = 0; t.h = ui->tile_h; t.w = ui->tile_w; 
+  SPRITE_INDEX si;
+  uint32_t c;
+  for (t.y=0; t.y<ui->fullMap->h && i < Board.size; t.y+=t.h) {
+    for (t.x=0; t.x<ui->fullMap->w && j < Board.size; t.x+=t.w) {
+      Cell * cell = Board.cells[i][j];
+      switch(cell->type){
+      case '#':
+	if (cell->team == 1){si = REDWALL_S; c = ui->wall_teama_c;} 
+	else{si = GREENWALL_S; c = ui->wall_teamb_c;}
+	break;
+      default:
+	si = FLOOR_S;
+	c = ui->isle_c;
+	break;
+      }
+      draw_cell(ui, si, &t, ui->fullMap, c);
+      j++;
+    }
+    i++;
+    j=0;
+  }
 }
 
 static sval ui_init_fullMap(UI *ui){
@@ -369,43 +445,7 @@ static sval ui_init_fullMap(UI *ui){
     return -1;
   }
 
-  //Write map to surface
-  SDL_Rect t;
-  int i = 0; int j = 0;
-  t.y = 0; t.x = 0; t.h = ui->tile_h; t.w = ui->tile_w; 
-  SPRITE_INDEX si;
-  for (t.y=0; t.y<ui->fullMap->h; t.y+=t.h) {
-    for (t.x=0; t.x<ui->fullMap->w; t.x+=t.w) {
-      Cell * cell = Board.cells[i][j];
-      switch(cell->type){
-      case '#':
-	if (cell->team == 1){si = REDWALL_S;} else{si = GREENWALL_S;}
-	break;
-      case 'h':
-	si = FLOOR_S;
-	break;
-      case 'H':
-	si = FLOOR_S;
-	break;
-      case 'j':
-	si = FLOOR_S;
-	break;
-      case 'J':
-	si = FLOOR_S;
-	break;
-      case ' ':
-	si = FLOOR_S;
-	break;
-      default:
-	si = FLOOR_S;
-	break;
-      }
-      draw_cell(ui, si, &t, ui->fullMap);
-      j++;
-    }
-    i++;
-    j=0;
-  }
+  ui_update_fullMap(ui);
 }
 
 static sval
@@ -514,14 +554,37 @@ ui_process(UI *ui)
 extern sval
 ui_zoom(UI *ui, sval fac)
 {
-  fprintf(stderr, "%s:\n", __func__);
+  SDL_FillRect(ui->fullMap, 0, ui->black_c);
+  (ui->currentZoom = ((fac > 0) ? ui->currentZoom + 1 : ui->currentZoom-1) % 3);
+  switch(ui->currentZoom){
+  case 0:
+    ui->tile_h = SPRITE_H;
+    ui->tile_w = SPRITE_W;
+    break;
+  case 1:
+    ui->tile_h = 16;
+    ui->tile_w = 16;
+    break;
+  case 2:
+    ui->tile_h = 8;
+    ui->tile_w = 8;
+    break;
+  }
+  ui_update_fullMap(ui);
+  ui_center_on_player(ui);
   return 2;
 }
 
 extern sval
 ui_pan(UI *ui, sval xdir, sval ydir)
 {
-  fprintf(stderr, "%s:\n", __func__);
+  if(xdir < 0){ui->camera.x -= ui->tile_w;}
+  else if(xdir > 0){ui->camera.x += ui->tile_w;}
+  if(ydir < 0){ui->camera.y -= ui->tile_h;}
+  else if(ydir > 0){ui->camera.y += ui->tile_h;}
+  
+  ui_check_camera_edges(ui);
+
   return 2;
 }
 
@@ -601,8 +664,8 @@ static void
 test_player_init(){
   globals.player = (Player*) malloc(sizeof(Player));
   globals.player->id = 1;
-  globals.player->x = 104;
-  globals.player->y = 190;
+  globals.player->x = 1;
+  globals.player->y = 100;
   globals.player->team = 1;
   globals.player->state = 0;
 }
@@ -635,17 +698,28 @@ paint_players(UI *ui)
   SDL_Rect t;
   t.h = ui->tile_h; t.w = ui->tile_w; t.y = 0; t.x = 0;
   int start_x = ui->camera.x / t.w;
+  int max_x = ui->camera.w /t.w + start_x;
   int x = start_x;
   int start_y = ui->camera.y / t.h;
+  int max_y = ui->camera.h / t.h + start_y;
   
   //this is just for testing to make sure im on the right track
   Player * player;
   player = globals.player;
   t.y = (player->y - start_y) * t.h;
   t.x = (player->x - start_x) * t.w;
-  player->uip->clip.x = player->uip->base_clip_x +
-    pxSpriteOffSet(player->team, player->state);
-  SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
+  if((player->x >= start_x) && (player->x < max_x) &&
+     (player->y >= start_y) && (player->y < max_y)){
+    if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
+      player->uip->clip.x = player->uip->base_clip_x +
+	pxSpriteOffSet(player->team, player->state);
+      SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
+    }
+    else{
+      uint32_t c = (player->team == 0) ? ui->player_teama_c : ui->player_teamb_c;
+      ui_draw_circle(ui->screen, &t, c);
+    }
+  }
   
 }
 
