@@ -90,6 +90,6 @@ int ui_up(UI *ui);
 //int ui_dummy_toggle_team(UI *ui);
 //int ui_dummy_inc_id(UI *ui);
 
-static sval ui_paintmap(UI *ui);
+sval ui_paintmap(UI *ui);
 
 #endif

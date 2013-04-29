@@ -390,7 +390,7 @@ ui_center_on_player(UI *ui){
   ui_check_camera_edges(ui);
 }
 
-static sval
+sval
 ui_paintmap(UI *ui) 
 {
 

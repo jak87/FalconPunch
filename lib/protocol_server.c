@@ -610,7 +610,7 @@ new_player_handler(Proto_Session *s)
   //printf("Created player!");
 
   //printf("Finally, updating everything!\n");
-  do_send_players_state();
+  //do_send_players_state();
 
   return rc;
 }

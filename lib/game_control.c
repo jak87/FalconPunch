@@ -219,10 +219,10 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
   switch (direction)
   {
 	case MOVE_LEFT:
-	  newX++;
+	  newX--;
 	  break;
 	case MOVE_RIGHT:
-	  newX--;
+	  newX++;
 	  break;
 	case MOVE_UP:
 	  newY--;
