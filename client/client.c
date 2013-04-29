@@ -37,19 +37,22 @@
 
 #define STRLEN 81
 
+typedef struct ClientState  {
+  int data;
+  Proto_Client_Handle ph;
+} Client;
+
 struct Globals {
   char host[STRLEN];
   PortType port;
   //Player player;
   int connection_id;
+  Client* client_inst;
 } globals;
 
 UI *ui;
 
-typedef struct ClientState  {
-  int data;
-  Proto_Client_Handle ph;
-} Client;
+
 
 static int
 clientInit(Client *C)
@@ -72,18 +75,6 @@ disconnect_handler(Proto_Session *s)
   exit(1);
 }
 
-static void
-playerCopy(Player *p1, Player *p2) {
-  p1->x = p2->x;
-  p1->y = p2->y;
-  p1->state = p2->state;
-  p1->team = p2->team;
-  p1->flag = p2->flag;
-  p1->shovel = p2->shovel;
-  p1->fd = p2->fd;
-  p1->uip = p2->uip;
-}
-
 extern int
 update_event_handler(Proto_Session *s)
 {
@@ -99,7 +90,7 @@ update_event_handler(Proto_Session *s)
     offset = player_unmarshall(s,offset,p);
     if (offset < 0)
       return offset;
-    playerCopy(&(ClientGameState.players[p->team][p->id]),p);
+    player_copy(&(ClientGameState.players[p->team][p->id]),p);
   }
   
   // Error-checking!
@@ -112,7 +103,7 @@ update_event_handler(Proto_Session *s)
 	     ClientGameState.players[j][i].state);
     }
   }
-
+  printf("Done getting update with all players\n");
   return 1;
 }
 
@@ -195,19 +186,24 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
   if (e->type == SDL_KEYDOWN) {
     if (sym == SDLK_LEFT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move left\n", __func__);
-      return ui_left(ui);
+      return proto_client_move(globals.client_inst->ph, MOVE_LEFT);
+//      return ui_left(ui);
     }
     if (sym == SDLK_RIGHT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move right\n", __func__);
-      return ui_right(ui);
+      return proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
+
+      //return ui_right(ui);
     }
     if (sym == SDLK_UP && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: move up\n", __func__);
-      return ui_up(ui);
+      return proto_client_move(globals.client_inst->ph, MOVE_UP);
+      //return ui_up(ui);
     }
     if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
       fprintf(stderr, "%s: move down\n", __func__);
-      return ui_down(ui);
+      return proto_client_move(globals.client_inst->ph, MOVE_DOWN);
+//      return ui_down(ui);
     }
     if (sym == SDLK_r && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: dummy pickup red flag\n", __func__);
@@ -488,8 +484,16 @@ main(int argc, char **argv)
 	
   bzero(&globals, sizeof(globals));
   bzero(&Board, sizeof(Board));
+
+  // store a pointer to the Client instance we just created. This will be used for
+  // the entire lifespan of the client, such that any code can access the proto
+  // client handle and other Client state.
+  globals.client_inst = &c;
+
   //initialize yourself! (sorta)
-  ClientGameState.me = malloc(sizeof(Player));
+  // no need to initialize yourself. .me will always point to the real memory location reserved
+  // for the player based on team and id.
+//  ClientGameState.me = malloc(sizeof(Player));
   //initialize players
   bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
   //set all ids = -1 to show they don't exist yet

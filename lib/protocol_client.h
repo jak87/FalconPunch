@@ -44,6 +44,6 @@ extern int proto_client_set_event_handler(Proto_Client_Handle ch,
 
 // client side protocol rpc's
 extern int proto_client_hello(Proto_Client_Handle ch);
-extern int proto_client_move(Proto_Client_Handle ch, char d);
+extern int proto_client_move(Proto_Client_Handle ch, Player_Move direction);
 extern int proto_client_goodbye(Proto_Client_Handle ch, int i, Player * p);
 #endif

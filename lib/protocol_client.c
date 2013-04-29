@@ -33,7 +33,7 @@
 #include "protocol_client.h"
 #include "maze.h"
 #include "player.h"
-//#include "game_control.h"
+#include "game_control.h"
 
 
 typedef struct {
@@ -252,11 +252,12 @@ proto_client_hello(Proto_Client_Handle ch)
 }
 
 extern int
-proto_client_new_player(Proto_Client_Handle ch, Player * p, int * id)
+proto_client_new_player(Proto_Client_Handle ch, int * id)
 {
   int rc = 1, offset = 0;
   Proto_Session *s;
   Proto_Client *c = ch;
+  Player clientPlayer;
   s = &(c->rpc_session);
 
   //printf("Requesting to create a new player...\n\n");
@@ -273,12 +274,55 @@ proto_client_new_player(Proto_Client_Handle ch, Player * p, int * id)
   else 
   {
     offset = proto_session_body_unmarshall_int(s,0,id);
-    rc = player_unmarshall(s,offset,p);
+    rc = player_unmarshall(s,offset, &clientPlayer);
+    printf("Got an object for my player\n");
+    // put the client player in it's proper place based on team and id.
+    player_copy(&(ClientGameState.players[clientPlayer.team][clientPlayer.id]),&clientPlayer);
+    printf("Copied it to the game state\n");
+    // set the ClientGameState.me pointer to this address. This is where our player will
+    // be unmarshalled from now on, with every update from the server.
+    ClientGameState.me = &(ClientGameState.players[clientPlayer.team][clientPlayer.id]);
+    printf("Set the .me pointer\n");
   }
 
   //printf("new player id = %d, team = %d\n",p->id,p->team);
 
   if (rc < 0) printf("Player_unmarshall Error!\n");
+  return rc;
+
+}
+
+
+extern int
+proto_client_move(Proto_Client_Handle ch, Player_Move direction)
+{
+  int rc = 1, offset = 0;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+  s = &(c->rpc_session);
+
+  printf("Sending move command to server...\n\n");
+
+
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_MOVE);
+  player_marshall(s, ClientGameState.me);
+  proto_session_body_marshall_int(s, direction);
+
+  rc = proto_session_rpc(s);
+
+  if (rc != 1)
+  {
+	  c->session_lost_handler(s);
+	  return rc;
+  }
+  else
+  {
+	proto_session_body_unmarshall_int(s, 0, &rc);
+  }
+
+  if (rc < 0) printf("player move Error!\n");
+  else if (rc == 0) printf("player move rejected by server!\n");
+  else printf("Player move successful.\n");
   return rc;
 
 }

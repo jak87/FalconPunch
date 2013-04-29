@@ -1,6 +1,18 @@
 #include "protocol_session.h"
 #include "player.h"
 
+
+extern void player_copy(Player *p1, Player *p2) {
+  p1->x = p2->x;
+  p1->y = p2->y;
+  p1->state = p2->state;
+  p1->team = p2->team;
+  p1->flag = p2->flag;
+  p1->shovel = p2->shovel;
+  p1->fd = p2->fd;
+  p1->uip = p2->uip;
+}
+
 extern int player_marshall(Proto_Session *s, Player * player)
 {
   int rc = proto_session_body_marshall_int(s, player->id);
