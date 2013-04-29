@@ -28,19 +28,19 @@
 #include "net.h"
 #include "maze.h"
 #include "player.h"
+//#include "game_control.h"
 
-struct{
-  Player *player;
-} globals;
 
 /* A lot of this code comes from http://www.libsdl.org/cgi/docwiki.cgi */
 
-/* Forward declaration of some dummy player code */
-static void ui_player_init(UI *ui);
 static void paint_players(UI *ui);
-static void test_player_init();
 
+#define MAX_NUM_PLAYERS 5 //per team
 
+struct {
+  Player *me; //For centering
+  Player players[2][MAX_NUM_PLAYERS];
+} ClientGameState;
 
 #define SPRITE_H 32
 #define SPRITE_W 32
@@ -381,8 +381,8 @@ ui_check_camera_edges(UI *ui){
 
 static sval
 ui_center_on_player(UI *ui){
-  int player_x = globals.player->x * ui->tile_w;
-  int player_y = globals.player->y * ui->tile_h;
+  int player_x = ClientGameState.me->x * ui->tile_w;
+  int player_y = ClientGameState.me->y * ui->tile_h;
 
   ui->camera.x = player_x - ui->camera.w / 2;
   ui->camera.y = player_y - ui->camera.h / 2;
@@ -618,6 +618,25 @@ ui_quit(UI *ui)
   SDL_PushEvent(&event);
 }
 
+static void
+init_test_struct(){
+  int i, j;
+  Player *p;
+  srand(time(NULL));
+  for(i = 0; i < 2; i++){
+    for(j = 0; j < MAX_NUM_PLAYERS; j++){
+      p = &ClientGameState.players[i][j];
+      p->id = j;
+      p->x = rand() % Board.size;
+      p->y = rand() % Board.size;
+      p->team = i;
+      p->state = 0;
+      p->uip = NULL;
+    }
+  }
+  ClientGameState.me = &(ClientGameState.players[rand() % 2][rand() % MAX_NUM_PLAYERS]);
+}
+
 extern void
 ui_main_loop(UI *ui, uval h, uval w)
 {
@@ -627,9 +646,7 @@ ui_main_loop(UI *ui, uval h, uval w)
 
   ui_init_sdl(ui, h, w, 32);
 
-  test_player_init(ui);
-
-  ui_player_init(ui);
+  init_test_struct();
   ui_center_on_player(ui);
   ui_paintmap(ui);
    
@@ -656,41 +673,9 @@ ui_init(UI **ui)
 }
 
 static void
-ui_player_init(UI *ui){
-  ui_uip_init(ui, &(globals.player->uip), globals.player->id, globals.player->team);
+ui_player_init(UI *ui, Player *player){
+  ui_uip_init(ui, &(player->uip), player->id, player->team);
 }
-
-static void
-test_player_init(){
-  globals.player = (Player*) malloc(sizeof(Player));
-  globals.player->id = 1;
-  globals.player->x = 1;
-  globals.player->y = 100;
-  globals.player->team = 1;
-  globals.player->state = 0;
-}
-
-/*static void 
-dummyPlayer_init(UI *ui) 
-{
-    pthread_mutex_init(&(dummyPlayer.lock), NULL);
-    dummyPlayer.id = 0;
-    dummyPlayer.x = 1; dummyPlayer.y = 1; dummyPlayer.team = 0; dummyPlayer.state = 0;
-  ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team); 
-  //}*/
-
-/*static void 
-dummyPlayer_paint(UI *ui)
-{
-  SDL_Rect t;
-  t.h = ui->tile_h; t.w = ui->tile_w;
-  pthread_mutex_lock(&dummyPlayer.lock);
-    t.y = dummyPlayer.uip->y; t.x =dummyPlayer.uip->x;
-    dummyPlayer.uip->clip.x = dummyPlayer.uip->base_clip_x +
-      pxSpriteOffSet(dummyPlayer.team, dummyPlayer.state);
-    SDL_BlitSurface(dummyPlayer.uip->img, &dummyPlayer.uip->clip, ui->screen, &t);
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  }*/
 
 static void
 paint_players(UI *ui)
@@ -698,37 +683,43 @@ paint_players(UI *ui)
   SDL_Rect t;
   t.h = ui->tile_h; t.w = ui->tile_w; t.y = 0; t.x = 0;
   int start_x = ui->camera.x / t.w;
-  int max_x = ui->camera.w /t.w + start_x;
-  int x = start_x;
+  int max_x = (ui->camera.w / t.w) + start_x;
   int start_y = ui->camera.y / t.h;
-  int max_y = ui->camera.h / t.h + start_y;
+  int max_y = (ui->camera.h / t.h) + start_y;
   
   //this is just for testing to make sure im on the right track
-  Player * player;
-  player = globals.player;
-  t.y = (player->y - start_y) * t.h;
-  t.x = (player->x - start_x) * t.w;
-  if((player->x >= start_x) && (player->x < max_x) &&
-     (player->y >= start_y) && (player->y < max_y)){
-    if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
-      player->uip->clip.x = player->uip->base_clip_x +
-	pxSpriteOffSet(player->team, player->state);
-      SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
-    }
-    else{
-      uint32_t c = (player->team == 0) ? ui->player_teama_c : ui->player_teamb_c;
-      ui_draw_circle(ui->screen, &t, c);
+  Player *player;
+  int i, j;
+  for (i = 0; i < 2; i++){
+    for(j = 0; j < MAX_NUM_PLAYERS; j++){
+      if((player = &ClientGameState.players[i][j])->id < 0){continue;}
+      if(player->uip == NULL){ui_player_init(ui, player);}
+      if((player->x >= start_x) && (player->x < max_x) &&
+	 (player->y >= start_y) && (player->y < max_y)){
+	t.x = (player->x - start_x) * t.w;
+	t.y = (player->y - start_y) * t.h;
+	fprintf(stderr, "id:%d\npx offsets x:%d y:%d\nraw x:%d y%d\n", player->id, t.x, t.y, player->x, player->y);
+	if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
+	  player->uip->clip.x = player->uip->base_clip_x +
+	    pxSpriteOffSet(player->team, player->state);
+	  fprintf(stderr, "sprite clip%d\n", player->uip->clip.x);
+	  SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
+	}
+	else{
+	  uint32_t c = (player->team == 0) ? ui->player_teama_c : ui->player_teamb_c;
+	    ui_draw_circle(ui->screen, &t, c);
+	}
+      }
     }
   }
-  
 }
 
 int
 ui_left(UI *ui)
 {
   //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[globals.player->y][globals.player->x-1]->type != '#'){  
-    globals.player->x--;
+  if(Board.cells[ClientGameState.me->y][ClientGameState.me->x-1]->type != '#'){  
+    ClientGameState.me->x--;
   }
   //pthread_mutex_unlock(&dummyPlayer.lock);
   ui_center_on_player(ui);
@@ -739,8 +730,8 @@ int
 ui_right(UI *ui)
 {
   //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[globals.player->y][globals.player->x+1]->type != '#'){  
-    globals.player->x++;
+  if(Board.cells[ClientGameState.me->y][ClientGameState.me->x+1]->type != '#'){  
+    ClientGameState.me->x++;
   }
   //pthread_mutex_unlock(&dummyPlayer.lock);
   ui_center_on_player(ui);
@@ -751,8 +742,8 @@ int
 ui_down(UI *ui)
 {
   //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[globals.player->y+1][globals.player->x]->type != '#'){  
-    globals.player->y++;
+  if(Board.cells[ClientGameState.me->y+1][ClientGameState.me->x]->type != '#'){  
+    ClientGameState.me->y++;
   }
   //pthread_mutex_unlock(&dummyPlayer.lock);
   ui_center_on_player(ui);
@@ -763,8 +754,8 @@ int
 ui_up(UI *ui)
 {
   //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[globals.player->y-1][globals.player->x]->type != '#'){  
-    globals.player->y--;
+  if(Board.cells[ClientGameState.me->y-1][ClientGameState.me->x]->type != '#'){  
+    ClientGameState.me->y--;
   }
   //pthread_mutex_unlock(&dummyPlayer.lock);
   ui_center_on_player(ui);
@@ -830,3 +821,10 @@ ui_dummy_inc_id(UI *ui)
   pthread_mutex_unlock(&dummyPlayer.lock);
   return 2;
   }*/
+
+int
+ui_inc_state(){
+  int *s = &ClientGameState.me->state;
+  *s = (*s +1) % 4;
+  return 2;
+}
