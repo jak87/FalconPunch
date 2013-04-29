@@ -272,7 +272,7 @@ proto_client_new_player(Proto_Client_Handle ch, Player * p, int * id)
   }
   else 
   {
-    offset = proto_session_body_unmarshall_int(s,0,&id);
+    offset = proto_session_body_unmarshall_int(s,0,id);
     rc = player_unmarshall(s,offset,p);
   }
 

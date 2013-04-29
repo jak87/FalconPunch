@@ -337,9 +337,11 @@ static int do_send_players_state()
 
   //TODO: lock, handle errors
 
+  printf("Marshalling the total number of players...\n");
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);
 
+  printf("Marshalling %d players...\n",totalPlayers);
   int i;
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
@@ -349,6 +351,7 @@ static int do_send_players_state()
       player_marshall(s, GameState.players[1][i]);
   }
 
+  printf("Posting event!\n");
   proto_server_post_event();
 
   return 1;
@@ -491,6 +494,7 @@ game_dump_handler(Proto_Session *s)
 static void
 remove_player(int fd_id, Player * p) {
   // Adjust the gamestate accordingly
+  free(GameState.players[p->team][p->id]);
   GameState.players[p->team][p->id] = NULL;
   GameState.numPlayers[p->team]--;
 
@@ -551,20 +555,25 @@ new_player_handler(Proto_Session *s)
   Proto_Msg_Hdr h;
   // nothing to unmarshall.
 
+  printf("Creating a new player!\n");
   // create a new player on a team that has fewer players.
   Player* p = game_create_player(2);
+  printf("Ok, created a new player!\n");
   // remember the id of the connection
   p->fd = s->fd;
 
+  printf("Marshalling stuff...\n");
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
   proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
   player_marshall(s, p);
+  printf("Alright, everyting marshalled. Sending the message!\n");
 
   rc = proto_session_send_msg(s,1);
   //printf("Created player!");
 
+  printf("Finally, updating everything!\n");
   do_send_players_state();
 
   return rc;
