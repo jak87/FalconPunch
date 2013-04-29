@@ -5,6 +5,7 @@
 #include "uistandalone.h"
 
 typedef struct {
+  // if id == -1, player is inactive 
   int id;
   int x;
   int y;

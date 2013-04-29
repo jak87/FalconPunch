@@ -162,8 +162,14 @@ void game_set_player_jail_position(Player* p)
 
 extern Player* game_create_player(int team)
 {
+  printf("Entering game_create_player\n");
   int i=0, playerTeam;
-  Player* p = malloc(sizeof(Player));
+  printf("Allocating player size\n");
+  Player *p = malloc(sizeof(Player));
+  //printf("Bzeroing player\n");
+  //bzero(&p,sizeof(Player));
+  printf("Successfully bzeroed!\n");
+  printf("P's id = %d\n",p->id);
 
   if (team < 2)
 	  playerTeam = team;
@@ -176,6 +182,7 @@ extern Player* game_create_player(int team)
   while (GameState.players[playerTeam][i] != NULL && i < MAX_NUM_PLAYERS)
     i++;
 
+  printf("Alright, assigning a new player pointer!\n");
   if (GameState.players[playerTeam][i] == NULL)
     {
       // slot i is available for the new player.
@@ -192,8 +199,8 @@ extern Player* game_create_player(int team)
   }
 
   // Checking to make sure everything worked
-  //printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
-  //printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
+  printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
+  printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
 
   //put player on the first unoccupied cell in its home territory
   game_set_player_start_position(p);

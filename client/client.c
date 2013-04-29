@@ -40,7 +40,7 @@
 struct Globals {
   char host[STRLEN];
   PortType port;
-  Player player;
+  //Player player;
   int connection_id;
 } globals;
 
@@ -72,32 +72,46 @@ disconnect_handler(Proto_Session *s)
   exit(1);
 }
 
+static void
+playerCopy(Player *p1, Player *p2) {
+  p1->x = p2->x;
+  p1->y = p2->y;
+  p1->state = p2->state;
+  p1->team = p2->team;
+  p1->flag = p2->flag;
+  p1->shovel = p2->shovel;
+  p1->fd = p2->fd;
+  p1->uip = p2->uip;
+}
+
 extern int
 update_event_handler(Proto_Session *s)
 {
 
   // n is the number of players that will be sent
-  int rc = 1, n=0, offset, i;
-  Player p;
+  int rc = 1, n=0, offset, i, j;
+  Player *p = malloc(sizeof(Player));
   //printf("Entering proto_client_player_update_handler\n");
   offset = proto_session_body_unmarshall_int(s,0,&n);
   //printf("Receiving %d players\n",n);		\
 
   for(i = 0; i < n; i++) {
-    offset = player_unmarshall(s,offset,&p);
+    offset = player_unmarshall(s,offset,p);
     if (offset < 0)
       return offset;
-    ClientGameState.players[p.team][p.id] = &p;
-
-    
-    printf("\nUpdated player [%d][%d]!\n",p.team,p.id);
-    printf("x = %d, y = %d, state = %d\n\n",
-    	   ClientGameState.players[p.team][p.id]->x,
-    	   ClientGameState.players[p.team][p.id]->y,
-    	   ClientGameState.players[p.team][p.id]->state);
-    
+    playerCopy(&(ClientGameState.players[p->team][p->id]),p);
   }
-  //printf("success!\n");
+  
+  // Error-checking!
+  for(j = 0; j < 2; j++) {
+    for(i = 0; i < MAX_NUM_PLAYERS; i++) {
+      printf("\nPlayer [%d][%d]:\n",j,i);
+      printf("x = %d, y = %d, state = %d\n\n",
+	     ClientGameState.players[j][i].x,
+	     ClientGameState.players[j][i].y,
+	     ClientGameState.players[j][i].state);
+    }
+  }
 
   return 1;
 }
@@ -257,7 +271,7 @@ docmd(Client *C, char * buf)
   
   // Quits
   if (strcmp(cmd,"quit") == 0 || (strcmp(cmd,"q") == 0)) {
-    proto_client_goodbye(C->ph,globals.connection_id,&(globals.player));
+    proto_client_goodbye(C->ph,globals.connection_id,ClientGameState.me);
     return -1;
   }
   
@@ -465,6 +479,7 @@ int
 main(int argc, char **argv)
 {
   Client c;
+  int i,j;
 
   if (clientInit(&c) < 0) {
     fprintf(stderr, "ERROR: clientInit failed\n");
@@ -473,6 +488,15 @@ main(int argc, char **argv)
 	
   bzero(&globals, sizeof(globals));
   bzero(&Board, sizeof(Board));
+  //initialize yourself! (sorta)
+  ClientGameState.me = malloc(sizeof(Player));
+  //initialize players
+  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
+  //set all ids = -1 to show they don't exist yet
+  for(i = 0; i < 2; i++) {
+    for(j = 0; j < MAX_NUM_PLAYERS; j++)
+      ClientGameState.players[i][j].id = -1;
+  }
 
   if (initialShell(&c) == 0) return 0;
 
@@ -484,13 +508,14 @@ main(int argc, char **argv)
 
   // connect to the server
   proto_client_hello(c.ph);
-  printf("My id is %d!\n", globals.connection_id);
 
+  //printf("Registering new player...\n");
   // register as a new player
-  if(proto_client_new_player(c.ph,&(globals.player),&(globals.connection_id)) < 1) {
+  if(proto_client_new_player(c.ph,ClientGameState.me,&(globals.connection_id)) < 1) {
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }
+  printf("My id is %d!\n", globals.connection_id);
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");
