@@ -210,15 +210,11 @@ proto_server_req_dispatcher(void * arg)
 
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
-        printf("Received Message!\n");
         mt = proto_session_hdr_unmarshall_type(&s);
-	printf("Unmarshalled header!\n");
-	printf("mt = %d\n",mt);
 	if(mt < 1)
 	  goto leave;
 	hdlr = Proto_Server.base_req_handlers[mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1];
 	
-	printf("Got to hldr(&s) statement...\n");
 	if (hdlr(&s)<0) goto leave;
     } else {
       goto leave;
@@ -227,6 +223,8 @@ proto_server_req_dispatcher(void * arg)
  leave:
   Proto_Server.session_lost_handler(&s);
   close(s.fd);
+  printf("Attempting to remove s.fd = %d\n",s.fd);
+  remove_player(s.fd);
   return NULL;
 }
 
@@ -492,20 +490,45 @@ game_dump_handler(Proto_Session *s)
 }
 
 static void
-remove_player(int fd_id, Player * p) {
+remove_player(int fd_id) {
+
+  int i;
+  Player *p = NULL;
+
+  for(i = 0; i < MAX_NUM_PLAYERS; i++) {
+    if(GameState.players[0][i] != NULL) {
+      if(GameState.players[0][i]->fd == fd_id) {
+	p = GameState.players[0][i];
+	break;
+      }
+    }
+    if(GameState.players[1][i] != NULL) {
+      if(GameState.players[1][i]->fd == fd_id) {
+	p = GameState.players[1][i];
+	break;
+      }
+    }
+  }
+
+  //Player already removed
+  if (p == NULL) {
+    return;
+  }
+
   // Adjust the gamestate accordingly
   free(GameState.players[p->team][p->id]);
   GameState.players[p->team][p->id] = NULL;
   GameState.numPlayers[p->team]--;
 
+  /*
   // Adjust the EventSubscribers
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
   
   Proto_Server.EventSubscribers[fd_id] = -1;
-  Proto_Server.EventNumSubscribers--;\
+  Proto_Server.EventNumSubscribers--;
 
   pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
-
+  */
   // Update the players
   do_send_players_state();
 }
@@ -524,7 +547,12 @@ goodbye_handler(Proto_Session *s)
   else
     printf("Error!\n");
 
-  remove_player(fd_id, &p);
+  printf("About to remove player... (From goodbye_handler)\n");
+  fd_id = Proto_Server.EventSubscribers[p.fd];
+  printf("p.fd = %d\n", p.fd);
+  printf("fd_id = %d\n", fd_id);
+  //remove_player(p.fd);
+  remove_player(p.fd);
 
   return -1;
 }
@@ -555,25 +583,24 @@ new_player_handler(Proto_Session *s)
   Proto_Msg_Hdr h;
   // nothing to unmarshall.
 
-  printf("Creating a new player!\n");
   // create a new player on a team that has fewer players.
   Player* p = game_create_player(2);
-  printf("Ok, created a new player!\n");
   // remember the id of the connection
-  p->fd = s->fd;
+  p->fd = s->fd; 
+    //Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber-1];
 
-  printf("Marshalling stuff...\n");
+  //printf("Marshalling stuff...\n");
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
   proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
   player_marshall(s, p);
-  printf("Alright, everyting marshalled. Sending the message!\n");
+  //printf("Alright, everyting marshalled. Sending the message!\n");
 
   rc = proto_session_send_msg(s,1);
   //printf("Created player!");
 
-  printf("Finally, updating everything!\n");
+  //printf("Finally, updating everything!\n");
   do_send_players_state();
 
   return rc;

@@ -64,6 +64,17 @@ clientInit(Client *C)
   return 1;
 }
 
+static void
+initializeGameState() {
+  int i,j;
+  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
+  //set all ids = -1 to show they don't exist yet
+  for(i = 0; i < 2; i++) {
+    for(j = 0; j < MAX_NUM_PLAYERS; j++)
+      ClientGameState.players[i][j].id = -1;
+  }
+}
+
 extern int
 disconnect_handler(Proto_Session *s)
 {
@@ -76,6 +87,7 @@ static void
 playerCopy(Player *p1, Player *p2) {
   p1->x = p2->x;
   p1->y = p2->y;
+  p1->id = p2->id;
   p1->state = p2->state;
   p1->team = p2->team;
   p1->flag = p2->flag;
@@ -91,6 +103,7 @@ update_event_handler(Proto_Session *s)
   // n is the number of players that will be sent
   int rc = 1, n=0, offset, i, j;
   Player *p = malloc(sizeof(Player));
+  initializeGameState();
   //printf("Entering proto_client_player_update_handler\n");
   offset = proto_session_body_unmarshall_int(s,0,&n);
   //printf("Receiving %d players\n",n);		\
@@ -103,13 +116,17 @@ update_event_handler(Proto_Session *s)
   }
   
   // Error-checking!
+
+  printf("\n New update!\n");
+
   for(j = 0; j < 2; j++) {
     for(i = 0; i < MAX_NUM_PLAYERS; i++) {
-      printf("\nPlayer [%d][%d]:\n",j,i);
-      printf("x = %d, y = %d, state = %d\n\n",
-	     ClientGameState.players[j][i].x,
-	     ClientGameState.players[j][i].y,
-	     ClientGameState.players[j][i].state);
+      if(ClientGameState.players[j][i].id > -1) {
+	printf("\nPlayer [%d][%d]:\n",j,i);
+	printf("id = %d, fd = %d\n",
+	       ClientGameState.players[j][i].id,
+	       ClientGameState.players[j][i].fd);
+      }
     }
   }
 
@@ -479,7 +496,6 @@ int
 main(int argc, char **argv)
 {
   Client c;
-  int i,j;
 
   if (clientInit(&c) < 0) {
     fprintf(stderr, "ERROR: clientInit failed\n");
@@ -491,12 +507,7 @@ main(int argc, char **argv)
   //initialize yourself! (sorta)
   ClientGameState.me = malloc(sizeof(Player));
   //initialize players
-  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
-  //set all ids = -1 to show they don't exist yet
-  for(i = 0; i < 2; i++) {
-    for(j = 0; j < MAX_NUM_PLAYERS; j++)
-      ClientGameState.players[i][j].id = -1;
-  }
+  initializeGameState();
 
   if (initialShell(&c) == 0) return 0;
 

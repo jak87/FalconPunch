@@ -12,6 +12,15 @@ extern int player_marshall(Proto_Session *s, Player * player)
   rc = proto_session_body_marshall_int(s, player->state);
   if (rc != 1) return rc;
 
+  rc = proto_session_body_marshall_int(s, player->shovel);
+  if (rc != 1) return rc;
+
+  rc = proto_session_body_marshall_int(s, player->flag);
+  if (rc != 1) return rc;
+
+  rc = proto_session_body_marshall_int(s, player->fd);
+  if (rc != 1) return rc;
+
   rc = proto_session_body_marshall_int(s, player->x);
   if (rc != 1) return rc;
 
@@ -21,7 +30,7 @@ extern int player_marshall(Proto_Session *s, Player * player)
 
 extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
 {
-  int id,team,state,x,y;
+  int id,team,state,x,y,fd,shovel,flag;
 
   offset = proto_session_body_unmarshall_int(s, offset, &id);
   if (offset < 0) return offset;
@@ -30,6 +39,15 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   if (offset < 0) return offset;
 
   offset = proto_session_body_unmarshall_int(s, offset, &state);
+  if (offset < 0) return offset;
+
+  offset = proto_session_body_unmarshall_int(s, offset, &shovel);
+  if (offset < 0) return offset;
+
+  offset = proto_session_body_unmarshall_int(s, offset, &flag);
+  if (offset < 0) return offset;
+
+  offset = proto_session_body_unmarshall_int(s, offset, &fd);
   if (offset < 0) return offset;
 
   offset = proto_session_body_unmarshall_int(s, offset, &x);
@@ -44,6 +62,9 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   player->id = id;
   player->team = team;
   player->state = state;
+  player->shovel = shovel;
+  player->flag = flag;
+  player->fd = fd;
   player->x = x;
   player->y = y;
 
