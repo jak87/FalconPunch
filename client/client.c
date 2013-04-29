@@ -515,11 +515,13 @@ main(int argc, char **argv)
 
   //printf("Registering new player...\n");
   // register as a new player
-  if(proto_client_new_player(c.ph,ClientGameState.me,&(globals.connection_id)) < 1) {
+  if(proto_client_new_player(c.ph, &(globals.connection_id)) < 1) {
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }
   printf("My id is %d!\n", globals.connection_id);
+  printf("My player (ClientGameState.me) is:\n");
+  player_dump(ClientGameState.me);
 
   printf("Connected to <%s:%i>\n", globals.host, globals.port);
   printf("For command options, please type 'h'\n");

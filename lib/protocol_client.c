@@ -265,24 +265,30 @@ proto_client_new_player(Proto_Client_Handle ch, int * id)
   marshall_mtonly(s, PROTO_MT_REQ_BASE_NEW_PLAYER);
 
   rc = proto_session_rpc(s);
-
+  printf("Got back from new player RPC\n");
   if (rc != 1)
   {
+	  printf("new player rpc returned -1\n");
 	  c->session_lost_handler(s);
 	  return rc;
   }
   else 
   {
+
+    printf("Will try to unmarshall an int for connection id");
     offset = proto_session_body_unmarshall_int(s,0,id);
+    printf("Unmarshalled id: %d", id);
     rc = player_unmarshall(s,offset, &clientPlayer);
     printf("Got an object for my player\n");
     // put the client player in it's proper place based on team and id.
     player_copy(&(ClientGameState.players[clientPlayer.team][clientPlayer.id]),&clientPlayer);
     printf("Copied it to the game state\n");
+    player_dump(&(ClientGameState.players[clientPlayer.team][clientPlayer.id]));
     // set the ClientGameState.me pointer to this address. This is where our player will
     // be unmarshalled from now on, with every update from the server.
     ClientGameState.me = &(ClientGameState.players[clientPlayer.team][clientPlayer.id]);
     printf("Set the .me pointer\n");
+    player_dump(ClientGameState.me);
   }
 
   //printf("new player id = %d, team = %d\n",p->id,p->team);

@@ -29,7 +29,7 @@ typedef enum {
   PLAYER_JAILED
 } Player_State;
 
-
+void player_dump(Player *p);
 void player_copy(Player *p1, Player *p2);
 int player_marshall(Proto_Session *s, Player * player);
 int player_unmarshall(Proto_Session *s, int offset, Player * player);

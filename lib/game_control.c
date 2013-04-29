@@ -314,6 +314,7 @@ extern int game_move_player(Player* p, Player_Move direction)
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
   {
+
     didMove = game_move_into_wall(p, newCell);
   }
   // if new cell contains another player, handle the collision.

@@ -28,7 +28,7 @@
 #include "net.h"
 #include "maze.h"
 #include "player.h"
-//#include "game_control.h"
+#include "game_control.h"
 
 
 /* A lot of this code comes from http://www.libsdl.org/cgi/docwiki.cgi */
@@ -37,10 +37,10 @@ static void paint_players(UI *ui);
 
 #define MAX_NUM_PLAYERS 5 //per team
 
-struct {
-  Player *me; //For centering
-  Player players[2][MAX_NUM_PLAYERS];
-} ClientGameState;
+//struct {
+//  Player *me; //For centering
+//  Player players[2][MAX_NUM_PLAYERS];
+//} ClientGameState;
 
 #define SPRITE_H 32
 #define SPRITE_W 32
@@ -646,7 +646,7 @@ ui_main_loop(UI *ui, uval h, uval w)
 
   ui_init_sdl(ui, h, w, 32);
 
-  init_test_struct();
+//  init_test_struct();
   ui_center_on_player(ui);
   ui_paintmap(ui);
    

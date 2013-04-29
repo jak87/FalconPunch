@@ -449,14 +449,23 @@ game_move_handler(Proto_Session *s)
   int rc=1;
   Proto_Msg_Hdr h;
 
+  printf("Processing client move from player:\n");
+
   Player clientPlayer;
   int offset = player_unmarshall(s, 0, &clientPlayer);
+
+  player_dump(&clientPlayer);
 
   int direction;
   proto_session_body_unmarshall_int(s, offset, &direction);
 
+  printf("Player wants to move in direction %d\n", direction);
+
   // find the server version of this player
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
+
+  printf("Located server representation of this player:\n");
+  player_dump(serverPlayer);
 
   int value = game_move_player(serverPlayer, (Player_Move) direction);
 

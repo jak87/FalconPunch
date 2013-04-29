@@ -1,12 +1,17 @@
 #include "protocol_session.h"
 #include "player.h"
 
+extern void player_dump(Player *p)
+{
+  printf("Player [team=%d][id=%d] : (x=%d;y=%d)\n", p->team, p->id, p->x, p->y);
+}
 
 extern void player_copy(Player *p1, Player *p2) {
   p1->x = p2->x;
   p1->y = p2->y;
   p1->state = p2->state;
   p1->team = p2->team;
+  p1->id = p2->id;
   p1->flag = p2->flag;
   p1->shovel = p2->shovel;
   p1->fd = p2->fd;
@@ -15,6 +20,10 @@ extern void player_copy(Player *p1, Player *p2) {
 
 extern int player_marshall(Proto_Session *s, Player * player)
 {
+  printf("Marshalling Player:\n");
+  player_dump(player);
+
+
   int rc = proto_session_body_marshall_int(s, player->id);
   if (rc != 1) return rc;
 
@@ -58,6 +67,9 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   player->state = state;
   player->x = x;
   player->y = y;
+
+  printf("Unmarshalled player:\n");
+  player_dump(player);
 
   return offset;
 }
