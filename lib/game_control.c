@@ -97,6 +97,8 @@ extern void game_init()
  */
 void game_set_player_position(Player* p, Cell* c, int updateOldCell)
 {
+  printf("Updating player position to %d,%d\n", c->x, c->y);
+
   if (updateOldCell)
   {
     Cell* oldCell = Board.cells[p->x][p->y];
@@ -239,6 +241,7 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
  */
 int game_move_into_wall(Player* p, Cell* newCell)
 {
+  printf("Moving into a wall\n");
   if (newCell->destructable && p->shovel != 0)
   {
     // TODO: change new cell type
@@ -311,10 +314,13 @@ extern int game_move_player(Player* p, Player_Move direction)
   // calculate new position from current position and direction
   Cell* newCell = findCellForMove(p->x, p->y, direction);
 
+  player_dump(p);
+  printf(" ..wants to move to cell : %d, %d\n", newCell->x, newCell->y);
+
+
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
   {
-
     didMove = game_move_into_wall(p, newCell);
   }
   // if new cell contains another player, handle the collision.

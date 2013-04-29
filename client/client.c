@@ -113,14 +113,14 @@ update_event_handler(Proto_Session *s)
   for(j = 0; j < 2; j++) {
     for(i = 0; i < MAX_NUM_PLAYERS; i++) {
       if(ClientGameState.players[j][i].id > -1) {
-	printf("\nPlayer [%d][%d]:\n",j,i);
-	printf("id = %d, fd = %d\n",
-	       ClientGameState.players[j][i].id,
-	       ClientGameState.players[j][i].fd);
+	    player_dump(&(ClientGameState.players[j][i]));
       }
     }
   }
   printf("Done getting update with all players\n");
+
+  ui_paintmap(ui);
+
   return 1;
 }
 
