@@ -609,8 +609,7 @@ new_player_handler(Proto_Session *s)
   rc = proto_session_send_msg(s,1);
   //printf("Created player!");
 
-  //printf("Finally, updating everything!\n");
-//  do_send_players_state();
+  // No need to update everything. Client hasn't launched ui yet.
 
   return rc;
 }
