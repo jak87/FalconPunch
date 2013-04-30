@@ -122,7 +122,6 @@ int
 main(int argc, char **argv)
 {
 
-  proto_debug_on();
   if (proto_server_init()<0) {
     fprintf(stderr, "ERROR: failed to initialize proto_server subsystem\n");
     exit(-1);

@@ -21,43 +21,43 @@ extern int game_load_board()
   FILE* map = fopen(MAP_PATH, "r");
   if(map == NULL) {return -1; }
   char buf[MAX_BOARD_SIZE];
-  int i = 0;
-  int j = 0;
+  int row = 0;
+  int col = 0;
   while(fgets(buf, MAX_BOARD_SIZE, map) != NULL) {
 	int mid = strlen(buf)/2;
 	Board.size = mid*2;
-	for (j=0; buf[j]; j++) {
-	  Board.cells[i][j] = (Cell *) malloc(sizeof(Cell));
-	  switch(buf[j]) {
+	for (col=0; buf[col]; col++) {
+	  Board.cells[row][col] = (Cell *) malloc(sizeof(Cell));
+	  switch(buf[col]) {
 	  case ' ': //floor cell
-	Board.cells[i][j]->type = ' ';
+	Board.cells[row][col]->type = ' ';
 	Board.total_floor++;
 	break;
 	  case '#': //wall cell
-	Board.cells[i][j]->type = '#';
+	Board.cells[row][col]->type = '#';
 	Board.total_wall++;
 	break;
 	  case 'h': //team1 home cell
-	Board.cells[i][j]->type = 'h';
-	Board.home_cells[0][Board.total_h] = Board.cells[i][j];
+	Board.cells[row][col]->type = 'h';
+	Board.home_cells[0][Board.total_h] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_h++;
 	break;
 	  case 'H': //team2 home cell
-	Board.cells[i][j]->type = 'H';
-	Board.home_cells[1][Board.total_H] = Board.cells[i][j];
+	Board.cells[row][col]->type = 'H';
+	Board.home_cells[1][Board.total_H] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_H++;
 	break;
 	  case 'j': //team1 jail cell
-	Board.cells[i][j]->type = 'j';
-	Board.jail_cells[0][Board.total_j] = Board.cells[i][j];
+	Board.cells[row][col]->type = 'j';
+	Board.jail_cells[0][Board.total_j] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_j++;
 	break;
 	  case 'J': //team2 jail cell
-	Board.cells[i][j]->type = 'J';
-	Board.jail_cells[1][Board.total_J] = Board.cells[i][j];
+	Board.cells[row][col]->type = 'J';
+	Board.jail_cells[1][Board.total_J] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_J++;
 	break;
@@ -67,11 +67,11 @@ extern int game_load_board()
 	fclose(map);
 	return -2;
 	  }
-	  Board.cells[i][j]->x = i;
-	  Board.cells[i][j]->y = j;
-	  Board.cells[i][j]->team = (j<mid) ? 1 : 2;
+	  Board.cells[row][col]->x = col;
+	  Board.cells[row][col]->y = row;
+	  Board.cells[row][col]->team = (col<mid) ? 0 : 1;
 	}
-	i++;
+	row++;
   }
   fclose(map);
 
@@ -101,7 +101,7 @@ void game_set_player_position(Player* p, Cell* c, int updateOldCell)
 
   if (updateOldCell)
   {
-    Cell* oldCell = Board.cells[p->x][p->y];
+    Cell* oldCell = Board.cells[p->y][p->x];
     oldCell->occupant = NULL;
   }
   p->x = c->x;
@@ -124,13 +124,8 @@ void game_set_player_start_position(Player* p)
     i = rand() % Board.total_h;
 
     // TODO: lock stuff
-    // Should be if == -1 or something, since 0 can be a player ID???
 
-    // Actually, shouldn't this be if == NULL since the occupant 
-    // is a player struct, not an int?
-
-    // Changed it to == NULL for the moment. Seems to work.
-    //if (Board.home_cells[p->team][i]->occupant == 0)
+    // Find an unoccupied home cell
     if (Board.home_cells[p->team][i]->occupant == NULL)
     {
       // update position pointers consistently, 3rd parameter is NULL because
@@ -164,14 +159,9 @@ void game_set_player_jail_position(Player* p)
 
 extern Player* game_create_player(int team)
 {
-  //printf("Entering game_create_player\n");
   int i=0, playerTeam;
-  //printf("Allocating player size\n");
+
   Player *p = malloc(sizeof(Player));
-  //printf("Bzeroing player\n");
-  //bzero(&p,sizeof(Player));
-  //printf("Successfully bzeroed!\n");
-  //printf("P's id = %d\n",p->id);
 
   if (team < 2)
 	  playerTeam = team;
@@ -219,10 +209,10 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
   switch (direction)
   {
 	case MOVE_LEFT:
-	  newX++;
+	  newX--;
 	  break;
 	case MOVE_RIGHT:
-	  newX--;
+	  newX++;
 	  break;
 	case MOVE_UP:
 	  newY--;
@@ -232,7 +222,7 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
 	  break;
   }
 
-  return Board.cells[newX][newY];
+  return Board.cells[newY][newX];
 }
 
 
@@ -292,7 +282,7 @@ int game_collide_players(Player* p, Cell* newCell)
     return 1;
   }
   // If you are on enemy territory, you are screwed
-  Cell* oldCell = Board.cells[p->x][p->y];
+  Cell* oldCell = Board.cells[p->y][p->x];
   if (p->team != oldCell->team)
   {
     game_jail_player(p);

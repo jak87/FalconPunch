@@ -390,7 +390,7 @@ ui_center_on_player(UI *ui){
   ui_check_camera_edges(ui);
 }
 
-static sval
+sval
 ui_paintmap(UI *ui) 
 {
 
@@ -412,7 +412,7 @@ static void ui_update_fullMap(UI *ui){
       Cell * cell = Board.cells[i][j];
       switch(cell->type){
       case '#':
-	if (cell->team == 1){si = REDWALL_S; c = ui->wall_teama_c;} 
+	if (cell->team == 0){si = REDWALL_S; c = ui->wall_teama_c;}
 	else{si = GREENWALL_S; c = ui->wall_teamb_c;}
 	break;
       default:

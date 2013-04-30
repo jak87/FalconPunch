@@ -57,13 +57,13 @@ maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
 
   // After all the primitives are unmarshalled correctly,
   // allocate a new cell, and put it's pointer in the board
-  Board.cells[x][y] = (Cell *) malloc(sizeof(Cell));
+  Board.cells[y][x] = (Cell *) malloc(sizeof(Cell));
 
   // Populate the values
-  Board.cells[x][y]->x = x;
-  Board.cells[x][y]->y = y;
-  Board.cells[x][y]->type = type;
-  Board.cells[x][y]->team = team;
+  Board.cells[y][x]->x = x;
+  Board.cells[y][x]->y = y;
+  Board.cells[y][x]->type = type;
+  Board.cells[y][x]->team = team;
 
   // printf("Done with cell [%d][%d]\n",x,y); 
 
