@@ -20,10 +20,6 @@ extern void player_copy(Player *p1, Player *p2) {
 
 extern int player_marshall(Proto_Session *s, Player * player)
 {
-  printf("Marshalling Player:\n");
-  player_dump(player);
-
-
   int rc = proto_session_body_marshall_int(s, player->id);
   if (rc != 1) return rc;
 
@@ -77,9 +73,6 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   offset = proto_session_body_unmarshall_int(s, offset, &y);
   if (offset < 0) return offset;
 
-  //printf("New Player:\nID = %d\nTeam = %d\nState = %d\n(x,y) = (%d,%d)\n",
-  //	 id,team,state,x,y);
-
   player->id = id;
   player->team = team;
   player->state = state;
@@ -88,9 +81,6 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   player->fd = fd;
   player->x = x;
   player->y = y;
-
-  printf("Unmarshalled player:\n");
-  player_dump(player);
 
   return offset;
 }

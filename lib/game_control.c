@@ -307,7 +307,6 @@ extern int game_move_player(Player* p, Player_Move direction)
   player_dump(p);
   printf(" ..wants to move to cell : %d, %d\n", newCell->x, newCell->y);
 
-
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
   {
@@ -318,7 +317,7 @@ extern int game_move_player(Player* p, Player_Move direction)
   {
     didMove = game_collide_players(p, newCell);
   }
-  // if a free player enters its
+  // if a free player enters its team's jail
   else if (p->state != PLAYER_JAILED && ((p->team == 0 && newCell->type == 'j')
 	                                  || (p->team == 1 && newCell->type == 'J')))
   {
@@ -326,8 +325,16 @@ extern int game_move_player(Player* p, Player_Move direction)
     game_free_jailed_players(p->team);
     didMove = 1;
   }
+  // if a player is jailed and tries to move outside its team's jail
+  else if (p->state == PLAYER_JAILED && !((p->team == 0 && newCell->type == 'j')
+                                       || (p->team == 1 && newCell->type == 'J')))
+  {
+	  // do nothing, can't move outside your own jail
+	  didMove = 0;
+  }
   else
   {
+
     // All other cases, just move
     game_set_player_position(p, newCell, 1);
     didMove = 1;
