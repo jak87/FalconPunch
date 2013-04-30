@@ -279,6 +279,7 @@ ost");
       }
       else {
         sprintf(globals.host, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+        globals.port = port;
         return 1;
       }
     } 
