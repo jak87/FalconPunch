@@ -22,6 +22,7 @@
 * THE SOFTWARE.
 *****************************************************************************/
 
+#include <sys/types.h>
 #include <stdio.h>
 
 typedef int FDType;
