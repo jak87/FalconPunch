@@ -76,20 +76,7 @@ void ui_update(UI *ui);
 void ui_quit(UI *ui);
 void ui_main_loop(UI *ui, uval h, uval w);
 void ui_init(UI **ui);
+sval ui_center_on_player(UI *ui);
 
-
-// DUMMY TEST CALLS
-int ui_left(UI *ui);
-int ui_right(UI *ui); 
-int ui_down(UI *ui);
-int ui_up(UI *ui);
-//int ui_dummy_normal(UI *ui);
-//int ui_dummy_pickup_red(UI *ui);
-//int ui_dummy_pickup_green(UI *ui);
-//int ui_dummy_jail(UI *ui);
-//int ui_dummy_toggle_team(UI *ui);
-//int ui_dummy_inc_id(UI *ui);
-
-sval ui_paintmap(UI *ui);
 
 #endif

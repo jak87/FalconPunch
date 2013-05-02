@@ -379,8 +379,7 @@ ui_check_camera_edges(UI *ui){
   }
 }
 
-static sval
-ui_center_on_player(UI *ui){
+sval ui_center_on_player(UI *ui){
   int player_x = ClientGameState.me->x * ui->tile_w;
   int player_y = ClientGameState.me->y * ui->tile_h;
 
@@ -390,7 +389,7 @@ ui_center_on_player(UI *ui){
   ui_check_camera_edges(ui);
 }
 
-sval
+static sval
 ui_paintmap(UI *ui) 
 {
 
