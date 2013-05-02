@@ -258,6 +258,7 @@ proto_client_new_player(Proto_Client_Handle ch, int * id)
   Proto_Session *s;
   Proto_Client *c = ch;
   Player clientPlayer;
+  memset(&clientPlayer, '\0', sizeof(clientPlayer));
   s = &(c->rpc_session);
 
   //printf("Requesting to create a new player...\n\n");
