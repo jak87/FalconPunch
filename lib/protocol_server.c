@@ -472,6 +472,7 @@ game_move_handler(Proto_Session *s)
   proto_session_hdr_marshall(s, &h);
 
   proto_session_body_marshall_int(s, value);
+  player_marshall(s, serverPlayer);
 
   rc = proto_session_send_msg(s,1);
 

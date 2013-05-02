@@ -324,7 +324,8 @@ proto_client_move(Proto_Client_Handle ch, Player_Move direction)
   }
   else
   {
-	proto_session_body_unmarshall_int(s, 0, &rc);
+	offset = proto_session_body_unmarshall_int(s, 0, &rc);
+	player_unmarshall(s, offset, ClientGameState.me);
   }
 
   if (rc < 0) printf("player move Error!\n");
