@@ -119,7 +119,7 @@ update_event_handler(Proto_Session *s)
   }
   printf("Done getting update with all players\n");
 
-  ui_paintmap(ui);
+  ui_update(ui);
 
   return 1;
 }
