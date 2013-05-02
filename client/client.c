@@ -119,7 +119,7 @@ update_event_handler(Proto_Session *s)
   }
   printf("Done getting update with all players\n");
 
-  ui_paintmap(ui);
+  ui_update(ui);
 
   return 1;
 }
@@ -197,30 +197,34 @@ game_process_reply(Client *C)
 extern sval
 ui_keypress(UI *ui, SDL_KeyboardEvent *e)
 {
+  int rc;
   SDLKey sym = e->keysym.sym;
   SDLMod mod = e->keysym.mod;
 
   if (e->type == SDL_KEYDOWN) {
     if (sym == SDLK_LEFT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move left\n", __func__);
-      return proto_client_move(globals.client_inst->ph, MOVE_LEFT);
-//      return ui_left(ui);
+      rc = proto_client_move(globals.client_inst->ph, MOVE_LEFT);
+      ui_center_on_player(ui);
+      return rc;
     }
     if (sym == SDLK_RIGHT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move right\n", __func__);
-      return proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
-
-      //return ui_right(ui);
+      rc = proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
+      ui_center_on_player(ui);
+      return rc;
     }
     if (sym == SDLK_UP && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: move up\n", __func__);
-      return proto_client_move(globals.client_inst->ph, MOVE_UP);
-      //return ui_up(ui);
+      rc = proto_client_move(globals.client_inst->ph, MOVE_UP);
+      ui_center_on_player(ui);
+      return rc;
     }
     if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
       fprintf(stderr, "%s: move down\n", __func__);
-      return proto_client_move(globals.client_inst->ph, MOVE_DOWN);
-//      return ui_down(ui);
+      rc = proto_client_move(globals.client_inst->ph, MOVE_DOWN);
+      ui_center_on_player(ui);
+      return rc;
     }
     if (sym == SDLK_r && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: dummy pickup red flag\n", __func__);
