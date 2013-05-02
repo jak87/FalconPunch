@@ -304,7 +304,7 @@ extern int game_move_player(Player* p, Player_Move direction)
   // calculate new position from current position and direction
   Cell* newCell = findCellForMove(p->x, p->y, direction);
 
-  player_dump(p);
+//  player_dump(p);
   printf(" ..wants to move to cell : %d, %d\n", newCell->x, newCell->y);
 
   // if new cell is a wall, check if we can destroy it.
