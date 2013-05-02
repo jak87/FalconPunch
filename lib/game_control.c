@@ -83,6 +83,8 @@ extern void game_init()
 {
   bzero(&GameState, sizeof(GameState));
 
+  pthread_mutex_init(&GameState.masterLock, 0);
+
   game_load_board();
 
   GameState.gameStatus = 0;
@@ -117,13 +119,13 @@ void game_set_player_start_position(Player* p)
   int i,success = 0;
   srand(time(NULL));
 
+  pthread_mutex_lock(&GameState.masterLock);
+
   while (success == 0)
   {
     // we'll be in trouble if no home cell is available...
     // assuming total_h = total_H
     i = rand() % Board.total_h;
-
-    // TODO: lock stuff
 
     // Find an unoccupied home cell
     if (Board.home_cells[p->team][i]->occupant == NULL)
@@ -135,6 +137,8 @@ void game_set_player_start_position(Player* p)
       printf("Player position = Board.home_cells[%d][%d]\n\n",p->team,i);
     }
   }
+
+  pthread_mutex_unlock(&GameState.masterLock);
 
 }
 
@@ -299,13 +303,13 @@ extern int game_move_player(Player* p, Player_Move direction)
 {
   int didMove = 0;
 
-  //TODO: lock
+  pthread_mutex_lock(&GameState.masterLock);
 
   // calculate new position from current position and direction
   Cell* newCell = findCellForMove(p->x, p->y, direction);
 
 //  player_dump(p);
-  printf(" ..wants to move to cell : %d, %d\n", newCell->x, newCell->y);
+  printf(" ..wants to move to cell : %d, %d = %c\n", newCell->x, newCell->y, newCell->type);
 
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
@@ -340,6 +344,6 @@ extern int game_move_player(Player* p, Player_Move direction)
     didMove = 1;
   }
 
-  //TODO: unlock
+  pthread_mutex_unlock(&GameState.masterLock);
   return didMove;
 }
