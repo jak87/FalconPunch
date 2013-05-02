@@ -70,7 +70,7 @@ clientInit(Client *C)
 static void
 initializeGameState() {
   int i,j;
-  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
+//  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
   //set all ids = -1 to show they don't exist yet
   for(i = 0; i < 2; i++) {
     for(j = 0; j < MAX_NUM_PLAYERS; j++)
