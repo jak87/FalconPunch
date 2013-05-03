@@ -13,6 +13,7 @@ typedef struct {
   int y;
   char type;
   int team;
+  // TODO: make outer walls and walls around home and jail indestructable
   int destructable;
   Player* occupant;
 } Cell;
@@ -21,6 +22,7 @@ struct {
   Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
   Cell* home_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
   Cell* jail_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
+  Cell* shovel_home[2];
   int total_wall;
   int total_floor;
   int total_j;

@@ -2,6 +2,7 @@
 #include "protocol.h"
 #include "protocol_session.h"
 #include "maze.h"
+#include "objects.h"
 #include "player.h"
 #include "game_control.h"
 
@@ -39,12 +40,16 @@ extern int game_load_board()
 	break;
 	  case 'h': //team1 home cell
 	Board.cells[row][col]->type = 'h';
+	// set the first home cell of team 0 to be the home location for their shovel
+    if (Board.shovel_home[0] == NULL) Board.shovel_home[0] = Board.cells[row][col];
 	Board.home_cells[0][Board.total_h] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_h++;
 	break;
 	  case 'H': //team2 home cell
 	Board.cells[row][col]->type = 'H';
+	// set the last home cell of team 1 to be the home location for their shovel
+	Board.shovel_home[1] = Board.cells[row][col];
 	Board.home_cells[1][Board.total_H] = Board.cells[row][col];
 	Board.total_floor++;
 	Board.total_H++;
@@ -79,6 +84,52 @@ extern int game_load_board()
   return rc;
 }
 
+extern int game_set_object_start_position(Object* object)
+{
+  int x,y,success = 0;
+  srand(time(NULL));
+
+  pthread_mutex_lock(&(GameState.masterLock));
+
+  while (success == 0)
+  {
+    // we should hit an empty cell sooner or later
+    y = rand() % Board.size;
+	x = rand() % (Board.size / 2);
+
+	// adjust x according to team
+	x = x + (Board.size / 2) * object->team;
+
+	// see if cell is available
+//	if (Board.cells[y][x]->occupant == NULL)
+//	{
+	  // update position pointers consistently, 3rd parameter is NULL because
+	  // this is a new player and wasn't in any cell before now.
+//	  game_set_player_position(p, Board.home_cells[p->team][i], 0);
+	  success = 1;
+//	}
+  }
+
+  pthread_mutex_unlock(&(GameState.masterLock));
+  return success;
+}
+
+
+extern int game_init_objects()
+{
+  int i;
+
+  for (i = 0; i < 4; i++)
+  {
+    GameState.objects[i].visible = 1;
+    GameState.objects[i].team = i % 2;
+    GameState.objects[i].type = i<2 ? FLAG : SHOVEL;
+    game_set_object_start_position(&(GameState.objects[i]));
+  }
+
+  return 1;
+}
+
 extern void game_init()
 {
   bzero(&GameState, sizeof(GameState));
@@ -86,6 +137,7 @@ extern void game_init()
   pthread_mutex_init(&(GameState.masterLock), 0);
 
   game_load_board();
+  game_init_objects();
 
   GameState.gameStatus = 0;
   GameState.numPlayers[0] = 0;
@@ -252,7 +304,7 @@ void game_free_jailed_players(int team)
     if (GameState.players[team][i] != NULL && GameState.players[team][i]->state == PLAYER_JAILED)
     {
       // TODO: handle other state (freed player cannot be tagged and cannot pick up stuff until it goes back)
-      GameState.players[team][i]->state = PLAYER_FREE;
+      GameState.players[team][i]->state = PLAYER_NORMAL;
     }
   }
 }

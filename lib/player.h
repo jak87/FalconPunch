@@ -8,8 +8,7 @@ typedef enum {
   PLAYER_NORMAL,
   PLAYER_OWN_FLAG,
   PLAYER_OPPONENT_FLAG,
-  PLAYER_JAILED,
-  PLAYER_FREE
+  PLAYER_JAILED
 } Player_State;
 
 typedef enum  {
@@ -26,7 +25,6 @@ typedef struct {
   int y;
   int team;
   Player_State state;
-  // 0 = no shovel, 1 = team 0's shovel, 2 = team 1's shovel
   int shovel;
   FDType fd;
   UI_Player * uip;
