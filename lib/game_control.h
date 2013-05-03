@@ -13,6 +13,7 @@ struct {
   Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
+  pthread_mutex_t masterLock;
 } GameState;
 
 struct {
