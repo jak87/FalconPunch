@@ -13,12 +13,14 @@ struct {
   Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
+  Flag flags[2];
   pthread_mutex_t masterLock;
 } GameState;
 
 struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
+  Flag flags[2];
   int gameStatus;
   pthread_mutex_t masterLock;
 } ClientGameState;

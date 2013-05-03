@@ -4,18 +4,12 @@
 #include "net.h"
 #include "uistandalone.h"
 
-typedef struct {
-  // if id == -1, player is inactive 
-  int id;
-  int x;
-  int y;
-  int team;
-  int state;
-  int flag;
-  int shovel;
-  FDType fd;
-  UI_Player * uip;
-} Player;
+typedef enum {
+  PLAYER_NORMAL,
+  PLAYER_OWN_FLAG,
+  PLAYER_OPPONENT_FLAG,
+  PLAYER_JAILED
+} Player_State;
 
 typedef enum  {
   MOVE_LEFT,
@@ -24,10 +18,19 @@ typedef enum  {
   MOVE_DOWN
 } Player_Move;
 
-typedef enum {
-  PLAYER_FREE,
-  PLAYER_JAILED
-} Player_State;
+typedef struct {
+  // if id == -1, player is inactive 
+  int id;
+  int x;
+  int y;
+  int team;
+  Player_State state;
+  int flag;
+  int shovel;
+  FDType fd;
+  UI_Player * uip;
+} Player;
+
 
 void player_dump(Player *p);
 void player_copy(Player *p1, Player *p2);
