@@ -59,6 +59,10 @@ clientInit(Client *C)
 {
   bzero(C, sizeof(Client));
 
+  bzero(&ClientGameState, sizeof(ClientGameState));
+
+  pthread_mutex_init(&(ClientGameState.masterLock), 0);
+
   // initialize the client protocol subsystem
   if (proto_client_init(&(C->ph))<0) {
     fprintf(stderr, "client: main: ERROR initializing proto system\n");
@@ -70,7 +74,6 @@ clientInit(Client *C)
 static void
 initializeGameState() {
   int i,j;
-//  bzero(&(ClientGameState.players), sizeof(ClientGameState.players));
   //set all ids = -1 to show they don't exist yet
   for(i = 0; i < 2; i++) {
     for(j = 0; j < MAX_NUM_PLAYERS; j++)
@@ -94,6 +97,10 @@ update_event_handler(Proto_Session *s)
   // n is the number of players that will be sent
   int rc = 1, n=0, offset, i, j;
   Player *p = malloc(sizeof(Player));
+
+  // Lock while updating values on the client players array.
+  pthread_mutex_lock(&(ClientGameState.masterLock));
+
   initializeGameState();
   //printf("Entering proto_client_player_update_handler\n");
   offset = proto_session_body_unmarshall_int(s,0,&n);
@@ -105,7 +112,7 @@ update_event_handler(Proto_Session *s)
       return offset;
     player_copy(&(ClientGameState.players[p->team][p->id]),p);
   }
-  
+  pthread_mutex_unlock(&(ClientGameState.masterLock));
   // Error-checking!
 
   //printf("\n New update!\n");

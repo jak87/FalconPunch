@@ -20,6 +20,7 @@ struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
   int gameStatus;
+  pthread_mutex_t masterLock;
 } ClientGameState;
 
 extern int game_load_board();
