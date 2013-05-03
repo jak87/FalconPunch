@@ -602,7 +602,6 @@ ui_update(UI *ui)
   
   event.type      = SDL_USEREVENT;
   event.user.code = UI_SDLEVENT_UPDATE;
-  printf("UI pushing event...\n");
   SDL_PushEvent(&event);
 
 }

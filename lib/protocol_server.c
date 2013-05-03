@@ -169,12 +169,20 @@ proto_server_post_event(void)
       num--;
       // try to send the message, without resetting it
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
+
+	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
+	close(Proto_Server.EventSession.fd);
+	printf("Attempting to remove s.fd = %d\n",Proto_Server.EventSession.fd);
+	remove_player(Proto_Server.EventSession.fd);
+
+	/*
 	// must have lost an event connection
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
 	printf("Lost the event connection!\n");
 	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
+	*/
       } 
       // FIXME: add ack message here to ensure that game is updated 
       // correctly everywhere... at the risk of making server dependent
@@ -251,7 +259,6 @@ proto_server_rpc_listen(void *arg)
       pthread_create(&tid, NULL, &proto_server_req_dispatcher,
 		     (void *)connfd);
     }
-    printf("AH!\n");
   }
 }
 
@@ -335,7 +342,7 @@ static int do_send_players_state()
 
   //TODO: lock, handle errors
 
-  printf("Marshalling the total number of players...\n");
+  //printf("Marshalling the total number of players...\n");
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);
 
@@ -349,7 +356,7 @@ static int do_send_players_state()
       player_marshall(s, GameState.players[1][i]);
   }
 
-  printf("Posting event!\n");
+  //printf("Posting event!\n");
   proto_server_post_event();
 
   return 1;
@@ -447,7 +454,7 @@ game_move_handler(Proto_Session *s)
   int rc=1;
   Proto_Msg_Hdr h;
 
-  printf("Processing client move from player:\n");
+  //printf("Processing client move from player:\n");
 
   Player clientPlayer;
   int offset = player_unmarshall(s, 0, &clientPlayer);
@@ -457,13 +464,13 @@ game_move_handler(Proto_Session *s)
   int direction;
   proto_session_body_unmarshall_int(s, offset, &direction);
 
-  printf("Player wants to move in direction %d\n", direction);
+  //printf("Player wants to move in direction %d\n", direction);
 
   // find the server version of this player
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
 
-  printf("Located server representation of this player:\n");
-  player_dump(serverPlayer);
+  //printf("Located server representation of this player:\n");
+  //player_dump(serverPlayer);
 
   int value = game_move_player(serverPlayer, (Player_Move) direction);
 
@@ -530,7 +537,7 @@ remove_player(int fd_id) {
   GameState.players[p->team][p->id] = NULL;
   GameState.numPlayers[p->team]--;
 
-  /*
+  
   // Adjust the EventSubscribers
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
   
@@ -538,7 +545,7 @@ remove_player(int fd_id) {
   Proto_Server.EventNumSubscribers--;
 
   pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
-  */
+  
   // Update the players
   do_send_players_state();
 }

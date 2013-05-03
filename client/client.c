@@ -108,20 +108,21 @@ update_event_handler(Proto_Session *s)
   
   // Error-checking!
 
-  printf("\n New update!\n");
+  //printf("\n New update!\n");
 
+  /*
   for(j = 0; j < 2; j++) {
     for(i = 0; i < MAX_NUM_PLAYERS; i++) {
       if(ClientGameState.players[j][i].id > -1) {
 	    player_dump(&(ClientGameState.players[j][i]));
       }
     }
-  }
-  printf("Done getting update with all players\n");
+    }*/
+  //printf("Done getting update with all players\n");
 
   ui_update(ui);
 
-  printf("UI Updated!\n");
+  //printf("UI Updated!\n");
 
   return 1;
 }
@@ -207,27 +208,27 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
     if (sym == SDLK_LEFT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move left\n", __func__);
       rc = proto_client_move(globals.client_inst->ph, MOVE_LEFT);
-      //ui_center_on_player(ui);
+      ui_center_on_player(ui);
       return rc;
     }
     if (sym == SDLK_RIGHT && mod == KMOD_NONE) {
       fprintf(stderr, "%s: move right\n", __func__);
       rc = proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
-      //ui_center_on_player(ui);
+      ui_center_on_player(ui);
       return rc;
     }
     if (sym == SDLK_UP && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: move up\n", __func__);
       rc = proto_client_move(globals.client_inst->ph, MOVE_UP);
       printf("Attempting to center...\n");
-      //ui_center_on_player(ui);
+      ui_center_on_player(ui);
       printf("Centered!\n");
       return rc;
     }
     if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
       fprintf(stderr, "%s: move down\n", __func__);
       rc = proto_client_move(globals.client_inst->ph, MOVE_DOWN);
-      //ui_center_on_player(ui);
+      ui_center_on_player(ui);
       return rc;
     }
     if (sym == SDLK_r && mod == KMOD_NONE)  {  
