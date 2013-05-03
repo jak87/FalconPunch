@@ -3,11 +3,19 @@
 
 //#include "net.h"
 //#include "protocol.h"
+#include "objects.h"
 #include "protocol_session.h"
 #include "maze.h"
 #include "player.h"
 
 #define MAX_NUM_PLAYERS 5
+
+// Won't include from objects.h for some reason
+typedef struct {
+  int x;
+  int y;
+  int team;
+} Flag, Shovel;
 
 struct {
   Player *players[2][MAX_NUM_PLAYERS];

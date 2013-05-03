@@ -158,34 +158,31 @@ proto_server_post_event(void)
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
 
   i = 0;
+  printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
   num = Proto_Server.EventNumSubscribers;
 
   fprintf(stderr, "Server will send updates to %i subscribers\n\n", num);
 
-  while (num) {
-    fprintf(stderr, "Send update to subscriber\n");
+  while (num) { 
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
     if (Proto_Server.EventSession.fd != -1) {
       num--;
       // try to send the message, without resetting it
+      fprintf(stderr, "Send update to subscriber\n");
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 
-	fprintf(stderr, "This shouldn't be happening!\n");
-
-	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
-	close(Proto_Server.EventSession.fd);
-	printf("Attempting to remove s.fd = %d\n",Proto_Server.EventSession.fd);
-	remove_player(Proto_Server.EventSession.fd);
-
-	/*
-	// must have lost an event connection
+	fprintf(stderr, "\nPost_Event has encountered a dead player!\n");
+	printf("Event Update Failed, removing dead player...\n");
+     
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
-	printf("Lost the event connection!\n");
-	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
-	*/
-      } 
+	//Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
+      } else {
+	printf("Event Update was Successful! (fd = %d)\n", 
+	       Proto_Server.EventSession.fd);
+      }
+
       // FIXME: add ack message here to ensure that game is updated 
       // correctly everywhere... at the risk of making server dependent
       // on client behaviour  (use time out to limit impact... drop
@@ -218,9 +215,14 @@ proto_server_req_dispatcher(void * arg)
   fprintf(stderr, "proto_rpc_dispatcher: %p: Started: fd=%d\n", 
 	  pthread_self(), s.fd);
 
+  // Listening for RPCs
   for (;;) {
     if (proto_session_rcv_msg(&s)==1) {
         mt = proto_session_hdr_unmarshall_type(&s);
+
+	// if mt == 0 (which is would in case of a disconnect),
+	// then it requests Proto_Server.base_req_handlers[-1]
+	// (thus segfaulting!), so disconnect the RPC!
 	if(mt < 1)
 	  goto leave;
 	hdlr = Proto_Server.base_req_handlers[mt - PROTO_MT_REQ_BASE_RESERVED_FIRST - 1];
@@ -231,9 +233,9 @@ proto_server_req_dispatcher(void * arg)
     }
   }
  leave:
-  Proto_Server.session_lost_handler(&s);
+  //Proto_Server.session_lost_handler(&s);
   close(s.fd);
-  printf("Attempting to remove s.fd = %d\n",s.fd);
+  printf("Attempting to remove s.fd = %d (From req_dispatcher)\n",s.fd);
   remove_player(s.fd);
   return NULL;
 }
@@ -283,8 +285,8 @@ proto_server_start_rpc_loop(void)
 static int 
 proto_session_lost_default_handler(Proto_Session *s)
 {
-  fprintf(stderr, "Session lost...:\n");
-  proto_session_dump(s);
+  //fprintf(stderr, "Session lost...:\n");
+  //proto_session_dump(s);
   return -1;
 }
 
@@ -531,6 +533,7 @@ remove_player(int fd_id) {
 
   //Player already removed
   if (p == NULL) {
+    printf("The player was already removed\n");
     return;
   }
 
@@ -539,16 +542,9 @@ remove_player(int fd_id) {
   GameState.players[p->team][p->id] = NULL;
   GameState.numPlayers[p->team]--;
   free(GameState.players[p->team][p->id]);
+  
+  printf("Player should be successfully removed!\n");
 
-  
-  // Adjust the EventSubscribers
-  pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
-  
-  Proto_Server.EventSubscribers[fd_id] = -1;
-  Proto_Server.EventNumSubscribers--;
-
-  pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
-  
   // Update the players
   do_send_players_state();
 }
@@ -570,7 +566,7 @@ goodbye_handler(Proto_Session *s)
   printf("About to remove player... (From goodbye_handler)\n");
   fd_id = Proto_Server.EventSubscribers[p.fd];
   printf("p.fd = %d\n", p.fd);
-  printf("fd_id = %d\n", fd_id);
+  //printf("fd_id = %d\n", fd_id);
   //remove_player(p.fd);
   remove_player(p.fd);
 
