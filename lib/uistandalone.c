@@ -379,7 +379,7 @@ ui_check_camera_edges(UI *ui){
   }
 }
 
-sval ui_center_on_player(UI *ui){
+void ui_center_on_player(UI *ui){
   int player_x = ClientGameState.me->x * ui->tile_w;
   int player_y = ClientGameState.me->y * ui->tile_h;
 
@@ -553,7 +553,7 @@ ui_process(UI *ui)
 extern sval
 ui_zoom(UI *ui, sval fac)
 {
-  SDL_FillRect(ui->fullMap, 0, ui->black_c);
+  SDL_FillRect(ui->fullMap, NULL, ui->black_c);
   (ui->currentZoom = ((fac > 0) ? ui->currentZoom + 1 : ui->currentZoom-1) % 3);
   switch(ui->currentZoom){
   case 0:
@@ -587,14 +587,6 @@ ui_pan(UI *ui, sval xdir, sval ydir)
   return 2;
 }
 
-extern sval
-ui_move(UI *ui, sval xdir, sval ydir)
-{
-  fprintf(stderr, "%s:\n", __func__);
-  return 1;
-}
-
-
 extern void
 ui_update(UI *ui)
 {
@@ -617,25 +609,6 @@ ui_quit(UI *ui)
   SDL_PushEvent(&event);
 }
 
-static void
-init_test_struct(){
-  int i, j;
-  Player *p;
-  srand(time(NULL));
-  for(i = 0; i < 2; i++){
-    for(j = 0; j < MAX_NUM_PLAYERS; j++){
-      p = &ClientGameState.players[i][j];
-      p->id = j;
-      p->x = rand() % Board.size;
-      p->y = rand() % Board.size;
-      p->team = i;
-      p->state = 0;
-      p->uip = NULL;
-    }
-  }
-  ClientGameState.me = &(ClientGameState.players[rand() % 2][rand() % MAX_NUM_PLAYERS]);
-}
-
 extern void
 ui_main_loop(UI *ui, uval h, uval w)
 {
@@ -645,7 +618,6 @@ ui_main_loop(UI *ui, uval h, uval w)
 
   ui_init_sdl(ui, h, w, 32);
 
-//  init_test_struct();
   ui_center_on_player(ui);
   ui_paintmap(ui);
    
@@ -685,23 +657,24 @@ paint_players(UI *ui)
   int max_x = (ui->camera.w / t.w) + start_x;
   int start_y = ui->camera.y / t.h;
   int max_y = (ui->camera.h / t.h) + start_y;
-  
-  //this is just for testing to make sure im on the right track
+
+  pthread_mutex_lock(&ClientGameState.masterLock);
   Player *player;
   int i, j;
   for (i = 0; i < 2; i++){
     for(j = 0; j < MAX_NUM_PLAYERS; j++){
+      //negative id denotes player not in play
       if((player = &ClientGameState.players[i][j])->id < 0){continue;}
+      //initializes uip if first time player is drawn
       if(player->uip == NULL){ui_player_init(ui, player);}
       if((player->x >= start_x) && (player->x < max_x) &&
 	 (player->y >= start_y) && (player->y < max_y)){
 	t.x = (player->x - start_x) * t.w;
 	t.y = (player->y - start_y) * t.h;
-	fprintf(stderr, "id:%d\npx offsets x:%d y:%d\nraw x:%d y%d\n", player->id, t.x, t.y, player->x, player->y);
+	//check tile size, if != sprite then draws circles instead
 	if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
 	  player->uip->clip.x = player->uip->base_clip_x +
 	    pxSpriteOffSet(player->team, player->state);
-	  fprintf(stderr, "sprite clip%d\n", player->uip->clip.x);
 	  SDL_BlitSurface(player->uip->img, &(player->uip->clip), ui->screen, &t);
 	}
 	else{
@@ -711,119 +684,5 @@ paint_players(UI *ui)
       }
     }
   }
-}
-
-int
-ui_left(UI *ui)
-{
-  //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[ClientGameState.me->y][ClientGameState.me->x-1]->type != '#'){  
-    ClientGameState.me->x--;
-  }
-  //pthread_mutex_unlock(&dummyPlayer.lock);
-  ui_center_on_player(ui);
-  return 2;
-}
-
-int
-ui_right(UI *ui)
-{
-  //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[ClientGameState.me->y][ClientGameState.me->x+1]->type != '#'){  
-    ClientGameState.me->x++;
-  }
-  //pthread_mutex_unlock(&dummyPlayer.lock);
-  ui_center_on_player(ui);
-  return 2;
-}
-
-int
-ui_down(UI *ui)
-{
-  //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[ClientGameState.me->y+1][ClientGameState.me->x]->type != '#'){  
-    ClientGameState.me->y++;
-  }
-  //pthread_mutex_unlock(&dummyPlayer.lock);
-  ui_center_on_player(ui);
-  return 2;
-}
-
-int
-ui_up(UI *ui)
-{
-  //pthread_mutex_lock(&dummyPlayer.lock);
-  if(Board.cells[ClientGameState.me->y-1][ClientGameState.me->x]->type != '#'){  
-    ClientGameState.me->y--;
-  }
-  //pthread_mutex_unlock(&dummyPlayer.lock);
-  ui_center_on_player(ui);
-  return 2;
-}
-
-/*int
-ui_dummy_normal(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    dummyPlayer.state = 0;
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-}
-
-int
-ui_dummy_pickup_red(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    dummyPlayer.state = 1;
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-  }*/
-
- /*int
-ui_dummy_pickup_green(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    dummyPlayer.state = 2;
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-  }*/
-
-
-  /*int
-ui_dummy_jail(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    dummyPlayer.state = 3;
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-  }
-
-int
-ui_dummy_toggle_team(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    if (dummyPlayer.uip) free(dummyPlayer.uip);
-    dummyPlayer.team = (dummyPlayer.team) ? 0 : 1;
-    ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team);
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-}
-
-int
-ui_dummy_inc_id(UI *ui)
-{
-  pthread_mutex_lock(&dummyPlayer.lock);
-    if (dummyPlayer.uip) free(dummyPlayer.uip);
-    dummyPlayer.id++;
-    if (dummyPlayer.id>=100) dummyPlayer.id = 0;
-    ui_uip_init(ui, &dummyPlayer.uip, dummyPlayer.id, dummyPlayer.team);
-  pthread_mutex_unlock(&dummyPlayer.lock);
-  return 2;
-  }*/
-
-int
-ui_inc_state(){
-  int *s = &ClientGameState.me->state;
-  *s = (*s +1) % 4;
-  return 2;
+  pthread_mutex_unlock(&ClientGameState.masterLock);
 }
