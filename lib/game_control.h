@@ -58,4 +58,7 @@ extern Player* game_create_player(int team);
  */
 extern int game_move_player(Player* p, Player_Move direction);
 
+extern int game_player_pickup(Player* p);
+extern int game_player_drop(Player* p);
+
 #endif

@@ -12,7 +12,6 @@ extern void player_copy(Player *p1, Player *p2) {
   p1->state = p2->state;
   p1->team = p2->team;
   p1->id = p2->id;
-  p1->flag = p2->flag;
   p1->shovel = p2->shovel;
   p1->fd = p2->fd;
 }

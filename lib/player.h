@@ -26,7 +26,7 @@ typedef struct {
   int y;
   int team;
   Player_State state;
-  int flag;
+  // 0 = no shovel, 1 = team 0's shovel, 2 = team 1's shovel
   int shovel;
   FDType fd;
   UI_Player * uip;
