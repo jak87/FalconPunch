@@ -698,7 +698,7 @@ paint_objects(UI *ui){
   int start_y = ui->camera.y / t.h;
   int max_y = (ui->camera.h / t.h) + start_y;
   int i = 0;
-  uint32 c;
+  uint32_t c;
   SPRITE_INDEX si;
   Object obj;
 
@@ -710,11 +710,11 @@ paint_objects(UI *ui){
       if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
 	si = (obj.type == SHOVEL) ? JACKHAMMER_S : ((obj.team) ? 
 						    GREENFLAG_S : REDFLAG_S);
-	SDL_BlitSurface(ui->sprites[si], NULL, ui->screen, &t);
+	SDL_BlitSurface(ui->sprites[si].img, NULL, ui->screen, &t);
       }
       else{
         c = (obj.type == SHOVEL) ? ui->jackhammer_c :
-	  ((obj.team) ? ui->flag_teamb_c : ui->flag_teama_c)
+	  ((obj.team) ? ui->flag_teamb_c : ui->flag_teama_c);
         ui_draw_circle(ui->screen, &t, c);
       }//if
     }//if
