@@ -83,7 +83,7 @@ extern void game_init()
 {
   bzero(&GameState, sizeof(GameState));
 
-  pthread_mutex_init(&GameState.masterLock, 0);
+  pthread_mutex_init(&(GameState.masterLock), 0);
 
   game_load_board();
 
@@ -119,7 +119,7 @@ void game_set_player_start_position(Player* p)
   int i,success = 0;
   srand(time(NULL));
 
-  pthread_mutex_lock(&GameState.masterLock);
+  pthread_mutex_lock(&(GameState.masterLock));
 
   while (success == 0)
   {
@@ -138,7 +138,7 @@ void game_set_player_start_position(Player* p)
     }
   }
 
-  pthread_mutex_unlock(&GameState.masterLock);
+  pthread_mutex_unlock(&(GameState.masterLock));
 
 }
 
@@ -163,9 +163,8 @@ void game_set_player_jail_position(Player* p)
 
 extern Player* game_create_player(int team)
 {
+  // TODO: do we need to lock here?
   int i=0, playerTeam;
-
-  Player *p = malloc(sizeof(Player));
 
   if (team < 2)
 	  playerTeam = team;
@@ -186,22 +185,18 @@ extern Player* game_create_player(int team)
       GameState.numPlayers[playerTeam]++;
       // assign id. 2 players can have the same id, as long as they
       // are on different teams
+      Player *p = malloc(sizeof(Player));
       p->id = i;
       p->team = playerTeam;
+
+      //put player on the first unoccupied cell in its home territory
+      game_set_player_start_position(p);
+      return p;
     }
   else {
     printf("ERROR, GAME FULL!\n");
-    return p;
+    return NULL;
   }
-
-  // Checking to make sure everything worked
-  //printf("\nPlayer created:\nTeam = %d\nPlayer ID = %d",p->team,p->id);
-  //printf("\nnumPlayers = %d\n", GameState.numPlayers[playerTeam]);
-
-  //put player on the first unoccupied cell in its home territory
-  game_set_player_start_position(p);
-
-  return p;
 }
 
 Cell* findCellForMove(int x, int y, Player_Move direction)
@@ -303,7 +298,7 @@ extern int game_move_player(Player* p, Player_Move direction)
 {
   int didMove = 0;
 
-  pthread_mutex_lock(&GameState.masterLock);
+  pthread_mutex_lock(&(GameState.masterLock));
 
   // calculate new position from current position and direction
   Cell* newCell = findCellForMove(p->x, p->y, direction);
@@ -344,6 +339,6 @@ extern int game_move_player(Player* p, Player_Move direction)
     didMove = 1;
   }
 
-  pthread_mutex_unlock(&GameState.masterLock);
+  pthread_mutex_unlock(&(GameState.masterLock));
   return didMove;
 }

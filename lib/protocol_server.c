@@ -676,7 +676,7 @@ proto_server_init(void)
   }
   Proto_Server.EventNumSubscribers=0;
   Proto_Server.EventLastSubscriber=0;
-  pthread_mutex_init(&Proto_Server.EventSubscribersLock, 0);
+  pthread_mutex_init(&(Proto_Server.EventSubscribersLock), 0);
 
 
   rc=net_setup_listen_socket(&(Proto_Server.RPCListenFD),
