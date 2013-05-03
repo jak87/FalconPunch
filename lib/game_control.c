@@ -100,14 +100,17 @@ extern int game_set_flag_start_position(Object* object)
 	// adjust x according to team
 	x = x + (Board.size / 2) * object->team;
 
-	// see if cell is available
-//	if (Board.cells[y][x]->occupant == NULL)
-//	{
-	  // update position pointers consistently, 3rd parameter is NULL because
-	  // this is a new player and wasn't in any cell before now.
-//	  game_set_player_position(p, Board.home_cells[p->team][i], 0);
+	Cell * myCell = Board.cells[y][x];
+
+	// Don't spawn flag on a wall or in jail, or on a shovel's home
+    if (myCell->type != '#' && myCell->type != 'j' && myCell->type != 'J'
+    		&& !(myCell->x == Board.shovel_home[object->team]->x
+    		     && myCell->y == Board.shovel_home[object->team]->y))
+    {
+      object->x = x;
+      object->y = y;
 	  success = 1;
-//	}
+	}
   }
 
   pthread_mutex_unlock(&(GameState.masterLock));
