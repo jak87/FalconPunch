@@ -165,6 +165,7 @@ extern Player* game_create_player(int team)
 {
   // TODO: do we need to lock here?
   int i=0, playerTeam;
+  Player *p;
 
   if (team < 2)
 	  playerTeam = team;
@@ -180,12 +181,14 @@ extern Player* game_create_player(int team)
   //printf("Alright, assigning a new player pointer!\n");
   if (GameState.players[playerTeam][i] == NULL)
     {
-      // slot i is available for the new player.
+	  p = (Player*) malloc(sizeof(Player));
+
+	  // slot i is available for the new player.
       GameState.players[playerTeam][i] = p;
       GameState.numPlayers[playerTeam]++;
+
       // assign id. 2 players can have the same id, as long as they
       // are on different teams
-      Player *p = malloc(sizeof(Player));
       p->id = i;
       p->team = playerTeam;
 
