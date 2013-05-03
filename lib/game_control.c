@@ -87,7 +87,7 @@ extern int game_load_board()
   return rc;
 }
 
-extern int game_set_object_start_position(Object* object)
+extern int game_set_flag_start_position(Object* object)
 {
   int x,y,success = 0;
   srand(time(NULL));
@@ -118,6 +118,13 @@ extern int game_set_object_start_position(Object* object)
 }
 
 
+extern int game_set_shovel_start_position(Object* object)
+{
+  object->x = Board.shovel_home[object->team]->x;
+  object->y = Board.shovel_home[object->team]->y;
+  return 1;
+}
+
 extern int game_init_objects()
 {
   int i;
@@ -126,8 +133,16 @@ extern int game_init_objects()
   {
     GameState.objects[i].visible = 1;
     GameState.objects[i].team = i % 2;
-    GameState.objects[i].type = i<2 ? FLAG : SHOVEL;
-    game_set_object_start_position(&(GameState.objects[i]));
+    if (i < 2)
+    {
+      GameState.objects[i].type = FLAG;
+      game_set_flag_start_position(&(GameState.objects[i]));
+    }
+    else
+    {
+      GameState.objects[i].type = SHOVEL;
+      game_set_shovel_start_position(&(GameState.objects[i]));
+    }
   }
 
   return 1;
