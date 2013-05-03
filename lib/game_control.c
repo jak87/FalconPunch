@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 
-
-
+#define flag_0 GameState.objects[0]
+#define flag_1 GameState.objects[1]
+#define shovel_0 GameState.objects[2]
+#define shovel_1 GameState.objects[3]
 
 extern int game_load_board()
 {
@@ -418,32 +420,32 @@ extern int game_move_player(Player* p, Player_Move direction)
 
 // Can't have more than 2 items on one cell
 extern int game_player_pickup(Player* p) {
-  if(flag0.x == p->x && flag0.y == p->y) {
-    if(flag0.team == p->team)
-      GameState.players[p->team][p->id].state = PLAYER_OWN_FLAG;
+  if(flag_0.x == p->x && flag_0.y == p->y) {
+    if(flag_0.team == p->team)
+      GameState.players[p->team][p->id]->state = PLAYER_OWN_FLAG;
     else
-      GameState.players[p->team][p->id].state = PLAYER_OPPONENT_FLAG;
+      GameState.players[p->team][p->id]->state = PLAYER_OPPONENT_FLAG;
     printf("Player %d (team %d) has picked up flag 0!\n",
 	   p->id, p->team);
     return 1;
   }
-  else if(flag1.x == p->x && flag1.y == p->y) {
-    if(flag1.team == p->team)
-      GameState.players[p->team][p->id].state = PLAYER_OWN_FLAG;
+  else if(flag_1.x == p->x && flag_1.y == p->y) {
+    if(flag_1.team == p->team)
+      GameState.players[p->team][p->id]->state = PLAYER_OWN_FLAG;
     else
-      GameState.players[p->team][p->id].state = PLAYER_OPPONENT_FLAG;
+      GameState.players[p->team][p->id]->state = PLAYER_OPPONENT_FLAG;
     printf("Player %d (team %d) has picked up flag 1!\n",
 	   p->id, p->team);
     return 1;
   } 
-  else if(shovel0.x == p->x && shovel0.y == p->y) {
-    GameState.players[p->team][p->id].shovel = 1;
+  else if(shovel_0.x == p->x && shovel_0.y == p->y) {
+    GameState.players[p->team][p->id]->shovel = 1;
     printf("Player %d (team %d) has picked up Shovel 0!\n",
 	   p->id, p->team);
     return 1;
   } 
-  else if(shovel1.x == p->x && shovel1.y == p->y) {
-    GameState.players[p->team][p->id].shovel = 2;
+  else if(shovel_1.x == p->x && shovel_1.y == p->y) {
+    GameState.players[p->team][p->id]->shovel = 2;
     printf("Player %d (team %d) has picked up Shovel 1!\n",
 	   p->id, p->team);
     return 1;
