@@ -25,7 +25,6 @@ typedef struct {
   int y;
   int team;
   Player_State state;
-  int flag;
   int shovel;
   FDType fd;
   UI_Player * uip;

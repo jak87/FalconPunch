@@ -344,7 +344,13 @@ static int do_send_players_state()
 
   //TODO: lock, handle errors
 
-  //printf("Marshalling the total number of players...\n");
+  // Marshall objects first
+  object_marshall(s, &(GameState.objects[0]));
+  object_marshall(s, &(GameState.objects[1]));
+  object_marshall(s, &(GameState.objects[2]));
+  object_marshall(s, &(GameState.objects[3]));
+
+  // Then marshall number of players
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);
 

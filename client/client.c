@@ -95,15 +95,21 @@ update_event_handler(Proto_Session *s)
 {
 
   // n is the number of players that will be sent
-  int rc = 1, n=0, offset, i, j;
+  int rc = 1, n=0, offset=0, i, j;
   Player *p = malloc(sizeof(Player));
 
   // Lock while updating values on the client players array.
   pthread_mutex_lock(&(ClientGameState.masterLock));
 
   initializeGameState();
+
+  offset = objects_unmarshall(s, offset, &ClientGameState.objects[0]);
+  offset = objects_unmarshall(s, offset, &ClientGameState.objects[1]);
+  offset = objects_unmarshall(s, offset, &ClientGameState.objects[2]);
+  offset = objects_unmarshall(s, offset, &ClientGameState.objects[3]);
+
   //printf("Entering proto_client_player_update_handler\n");
-  offset = proto_session_body_unmarshall_int(s,0,&n);
+  offset = proto_session_body_unmarshall_int(s, offset,&n);
   //printf("Receiving %d players\n",n);		\
 
   for(i = 0; i < n; i++) {

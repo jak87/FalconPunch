@@ -5,7 +5,9 @@
 //#include "protocol.h"
 #include "protocol_session.h"
 #include "maze.h"
+#include "objects.h"
 #include "player.h"
+
 
 #define MAX_NUM_PLAYERS 5
 
@@ -13,14 +15,15 @@ struct {
   Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
-  Flag flags[2];
+  // two flags, followed by two shovels
+  Object objects[4];
   pthread_mutex_t masterLock;
 } GameState;
 
 struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
-  Flag flags[2];
+  Object objects[4];
   int gameStatus;
   pthread_mutex_t masterLock;
 } ClientGameState;
