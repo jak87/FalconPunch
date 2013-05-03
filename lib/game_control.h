@@ -6,9 +6,7 @@
 #include "objects.h"
 #include "protocol_session.h"
 #include "maze.h"
-#include "objects.h"
 #include "player.h"
-
 
 #define MAX_NUM_PLAYERS 5
 
@@ -23,15 +21,14 @@ struct {
   Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
-  // two flags, followed by two shovels
-  Object objects[4];
+  Flag flags[2];
   pthread_mutex_t masterLock;
 } GameState;
 
 struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
-  Object objects[4];
+  Flag flags[2];
   int gameStatus;
   pthread_mutex_t masterLock;
 } ClientGameState;
@@ -60,5 +57,8 @@ extern Player* game_create_player(int team);
  * Return 1 if anything in the game state changed. 0 otherwise.
  */
 extern int game_move_player(Player* p, Player_Move direction);
+
+extern int game_player_pickup(Player* p);
+extern int game_player_drop(Player* p);
 
 #endif

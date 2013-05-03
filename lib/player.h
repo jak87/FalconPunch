@@ -8,8 +8,7 @@ typedef enum {
   PLAYER_NORMAL,
   PLAYER_OWN_FLAG,
   PLAYER_OPPONENT_FLAG,
-  PLAYER_JAILED,
-  PLAYER_FREE
+  PLAYER_JAILED
 } Player_State;
 
 typedef enum  {
