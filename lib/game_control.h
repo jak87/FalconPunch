@@ -10,25 +10,18 @@
 
 #define MAX_NUM_PLAYERS 5
 
-// Won't include from objects.h for some reason
-typedef struct {
-  int x;
-  int y;
-  int team;
-} Flag, Shovel;
-
 struct {
   Player *players[2][MAX_NUM_PLAYERS];
   int gameStatus;
   int numPlayers[2];
-  Flag flags[2];
+  Object objects[4];
   pthread_mutex_t masterLock;
 } GameState;
 
 struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
-  Flag flags[2];
+  Object objects[4];
   int gameStatus;
   pthread_mutex_t masterLock;
 } ClientGameState;
