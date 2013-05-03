@@ -170,6 +170,8 @@ proto_server_post_event(void)
       // try to send the message, without resetting it
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 
+	fprintf(stderr, "This shouldn't be happening!\n");
+
 	Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
 	close(Proto_Server.EventSession.fd);
 	printf("Attempting to remove s.fd = %d\n",Proto_Server.EventSession.fd);
@@ -533,9 +535,10 @@ remove_player(int fd_id) {
   }
 
   // Adjust the gamestate accordingly
-  free(GameState.players[p->team][p->id]);
+  Board.cells[p->y][p->x]->occupant = NULL;
   GameState.players[p->team][p->id] = NULL;
   GameState.numPlayers[p->team]--;
+  free(GameState.players[p->team][p->id]);
 
   
   // Adjust the EventSubscribers
