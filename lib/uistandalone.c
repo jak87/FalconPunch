@@ -29,12 +29,13 @@
 #include "maze.h"
 #include "player.h"
 #include "game_control.h"
+#include "objects.h"
 
 
 /* A lot of this code comes from http://www.libsdl.org/cgi/docwiki.cgi */
 
 static void paint_players(UI *ui);
-
+static void paint_objects(UI *ui);
 #define MAX_NUM_PLAYERS 5 //per team
 
 //struct {
@@ -395,6 +396,7 @@ ui_paintmap(UI *ui)
 
   SDL_BlitSurface(ui->fullMap, &ui->camera, ui->screen, NULL);
   paint_players(ui);
+  paint_objects(ui);
 
   SDL_UpdateRect(ui->screen, 0, 0, ui->screen->w, ui->screen->h);
   return 1;
@@ -685,4 +687,36 @@ paint_players(UI *ui)
     }
   }
   pthread_mutex_unlock(&ClientGameState.masterLock);
+}
+
+static void
+paint_objects(UI *ui){
+  SDL_Rect t;
+  t.h = ui->tile_h; t.w = ui->tile_w; t.y = 0; t.x = 0;
+  int start_x = ui->camera.x / t.w;
+  int max_x = (ui->camera.w / t.w) + start_x;
+  int start_y = ui->camera.y / t.h;
+  int max_y = (ui->camera.h / t.h) + start_y;
+  int i = 0;
+  uint32 c;
+  SPRITE_INDEX si;
+  Object obj;
+
+  //this is basically doing the same thing as the paint players function
+  for(;i<4;i++){
+    obj = ClientGameState.objects[i];
+    if((obj.x >= start_x) && (obj.x < max_x) &&
+       (obj.y >= start_y) && (obj.y < max_y)){
+      if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
+	si = (obj.type == SHOVEL) ? JACKHAMMER_S : ((obj.team) ? 
+						    GREENFLAG_S : REDFLAG_S);
+	SDL_BlitSurface(ui->sprites[si], NULL, ui->screen, &t);
+      }
+      else{
+        c = (obj.type == SHOVEL) ? ui->jackhammer_c :
+	  ((obj.team) ? ui->flag_teamb_c : ui->flag_teama_c)
+        ui_draw_circle(ui->screen, &t, c);
+      }//if
+    }//if
+  }//for
 }
