@@ -30,6 +30,7 @@
 #include "../lib/protocol_utils.h"
 #include "../lib/maze.h"
 #include "../lib/tty.h"
+#include "../lib/objects.h"
 #include "../lib/uistandalone.h"
 #include "../lib/player.h"
 #include "../lib/game_control.h"
@@ -103,10 +104,10 @@ update_event_handler(Proto_Session *s)
 
   initializeGameState();
 
-  offset = objects_unmarshall(s, offset, &ClientGameState.objects[0]);
-  offset = objects_unmarshall(s, offset, &ClientGameState.objects[1]);
-  offset = objects_unmarshall(s, offset, &ClientGameState.objects[2]);
-  offset = objects_unmarshall(s, offset, &ClientGameState.objects[3]);
+  offset = object_unmarshall(s, offset, &ClientGameState.objects[0]);
+  offset = object_unmarshall(s, offset, &ClientGameState.objects[1]);
+  offset = object_unmarshall(s, offset, &ClientGameState.objects[2]);
+  offset = object_unmarshall(s, offset, &ClientGameState.objects[3]);
 
   //printf("Entering proto_client_player_update_handler\n");
   offset = proto_session_body_unmarshall_int(s, offset,&n);

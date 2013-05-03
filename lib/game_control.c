@@ -101,13 +101,13 @@ extern int game_set_object_start_position(Object* object)
 	x = x + (Board.size / 2) * object->team;
 
 	// see if cell is available
-	if (Board.cells[y][x]->occupant == NULL)
-	{
+//	if (Board.cells[y][x]->occupant == NULL)
+//	{
 	  // update position pointers consistently, 3rd parameter is NULL because
 	  // this is a new player and wasn't in any cell before now.
-	  game_set_player_position(p, Board.home_cells[p->team][i], 0);
+//	  game_set_player_position(p, Board.home_cells[p->team][i], 0);
 	  success = 1;
-	}
+//	}
   }
 
   pthread_mutex_unlock(&(GameState.masterLock));
@@ -124,7 +124,7 @@ extern int game_init_objects()
     GameState.objects[i].visible = 1;
     GameState.objects[i].team = i % 2;
     GameState.objects[i].type = i<2 ? FLAG : SHOVEL;
-    game_set_object_start_position();
+    game_set_object_start_position(&(GameState.objects[i]));
   }
 
   return 1;
