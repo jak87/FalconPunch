@@ -352,6 +352,14 @@ static int do_send_players_state()
   object_marshall(s, &(GameState.objects[2]));
   object_marshall(s, &(GameState.objects[3]));
 
+  int changed = GameState.changedCell != NULL;
+  proto_session_body_marshall_int(s, changed);
+  if (changed)
+  {
+    maze_marshall_cell(s, GameState.changedCell);
+    GameState.changedCell = NULL;
+  }
+
   // Then marshall number of players
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);

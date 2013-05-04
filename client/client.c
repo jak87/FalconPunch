@@ -96,21 +96,33 @@ update_event_handler(Proto_Session *s)
 {
 
   // n is the number of players that will be sent
-  int rc = 1, n=0, offset=0, i, j;
+  int rc = 1, n=0, offset=0, c=0, i, j;
   Player *p = malloc(sizeof(Player));
+  Cell cell;
 
   // Lock while updating values on the client players array.
   pthread_mutex_lock(&(ClientGameState.masterLock));
 
   initializeGameState();
 
+  // update event always starts with the 4 objects
   offset = object_unmarshall(s, offset, &ClientGameState.objects[0]);
   offset = object_unmarshall(s, offset, &ClientGameState.objects[1]);
   offset = object_unmarshall(s, offset, &ClientGameState.objects[2]);
   offset = object_unmarshall(s, offset, &ClientGameState.objects[3]);
 
-  //printf("Entering proto_client_player_update_handler\n");
-  offset = proto_session_body_unmarshall_int(s, offset,&n);
+  // see if there are any cells changed
+  offset = proto_session_body_unmarshall_int(s, offset, &c);
+  for (i=0; i < c; i++)
+  {
+    // The unmarshalling will put the cell in the correct place on the Board.
+    offset = maze_unmarshall_cell(s, offset);
+    // The trouble now is that the way we have done unmarshalling, here we
+    // don't know which cell changed... and the UI needs to know to repaint it.
+  }
+
+
+  offset = proto_session_body_unmarshall_int(s, offset, &n);
   //printf("Receiving %d players\n",n);		\
 
   for(i = 0; i < n; i++) {
@@ -234,9 +246,9 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
     if (sym == SDLK_UP && mod == KMOD_NONE)  {  
       //fprintf(stderr, "%s: move up\n", __func__);
       rc = proto_client_move(globals.client_inst->ph, MOVE_UP);
-      printf("Attempting to center...\n");
+//      printf("Attempting to center...\n");
       ui_center_on_player(ui);
-      printf("Centered!\n");
+//      printf("Centered!\n");
       return rc;
     }
     if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
@@ -553,7 +565,7 @@ main(int argc, char **argv)
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }
-  printf("My id is %d!\n", globals.connection_id);
+//  printf("My id is %d!\n", globals.connection_id);
   printf("My player (ClientGameState.me) is:\n");
   player_dump(ClientGameState.me);
 

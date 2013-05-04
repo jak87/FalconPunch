@@ -5,6 +5,8 @@
 #include "player.h"
 
 #define MAX_BOARD_SIZE 202
+#define MAX_HOME_CELLS 100
+#define MAX_JAIL_CELLS 100
 #define MAP_PATH "../lib/daGame_small.map"
 //#define MAP_PATH "../lib/daGame.map"
 
@@ -20,8 +22,8 @@ typedef struct {
 
 struct {
   Cell* cells[MAX_BOARD_SIZE][MAX_BOARD_SIZE];
-  Cell* home_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
-  Cell* jail_cells[2][MAX_BOARD_SIZE * MAX_BOARD_SIZE];
+  Cell* home_cells[2][MAX_HOME_CELLS];
+  Cell* jail_cells[2][MAX_JAIL_CELLS];
   Cell* shovel_home[2];
   int total_wall;
   int total_floor;
@@ -37,7 +39,7 @@ int loadBoard();
 void dump();
 
 int maze_marshall_cell(Proto_Session *s, Cell *cell);
-int maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell);
+int maze_unmarshall_cell(Proto_Session *s, int offset);
 
 int maze_marshall_board(Proto_Session *s);
 int maze_unmarshall_board(Proto_Session *s, int offset);

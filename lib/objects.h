@@ -22,5 +22,6 @@ typedef struct {
 
 int object_marshall(Proto_Session *s, Object * object);
 int object_unmarshall(Proto_Session *s, int offset, Object * object);
+void object_dump(Object * object);
 
 #endif

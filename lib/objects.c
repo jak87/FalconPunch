@@ -44,5 +44,20 @@ extern int object_unmarshall(Proto_Session *s, int offset, Object * object)
   object->team = team;
   object->visible = visible;
 
+//  printf("Unmarshalled ");
+//  object_dump(object);
+
   return offset;
+}
+
+extern void object_dump(Object * object)
+{
+  if (object->type == FLAG)
+  {
+    printf("Flag, team %d: (%d, %d)\n", object->team, object->x, object->y);
+  }
+  else
+  {
+    printf("Shovel, team %d: (%d, %d)\n", object->team, object->x, object->y);
+  }
 }

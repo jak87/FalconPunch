@@ -27,64 +27,98 @@ extern int game_load_board()
   int row = 0;
   int col = 0;
   while(fgets(buf, MAX_BOARD_SIZE, map) != NULL) {
-	int mid = strlen(buf)/2;
-	Board.size = mid*2;
-	for (col=0; buf[col]; col++) {
-	  Board.cells[row][col] = (Cell *) malloc(sizeof(Cell));
-	  switch(buf[col]) {
-	  case ' ': //floor cell
-	Board.cells[row][col]->type = ' ';
-	Board.total_floor++;
-	break;
-	  case '#': //wall cell
-	Board.cells[row][col]->type = '#';
-	Board.total_wall++;
-	break;
-	  case 'h': //team1 home cell
-	Board.cells[row][col]->type = 'h';
-	// set the first home cell of team 0 to be the home location for their shovel
-    if (Board.shovel_home[0] == NULL) Board.shovel_home[0] = Board.cells[row][col];
-	Board.home_cells[0][Board.total_h] = Board.cells[row][col];
-	Board.total_floor++;
-	Board.total_h++;
-	break;
-	  case 'H': //team2 home cell
-	Board.cells[row][col]->type = 'H';
-	// set the last home cell of team 1 to be the home location for their shovel
-	Board.shovel_home[1] = Board.cells[row][col];
-	Board.home_cells[1][Board.total_H] = Board.cells[row][col];
-	Board.total_floor++;
-	Board.total_H++;
-	break;
-	  case 'j': //team1 jail cell
-	Board.cells[row][col]->type = 'j';
-	Board.jail_cells[0][Board.total_j] = Board.cells[row][col];
-	Board.total_floor++;
-	Board.total_j++;
-	break;
-	  case 'J': //team2 jail cell
-	Board.cells[row][col]->type = 'J';
-	Board.jail_cells[1][Board.total_J] = Board.cells[row][col];
-	Board.total_floor++;
-	Board.total_J++;
-	break;
-	  case '\n':
-	continue;
-	  default: //unknown
-	fclose(map);
-	return -2;
-	  }
-	  Board.cells[row][col]->x = col;
-	  Board.cells[row][col]->y = row;
-	  Board.cells[row][col]->team = (col<mid) ? 0 : 1;
-	}
-	row++;
+    int mid = strlen(buf)/2;
+    Board.size = mid*2;
+    for (col=0; buf[col]; col++) {
+      Board.cells[row][col] = (Cell *) malloc(sizeof(Cell));
+      switch(buf[col]) {
+
+        case ' ': //floor cell
+          Board.total_floor++;
+          break;
+
+        case '#': //wall cell
+          if (row > 0 && row < Board.size -1 && col > 0 && col < Board.size -1)
+            // Any wall that's not an outer wall is initially set to be destructable
+            Board.cells[row][col]->destructable = 1;
+          Board.total_wall++;
+          break;
+
+        case 'h': //team1 home cell
+          // set the first home cell of team 0 to be the home location for their shovel
+          if (Board.shovel_home[0] == NULL) Board.shovel_home[0] = Board.cells[row][col];
+          Board.home_cells[0][Board.total_h] = Board.cells[row][col];
+          Board.total_floor++;
+          Board.total_h++;
+          break;
+
+        case 'H': //team2 home cell
+          // set the last home cell of team 1 to be the home location for their shovel
+          Board.shovel_home[1] = Board.cells[row][col];
+          Board.home_cells[1][Board.total_H] = Board.cells[row][col];
+          Board.total_floor++;
+          Board.total_H++;
+          break;
+
+        case 'j': //team1 jail cell
+          Board.jail_cells[0][Board.total_j] = Board.cells[row][col];
+          Board.total_floor++;
+          Board.total_j++;
+          break;
+
+        case 'J': //team2 jail cell
+          Board.jail_cells[1][Board.total_J] = Board.cells[row][col];
+          Board.total_floor++;
+          Board.total_J++;
+          break;
+
+        case '\n':
+          continue;
+
+        default: //unknown
+          fclose(map);
+          return -2;
+      }
+      Board.cells[row][col]->x = col;
+      Board.cells[row][col]->y = row;
+      Board.cells[row][col]->type = buf[col];
+      Board.cells[row][col]->team = (col<mid) ? 0 : 1;
+    }
+    row++;
   }
   fclose(map);
 
   // TODO: handle some error cases and return -1 if something went wrong
   return rc;
 }
+
+extern void make_neighboring_cells_indestructable(Cell * cell)
+{
+  // It doesn't matter that we make some floor/jail/home cells
+  // indestructable. That only matters for walls.
+  // We are safe in assuming that a jail or home cell will always
+  // have neighbors in all directions, because of the outer wall.
+  Board.cells[cell->y-1][cell->x]->destructable = 0;
+  Board.cells[cell->y+1][cell->x]->destructable = 0;
+  Board.cells[cell->y][cell->x-1]->destructable = 0;
+  Board.cells[cell->y][cell->x+1]->destructable = 0;
+}
+
+extern void game_set_indestructable_cells()
+{
+  int t, i;
+  for (t = 0; t < 2; t++)
+  {
+    for (i = 0; i < MAX_HOME_CELLS; i++)
+      if (Board.home_cells[t][i] != NULL)
+        make_neighboring_cells_indestructable(Board.home_cells[t][i]);
+
+    for (i = 0; i < MAX_JAIL_CELLS; i++)
+      if (Board.jail_cells[t][i] != NULL)
+        make_neighboring_cells_indestructable(Board.jail_cells[t][i]);
+  }
+}
+
 
 extern int game_set_flag_start_position(Object* object)
 {
@@ -109,6 +143,7 @@ extern int game_set_flag_start_position(Object* object)
     {
       object->x = x;
       object->y = y;
+      printf("Setting team %d's flag to start position: %d,%d\n", object->team, object->x, object->y);
 	  success = 1;
 	}
   }
@@ -121,6 +156,7 @@ extern int game_set_shovel_start_position(Object* object)
 {
   object->x = Board.shovel_home[object->team]->x;
   object->y = Board.shovel_home[object->team]->y;
+  printf("Setting team %d's shovel to start position: %d,%d\n", object->team, object->x, object->y);
   return 1;
 }
 
@@ -154,6 +190,7 @@ extern void game_init()
   pthread_mutex_init(&(GameState.masterLock), 0);
 
   game_load_board();
+  game_set_indestructable_cells();
   game_init_objects();
 
   GameState.gameStatus = 0;
@@ -212,17 +249,15 @@ void game_set_player_start_position(Player* p)
   while (success == 0)
   {
     // we'll be in trouble if no home cell is available...
-    // assuming total_h = total_H
-    i = rand() % Board.total_h;
+    i = rand() % MAX_HOME_CELLS;
 
     // Find an unoccupied home cell
-    if (Board.home_cells[p->team][i]->occupant == NULL)
+    if (Board.home_cells[p->team][i] != NULL && Board.home_cells[p->team][i]->occupant == NULL)
     {
       // update position pointers consistently, 3rd parameter is NULL because
       // this is a new player and wasn't in any cell before now.
       game_set_player_position(p, Board.home_cells[p->team][i], 0);
       success = 1;
-      printf("Player position = Board.home_cells[%d][%d]\n\n",p->team,i);
     }
   }
 
@@ -236,10 +271,9 @@ void game_set_player_jail_position(Player* p)
   while (success == 0)
   {
     // we'll be in trouble if no jail cell is available...
-    // assuming total_j = total_J
-    i = rand() % Board.total_j;
+    i = rand() % MAX_JAIL_CELLS;
 
-    if (Board.jail_cells[p->team][i]->occupant == NULL)
+    if (Board.jail_cells[p->team][i] != NULL && Board.jail_cells[p->team][i]->occupant == NULL)
     {
       game_set_player_position(p, Board.jail_cells[p->team][i], 1);
       success = 1;
@@ -325,10 +359,33 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
 int game_move_into_wall(Player* p, Cell* newCell)
 {
   printf("Moving into a wall\n");
+
+  if (newCell->y == 0)
+  {
+	  printf("TESTING... Player picking up Flag 0\n");
+	  p->state = PLAYER_OWN_FLAG;
+  }
+  else if (newCell->y == Board.size - 1)
+  {
+	  printf("TESTING... Player picking up Flag 1\n");
+      p->state = PLAYER_OPPONENT_FLAG;
+  }
+  else if (newCell->x == 0)
+  {
+	  printf("TESTING... Player picking up Shovel 0\n");
+	  p->shovel = 1;
+  }
+  else if (newCell->x == Board.size - 1)
+  {
+	  printf("TESTING... Player picking up Shovel 1\n");
+	  p->shovel = 2;
+  }
+
   if (newCell->destructable && p->shovel != 0)
   {
 	// erase the wall and turn it into floor space
     newCell->type = ' ';
+    GameState.changedCell = newCell;
 
 	// p->shovel is 1 or 2. shovels are at objects[2] and objects[3]
     game_set_shovel_start_position(&(GameState.objects[p->shovel+1]));

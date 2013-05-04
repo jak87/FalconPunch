@@ -38,7 +38,7 @@ maze_marshall_cell(Proto_Session *s, Cell *cell)
 }
 
 extern int
-maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
+maze_unmarshall_cell(Proto_Session *s, int offset)
 {
   int x, y, team;
   char type;
@@ -54,6 +54,11 @@ maze_unmarshall_cell(Proto_Session *s, int offset, Cell *cell)
 
   offset = proto_session_body_unmarshall_int(s, offset, &team);
   if (offset < 0) return offset;
+
+
+  // If the cell at that location existed, free the memory
+  if (Board.cells[y][x] != NULL)
+    free(Board.cells[y][x]);
 
   // After all the primitives are unmarshalled correctly,
   // allocate a new cell, and put it's pointer in the board
@@ -109,7 +114,7 @@ maze_unmarshall_row(Proto_Session *s, int offset, int section) {
   for (y = section*20; y < (section+1)*20 && y < Board.size; y++) {
     //printf("Unmarshalling row %d\n",y);
     for (x = 0; x < Board.size; x++) {
-      offset = maze_unmarshall_cell(s, offset, Board.cells[y][x]);
+      offset = maze_unmarshall_cell(s, offset);
       if (offset < 0) return offset;
     }
   }
@@ -148,7 +153,7 @@ maze_unmarshall_board(Proto_Session *s, int offset)
   {
     for (x = 0; x < Board.size; x++)
     {
-      offset = maze_unmarshall_cell(s, offset, Board.cells[y][x]);
+      offset = maze_unmarshall_cell(s, offset);
       if (offset < 0) return offset;
     }
   }

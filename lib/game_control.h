@@ -15,6 +15,7 @@ struct {
   int gameStatus;
   int numPlayers[2];
   Object objects[4];
+  Cell * changedCell;
   pthread_mutex_t masterLock;
 } GameState;
 
