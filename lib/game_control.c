@@ -91,8 +91,6 @@ extern int game_set_flag_start_position(Object* object)
   int x,y,success = 0;
   srand(time(NULL));
 
-  pthread_mutex_lock(&(GameState.masterLock));
-
   while (success == 0)
   {
     // we should hit an empty cell sooner or later
@@ -115,7 +113,6 @@ extern int game_set_flag_start_position(Object* object)
 	}
   }
 
-  pthread_mutex_unlock(&(GameState.masterLock));
   return success;
 }
 
@@ -181,6 +178,27 @@ void game_set_player_position(Player* p, Cell* c, int updateOldCell)
   p->x = c->x;
   p->y = c->y;
   c->occupant = p;
+
+  // If the player is carrying a shovel, move it along
+  if (p->shovel > 0)
+  {
+    GameState.objects[p->shovel+1].x = p->x;
+    GameState.objects[p->shovel+1].y = p->y;
+  }
+
+  // If a player is carrying a flag, move it along
+  if (p->state == PLAYER_OWN_FLAG || p->state == PLAYER_OPPONENT_FLAG)
+  {
+    // So,
+    // if player is team 0, and is carrying own flag (state 1), we need to change object 0
+    // if player is team 0, and is carrying opp flag (state 2), we need to change object 1
+    // if player is team 1, and is carrying own flag (state 1), we need to change object 1
+    // if player is team 1, and is carrying opp flag (state 2), we need to change object 0
+	// this reduces to the following:
+	int flagIndex = (p->team + p->state) == 2;
+    GameState.objects[flagIndex].x = p->x;
+    GameState.objects[flagIndex].y = p->y;
+  }
 }
 
 /**
@@ -190,8 +208,6 @@ void game_set_player_start_position(Player* p)
 {
   int i,success = 0;
   srand(time(NULL));
-
-  pthread_mutex_lock(&(GameState.masterLock));
 
   while (success == 0)
   {
@@ -209,8 +225,6 @@ void game_set_player_start_position(Player* p)
       printf("Player position = Board.home_cells[%d][%d]\n\n",p->team,i);
     }
   }
-
-  pthread_mutex_unlock(&(GameState.masterLock));
 
 }
 
@@ -239,10 +253,12 @@ extern Player* game_create_player(int team)
   int i=0, playerTeam;
   Player *p;
 
+  pthread_mutex_lock(&(GameState.masterLock));
+
   if (team < 2)
 	  playerTeam = team;
   else
-	  // if team 1 has less players, set playerTeam to 1. 0 otherwise
+    // if team 1 has less players, set playerTeam to 1. 0 otherwise
     playerTeam = GameState.numPlayers[1] < GameState.numPlayers[0];
 
   // New code (Uses same if statement)
@@ -266,10 +282,13 @@ extern Player* game_create_player(int team)
 
       //put player on the first unoccupied cell in its home territory
       game_set_player_start_position(p);
+
+      pthread_mutex_unlock(&(GameState.masterLock));
       return p;
     }
   else {
     printf("ERROR, GAME FULL!\n");
+    pthread_mutex_unlock(&(GameState.masterLock));
     return NULL;
   }
 }
@@ -308,8 +327,12 @@ int game_move_into_wall(Player* p, Cell* newCell)
   printf("Moving into a wall\n");
   if (newCell->destructable && p->shovel != 0)
   {
-    // TODO: change new cell type
-    // TODO: return shovel to its place
+	// erase the wall and turn it into floor space
+    newCell->type = ' ';
+
+	// p->shovel is 1 or 2. shovels are at objects[2] and objects[3]
+    game_set_shovel_start_position(&(GameState.objects[p->shovel+1]));
+    p->shovel = 0;
     game_set_player_position(p, newCell, 1);
     return 1;
   }
@@ -323,7 +346,6 @@ void game_free_jailed_players(int team)
   {
     if (GameState.players[team][i] != NULL && GameState.players[team][i]->state == PLAYER_JAILED)
     {
-      // TODO: handle other state (freed player cannot be tagged and cannot pick up stuff until it goes back)
       GameState.players[team][i]->state = PLAYER_NORMAL;
     }
   }
@@ -331,8 +353,11 @@ void game_free_jailed_players(int team)
 
 void game_jail_player(Player* p)
 {
-  game_set_player_jail_position(p);
+  // just forget about holding the objects.
+  // they will stay at this location.
+  p->shovel = 0;
   p->state = PLAYER_JAILED;
+  game_set_player_jail_position(p);
 }
 
 /**
