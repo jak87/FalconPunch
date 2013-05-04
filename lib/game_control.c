@@ -419,6 +419,7 @@ extern int game_move_player(Player* p, Player_Move direction)
 }
 
 
+
 extern int game_player_pickup(Player* p) {
   Object * o;
   int i;
@@ -448,7 +449,12 @@ extern int game_player_pickup(Player* p) {
   return 0;
 }
 
+extern int player_drop_flag(Player* p) {
+  p->state = PLAYER_NORMAL;
+  return 1;
+}
 
-extern int game_player_drop(Player* p) {
+extern int player_drop_shovel(Player *p) {
+  p->shovel = 0;
   return 1;
 }
