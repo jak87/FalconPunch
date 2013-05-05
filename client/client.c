@@ -46,7 +46,6 @@ typedef struct ClientState  {
 struct Globals {
   char host[STRLEN];
   PortType port;
-  //Player player;
   int connection_id;
   Client* client_inst;
 } globals;
@@ -158,12 +157,18 @@ gameover_event_handler(Proto_Session *s)
 {
 //  Proto_Client_Handle pch = ((Client *) proto_session_get_data(s))->ph;
 
-  char winner;
-  proto_session_body_unmarshall_char(s, 0, &winner);
+  int winner;
+  proto_session_body_unmarshall_int(s, 0, &winner);
 
   fprintf(stderr, "Game Over\n");
+  if(ClientGameState.me->team == winner)
+    fprintf(stderr, "You won!\n");
+  else
+    fprintf(stderr, "You lost...\n");
+  
+  proto_client_disconnect();
 
-  return 1;
+  exit(1);
 }
 
 

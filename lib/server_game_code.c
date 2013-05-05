@@ -1,5 +1,19 @@
 #include "server_game_code.h"
 
+extern int do_gameover(int winner) {
+  Proto_Session *s;
+  Proto_Msg_Hdr hdr;
+
+  s = proto_server_event_session();
+  bzero(&hdr, sizeof(s));
+  hdr.type = PROTO_MT_EVENT_BASE_GAMEOVER;
+  proto_session_hdr_marshall(s, &hdr);
+  proto_session_body_marshall_int(s, winner);
+  proto_server_post_event();
+  //proto_disconnect();
+  return 1;
+}
+
 extern int do_send_players_state()
 {
   Proto_Session *s;
@@ -207,17 +221,22 @@ drop_flag_handler(Proto_Session *s)
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
   i = player_drop_flag(serverPlayer);
 
+  if (i == 2) // Team 0 won! 
+    { do_gameover(0); }
+  else if (i == 3) // Team 1 won! 
+    { do_gameover(1); }
+
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_DROP_FLAG;
   proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s,i);
+    
+  proto_session_body_marshall_int(s,1);
   player_marshall(s, serverPlayer); 
-
+  
   rc = proto_session_send_msg(s,1);  
-
+  
   do_send_players_state();
- 
+  
   return rc;
 }
 

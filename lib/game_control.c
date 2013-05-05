@@ -545,6 +545,12 @@ extern int player_pickup_shovel(Player *p) {
 
 extern int player_drop_flag(Player* p) {
   p->state = PLAYER_NORMAL;
+  if(Board.cells[flag_0.y][flag_0.x]->type == 'h' &&
+     Board.cells[flag_1.y][flag_0.x]->type == 'h')
+    return 2;
+  if(Board.cells[flag_0.y][flag_0.x]->type == 'H' &&
+     Board.cells[flag_1.y][flag_0.x]->type == 'H')
+    return 3;
   return 1;
 }
 

@@ -13,8 +13,9 @@
 #include "maze.h"
 #include "game_control.h"
 
-// Updates all players of the new state of the game
+// Updates
 extern int do_send_players_state();
+extern int do_gameover(int winner);
 
 // Connection Handlers
 extern int hello_handler(Proto_Session *s);
