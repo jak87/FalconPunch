@@ -23,6 +23,7 @@ extern int game_load_board()
 
   FILE* map = fopen(MAP_PATH, "r");
   if(map == NULL) {return -1; }
+
   char buf[MAX_BOARD_SIZE];
   int row = 0;
   int col = 0;
@@ -38,7 +39,7 @@ extern int game_load_board()
           break;
 
         case '#': //wall cell
-          if (row > 0 && row < Board.size -1 && col > 0 && col < Board.size -1)
+          if (row > 0 && row < Board.size-1 && col > 0 && col < Board.size -1)
             // Any wall that's not an outer wall is initially set to be destructable
             Board.cells[row][col]->destructable = 1;
           Board.total_wall++;
@@ -46,10 +47,12 @@ extern int game_load_board()
 
         case 'h': //team1 home cell
           // set the first home cell of team 0 to be the home location for their shovel
-          if (Board.shovel_home[0] == NULL) Board.shovel_home[0] = Board.cells[row][col];
+          if (Board.shovel_home[0] == NULL) 
+	    Board.shovel_home[0] = Board.cells[row][col];
           Board.home_cells[0][Board.total_h] = Board.cells[row][col];
           Board.total_floor++;
           Board.total_h++;
+	  printf("So far so good!\n");
           break;
 
         case 'H': //team2 home cell
@@ -88,6 +91,7 @@ extern int game_load_board()
   }
   fclose(map);
 
+  printf("Board loaded!\n");
   // TODO: handle some error cases and return -1 if something went wrong
   return rc;
 }
