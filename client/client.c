@@ -246,7 +246,8 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
       return rc;
     }
     if (sym == SDLK_r && mod == KMOD_NONE)  {  
-      fprintf(stderr, "%s: dummy pickup red flag\n", __func__);
+      fprintf(stderr, "%s: Pickup/putdown flag\n", __func__);
+      //rc = proto_client_
       //return ui_dummy_pickup_red(ui);
     }
     if (sym == SDLK_g && mod == KMOD_NONE)  {   

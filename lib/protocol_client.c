@@ -423,6 +423,82 @@ proto_client_goodbye(Proto_Client_Handle ch, int id, Player * p)
   return rc;
 }
 
+extern int
+proto_client_drop_flag(Proto_Client_Handle ch, Player *p) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_DROP_FLAG);
+  player_marshall(s,p);
+
+  rc = proto_session_rpc(s);  
+
+  if (rc < 0) c->session_lost_handler(s);
+  else if (rc == 0) printf("Drop flag didn't work!\n");
+  else rc=2;
+
+  return rc;
+}
+
+extern int
+proto_client_drop_shovel(Proto_Client_Handle ch, Player *p) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_DROP_SHOVEL);
+  player_marshall(s,p);
+
+  rc = proto_session_rpc(s);  
+
+  if (rc < 0) c->session_lost_handler(s);
+  else if (rc == 0) printf("Drop shovel didn't work!\n");
+  else rc=2;
+
+  return rc;
+}
+
+extern int
+proto_client_pickup_flag(Proto_Client_Handle ch, Player *p) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_PICKUP_FLAG);
+  player_marshall(s,p);
+
+  rc = proto_session_rpc(s);  
+
+  if (rc < 0) c->session_lost_handler(s);
+  else if (rc == 0) printf("Pickup flag didn't work!\n");
+  else rc=2;
+
+  return rc;
+}
+
+extern int
+proto_client_pickup_shovel(Proto_Client_Handle ch, Player *p) {
+  int rc;
+  Proto_Session *s;
+  Proto_Client *c = ch;
+
+  s = &(c->rpc_session);
+  marshall_mtonly(s, PROTO_MT_REQ_BASE_PICKUP_SHOVEL);
+  player_marshall(s,p);
+
+  rc = proto_session_rpc(s);  
+
+  if (rc < 0) c->session_lost_handler(s);
+  else if (rc == 0) printf("Pickup shovel didn't work!\n");
+  else rc=2;
+
+  return rc;
+}
+
 extern void
 proto_client_disconnect(Proto_Client_Handle ch)
 {

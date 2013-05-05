@@ -54,5 +54,7 @@ extern int game_move_player(Player* p, Player_Move direction);
 extern int game_player_pickup(Player* p);
 extern int player_drop_flag(Player* p);
 extern int player_drop_shovel(Player* p);
+extern int player_pickup_flag(Player* p);
+extern int player_pickup_shovel(Player* p);
 
 #endif

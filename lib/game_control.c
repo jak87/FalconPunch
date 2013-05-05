@@ -443,35 +443,44 @@ extern int game_move_player(Player* p, Player_Move direction)
   return didMove;
 }
 
+extern int player_pickup_flag(Player* p) {
 
-
-extern int game_player_pickup(Player* p) {
-  Object * o;
-  int i;
-
-  for (i = 0; i < 4; i++) {
-
-    o = &(GameState.objects[i]);    
-    if ((o->x == p->x) && (o->y == p->y)) {
-
-      // Checks to see if it's a flag
-      if (i < 2) {
-	if(o->team == p->team)
-	  GameState.players[p->team][p->id]->state = PLAYER_OWN_FLAG;
-	else
-	  GameState.players[p->team][p->id]->state = PLAYER_OPPONENT_FLAG;
-      }
-
-      // If not, set the player to have the correct shovel
-      else 
-	GameState.players[p->team][p->id]->shovel = (i-2);
-      
-      return 1;
-    }
+  if (GameState.objects[p->team].x == p->x &&
+      GameState.objects[p->team].y == p->y) {
+    p->state = PLAYER_OWN_FLAG;
   }
 
-  // Nothing to pick up
-  return 0;
+  else if (GameState.objects[((p->team)+1)%2].x == p->x &&
+	   GameState.objects[((p->team)+1)%2].y == p->y) {
+    p->state = PLAYER_OPPONENT_FLAG;
+  }
+
+  else {
+    printf("No flag to pick up!\n");
+    return 0;
+  }
+
+  return 1;
+}
+
+extern int player_pickup_shovel(Player *p) {
+
+  if (GameState.objects[2].x == p->x &&
+      GameState.objects[2].y == p->y) {
+    p->shovel = 1;
+  }
+
+  else if (GameState.objects[3].x == p->x &&
+	   GameState.objects[3].y == p->y) {
+    p->shovel = 2;
+  }
+
+  else {
+    printf("No shovel to pick up!\n");
+    return 0;
+  }
+
+  return 1;
 }
 
 extern int player_drop_flag(Player* p) {
