@@ -360,25 +360,22 @@ int game_move_into_wall(Player* p, Cell* newCell)
 {
   printf("Moving into a wall\n");
 
+  // return 0 for all of these?
   if (newCell->y == 0)
   {
-	  printf("TESTING... Player picking up Flag 0\n");
-	  p->state = PLAYER_OWN_FLAG;
+    return 0;
   }
   else if (newCell->y == Board.size - 1)
   {
-	  printf("TESTING... Player picking up Flag 1\n");
-      p->state = PLAYER_OPPONENT_FLAG;
+    return 0;
   }
   else if (newCell->x == 0)
   {
-	  printf("TESTING... Player picking up Shovel 0\n");
-	  p->shovel = 1;
+    return 0;
   }
   else if (newCell->x == Board.size - 1)
   {
-	  printf("TESTING... Player picking up Shovel 1\n");
-	  p->shovel = 2;
+    return 0;
   }
 
   if (newCell->destructable && p->shovel != 0)

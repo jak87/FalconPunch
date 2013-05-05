@@ -259,12 +259,20 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
     }
     if (sym == SDLK_r && mod == KMOD_NONE)  {  
       fprintf(stderr, "%s: Pickup/putdown flag\n", __func__);
-      //rc = proto_client_
-      //return ui_dummy_pickup_red(ui);
+      if(ClientGameState.me->state == PLAYER_OWN_FLAG ||
+	 ClientGameState.me->state == PLAYER_OPPONENT_FLAG)
+	rc = proto_client_drop_flag(globals.client_inst->ph);
+      else
+	rc = proto_client_pickup_flag(globals.client_inst->ph);
+      return rc;
     }
     if (sym == SDLK_g && mod == KMOD_NONE)  {   
-      fprintf(stderr, "%s: dummy pickup green flag\n", __func__);
-      //return ui_dummy_pickup_green(ui);
+      fprintf(stderr, "%s: Pickup/putdown shovel\n", __func__);
+      if(ClientGameState.me->shovel > 0)
+	rc = proto_client_drop_shovel(globals.client_inst->ph);
+      else
+	rc = proto_client_pickup_shovel(globals.client_inst->ph);
+      return rc;
     }
     if (sym == SDLK_j && mod == KMOD_NONE)  {   
       fprintf(stderr, "%s: dummy jail\n", __func__);

@@ -424,8 +424,9 @@ proto_client_goodbye(Proto_Client_Handle ch, int id, Player * p)
 }
 
 extern int
-proto_client_drop_flag(Proto_Client_Handle ch, Player *p) {
-  int rc;
+proto_client_drop_flag(Proto_Client_Handle ch) {
+  Player *p = ClientGameState.me;
+  int rc, offset;
   Proto_Session *s;
   Proto_Client *c = ch;
 
@@ -435,16 +436,24 @@ proto_client_drop_flag(Proto_Client_Handle ch, Player *p) {
 
   rc = proto_session_rpc(s);  
 
-  if (rc < 0) c->session_lost_handler(s);
-  else if (rc == 0) printf("Drop flag didn't work!\n");
-  else rc=2;
+  if (rc != 1)
+  {
+        c->session_lost_handler(s);
+	return rc;
+  }
+  else
+  {
+	offset = proto_session_body_unmarshall_int(s, 0, &rc);
+	player_unmarshall(s, offset, ClientGameState.me);
+  }
 
   return rc;
 }
 
 extern int
-proto_client_drop_shovel(Proto_Client_Handle ch, Player *p) {
-  int rc;
+proto_client_drop_shovel(Proto_Client_Handle ch) {
+  Player *p = ClientGameState.me;
+  int rc, offset;
   Proto_Session *s;
   Proto_Client *c = ch;
 
@@ -454,16 +463,25 @@ proto_client_drop_shovel(Proto_Client_Handle ch, Player *p) {
 
   rc = proto_session_rpc(s);  
 
-  if (rc < 0) c->session_lost_handler(s);
-  else if (rc == 0) printf("Drop shovel didn't work!\n");
-  else rc=2;
+
+  if (rc != 1)
+  {
+        c->session_lost_handler(s);
+	return rc;
+  }
+  else
+  {
+	offset = proto_session_body_unmarshall_int(s, 0, &rc);
+	player_unmarshall(s, offset, ClientGameState.me);
+  }
 
   return rc;
 }
 
 extern int
-proto_client_pickup_flag(Proto_Client_Handle ch, Player *p) {
-  int rc;
+proto_client_pickup_flag(Proto_Client_Handle ch) {
+  Player *p = ClientGameState.me;
+  int rc, offset;
   Proto_Session *s;
   Proto_Client *c = ch;
 
@@ -473,16 +491,24 @@ proto_client_pickup_flag(Proto_Client_Handle ch, Player *p) {
 
   rc = proto_session_rpc(s);  
 
-  if (rc < 0) c->session_lost_handler(s);
-  else if (rc == 0) printf("Pickup flag didn't work!\n");
-  else rc=2;
+  if (rc != 1)
+  {
+        c->session_lost_handler(s);
+	return rc;
+  }
+  else
+  {
+	offset = proto_session_body_unmarshall_int(s, 0, &rc);
+	player_unmarshall(s, offset, ClientGameState.me);
+  }
 
   return rc;
 }
 
 extern int
-proto_client_pickup_shovel(Proto_Client_Handle ch, Player *p) {
-  int rc;
+proto_client_pickup_shovel(Proto_Client_Handle ch) {
+  int rc, offset;
+  Player *p = ClientGameState.me;
   Proto_Session *s;
   Proto_Client *c = ch;
 
@@ -492,9 +518,16 @@ proto_client_pickup_shovel(Proto_Client_Handle ch, Player *p) {
 
   rc = proto_session_rpc(s);  
 
-  if (rc < 0) c->session_lost_handler(s);
-  else if (rc == 0) printf("Pickup shovel didn't work!\n");
-  else rc=2;
+  if (rc != 1)
+  {
+        c->session_lost_handler(s);
+	return rc;
+  }
+  else
+  {
+	offset = proto_session_body_unmarshall_int(s, 0, &rc);
+	player_unmarshall(s, offset, ClientGameState.me);
+  }
 
   return rc;
 }

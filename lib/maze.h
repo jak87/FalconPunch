@@ -11,9 +11,6 @@
 
 #define MAX_HOME_CELLS 100
 #define MAX_JAIL_CELLS 100
-#define MAP_PATH "../lib/daGame_small.map"
-//#define MAP_PATH "../lib/daGame.map"
->>>>>>> c516e15f02c9b61cce60a3e66fb77d01ed4777b0
 
 typedef struct {
   int x;

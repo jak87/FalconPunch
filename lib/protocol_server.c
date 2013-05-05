@@ -472,17 +472,14 @@ game_move_handler(Proto_Session *s)
   int rc=1;
   Proto_Msg_Hdr h;
 
-  //printf("Processing client move from player:\n");
-
   Player clientPlayer;
   int offset = player_unmarshall(s, 0, &clientPlayer);
 
-  player_dump(&clientPlayer);
+  //player_dump(&clientPlayer);
 
   int direction;
   proto_session_body_unmarshall_int(s, offset, &direction);
 
-  //printf("Player wants to move in direction %d\n", direction);
 
   // find the server version of this player
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
@@ -497,13 +494,117 @@ game_move_handler(Proto_Session *s)
   proto_session_hdr_marshall(s, &h);
 
   proto_session_body_marshall_int(s, value);
-  player_marshall(s, serverPlayer);
+  player_marshall(s, serverPlayer); 
 
   rc = proto_session_send_msg(s,1);
 
   // send updates to all clients with the states of all players after this move
   do_send_players_state();
 
+  return rc;
+}
+
+static int
+pickup_flag_handler(Proto_Session *s) 
+{ 
+  int rc = 1, i;
+  Proto_Msg_Hdr h;
+  Player clientPlayer;
+
+  player_unmarshall(s, 0, &clientPlayer);
+ 
+  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
+  i = player_pickup_flag(serverPlayer);
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_PICKUP_FLAG;
+  proto_session_hdr_marshall(s, &h);
+
+  proto_session_body_marshall_int(s,i);
+  player_marshall(s, serverPlayer); 
+
+  rc = proto_session_send_msg(s,1);  
+
+  do_send_players_state();
+ 
+  return rc;
+}
+
+static int
+drop_flag_handler(Proto_Session *s) 
+{ 
+  int rc = 1, i;
+  Proto_Msg_Hdr h;
+  Player clientPlayer;
+
+  player_unmarshall(s, 0, &clientPlayer);
+ 
+  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
+  i = player_drop_flag(serverPlayer);
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_DROP_FLAG;
+  proto_session_hdr_marshall(s, &h);
+
+  proto_session_body_marshall_int(s,i);
+  player_marshall(s, serverPlayer); 
+
+  rc = proto_session_send_msg(s,1);  
+
+  do_send_players_state();
+ 
+  return rc;
+}
+
+static int
+pickup_shovel_handler(Proto_Session *s)  
+{ 
+  int rc = 1, i;
+  Proto_Msg_Hdr h;
+  Player clientPlayer;
+
+  player_unmarshall(s, 0, &clientPlayer);
+ 
+  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
+  i = player_pickup_shovel(serverPlayer);
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_PICKUP_SHOVEL;
+  proto_session_hdr_marshall(s, &h);
+
+  proto_session_body_marshall_int(s,i);
+  player_marshall(s, serverPlayer); 
+
+  rc = proto_session_send_msg(s,1);  
+
+  do_send_players_state();
+ 
+  return rc;
+}
+
+static int
+drop_shovel_handler(Proto_Session *s) 
+{ 
+  int rc = 1, i;
+  Proto_Msg_Hdr h;
+  Player clientPlayer;
+
+  player_unmarshall(s, 0, &clientPlayer);
+ 
+  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
+  i = player_drop_shovel(serverPlayer);
+
+  bzero(&h, sizeof(s));
+  h.type = PROTO_MT_REP_BASE_DROP_SHOVEL;
+  proto_session_hdr_marshall(s, &h);
+
+  proto_session_body_marshall_int(s,i);
+  player_marshall(s, serverPlayer); 
+
+  rc = proto_session_send_msg(s,1);  
+
+  do_send_players_state();
+ 
   return rc;
 }
 
@@ -673,6 +774,18 @@ proto_server_init(void)
         break;
       case PROTO_MT_REQ_BASE_GOODBYE:
 	proto_server_set_req_handler(i, goodbye_handler);
+	break;
+      case PROTO_MT_REQ_BASE_PICKUP_FLAG:
+	proto_server_set_req_handler(i, pickup_flag_handler);
+	break;
+      case PROTO_MT_REQ_BASE_DROP_FLAG:
+	proto_server_set_req_handler(i, drop_flag_handler);
+	break;
+      case PROTO_MT_REQ_BASE_PICKUP_SHOVEL:
+	proto_server_set_req_handler(i, pickup_shovel_handler);
+	break;
+      case PROTO_MT_REQ_BASE_DROP_SHOVEL:
+	proto_server_set_req_handler(i, drop_shovel_handler);
 	break;
       default:
         proto_server_set_req_handler(i, proto_server_mt_null_handler);
