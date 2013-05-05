@@ -73,5 +73,8 @@ extern int player_unmarshall(Proto_Session *s, int offset, Player * player)
   player->x = x;
   player->y = y;
 
+//  printf("Unmarshalled ");
+//  player_dump(player);
+
   return offset;
 }
