@@ -707,6 +707,10 @@ paint_objects(UI *ui){
     obj = ClientGameState.objects[i];
     if((obj.x >= start_x) && (obj.x < max_x) &&
        (obj.y >= start_y) && (obj.y < max_y)){
+      /******* Added in this stuff *********/
+      t.x = (obj.x - start_x) * t.w;
+      t.y = (obj.y - start_y) * t.h;
+      /*************************************/
       if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
 	si = (obj.type == SHOVEL) ? JACKHAMMER_S : ((obj.team) ? 
 						    GREENFLAG_S : REDFLAG_S);

@@ -34,6 +34,7 @@
 #include "protocol_server.h"
 #include "maze.h"
 #include "game_control.h"*/
+
 #include "server_game_code.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024

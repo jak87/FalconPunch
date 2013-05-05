@@ -1,9 +1,5 @@
 #include "server_game_code.h"
 
-/**
- * GAME specific code. Move it out of proto_server
- */
-
 extern int do_send_players_state()
 {
   Proto_Session *s;
