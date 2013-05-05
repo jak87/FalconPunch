@@ -27,13 +27,14 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
-
+/*
 #include "net.h"
 #include "protocol.h"
 #include "protocol_utils.h"
 #include "protocol_server.h"
 #include "maze.h"
-#include "game_control.h"
+#include "game_control.h"*/
+#include "server_game_code.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
 
@@ -59,6 +60,7 @@ struct {
 extern PortType proto_server_rpcport(void) { return Proto_Server.RPCPort; }
 extern PortType proto_server_eventport(void) { return Proto_Server.EventPort; }
 extern Proto_Session *
+
 proto_server_event_session(void) 
 { 
   return &Proto_Server.EventSession; 
@@ -69,6 +71,11 @@ proto_server_set_session_lost_handler(Proto_MT_Handler h)
 {
   Proto_Server.session_lost_handler = h;
 }
+
+
+/***********************************
+ ***** Basic RPC & Event Stuff *****
+ ***********************************/
 
 extern int
 proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h)
@@ -87,6 +94,10 @@ proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h)
   }
 }
 
+
+
+// Records a new subscriber to the event port in the EventSubscriber array 
+
 static int
 proto_server_record_event_subscriber(int fd, int *num)
 {
@@ -102,7 +113,9 @@ proto_server_record_event_subscriber(int fd, int *num)
     Proto_Server.EventLastSubscriber++;
     Proto_Server.EventNumSubscribers++;
     rc = 1;
-  } else {
+  } 
+  else 
+  {
     int i;
     for (i=0; i< PROTO_SERVER_MAX_EVENT_SUBSCRIBERS; i++) {
       if (Proto_Server.EventSubscribers[i]==-1) {
@@ -119,8 +132,12 @@ proto_server_record_event_subscriber(int fd, int *num)
   return rc;
 }
 
-static
-void *
+
+
+// Listens for new connections to the event port, then records
+// them to the EventSubscribers array
+
+static void *
 proto_server_event_listen(void *arg)
 {
   fprintf(stderr, "proto_server_event_listen\n");
@@ -149,6 +166,11 @@ proto_server_event_listen(void *arg)
   }
 } 
 
+
+
+// Goes through every member of the EventSubscriber array (until it
+// hits the last subscriber) and sends an update to them!
+
 void
 proto_server_post_event(void) 
 {
@@ -165,6 +187,9 @@ proto_server_post_event(void)
 
   while (num) { 
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
+
+    // If the EventSession == -1, then it was a player that left so we
+    // skip it
     if (Proto_Server.EventSession.fd != -1) {
       num--;
       // try to send the message, without resetting it
@@ -173,14 +198,19 @@ proto_server_post_event(void)
 
 	//fprintf(stderr, "\nPost_Event has encountered a dead player!\n");
 	//printf("Event Update Failed, removing dead player...\n");
-     
-	close(Proto_Server.EventSession.fd);
+
+	// if the message failed, it means that the player is no longer
+	// in the game, so we set their EventSubscriber fd to -1, reduce
+	// the number of subscribers, and close the port.
+
 	Proto_Server.EventSubscribers[i]=-1;
 	Proto_Server.EventNumSubscribers--;
+	close(Proto_Server.EventSession.fd);
 	//Proto_Server.session_lost_handler(&(Proto_Server.EventSession));
-      } else {
-	printf("Event Update was Successful! (fd = %d)\n", 
-	       Proto_Server.EventSession.fd);
+      } 
+      else {
+	//printf("Event Update was Successful! (fd = %d)\n", 
+	//     Proto_Server.EventSession.fd);
       }
 
       // FIXME: add ack message here to ensure that game is updated 
@@ -194,6 +224,10 @@ proto_server_post_event(void)
   pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
 }
 
+
+
+// Listens for new RPC requests and calls the methods corresponding
+// to the message type in the header of the session
 
 static void *
 proto_server_req_dispatcher(void * arg)
@@ -240,8 +274,11 @@ proto_server_req_dispatcher(void * arg)
   return NULL;
 }
 
-static
-void *
+
+
+// Listens for new connections to the RPC port
+
+static void *
 proto_server_rpc_listen(void *arg)
 {
   fprintf(stderr, "proto_server_rpc_listen\n");
@@ -282,6 +319,13 @@ proto_server_start_rpc_loop(void)
   return 1;
 }
 
+
+
+/*****************************
+ **** Some Basic Handlers ****
+ *****************************/
+
+
 static int 
 proto_session_lost_default_handler(Proto_Session *s)
 {
@@ -314,6 +358,14 @@ proto_server_mt_null_handler(Proto_Session *s)
   return rc;
 }
 
+
+
+/*************************************************
+ ********* Disconnect and Initialization *********
+ *************************************************/
+
+
+
 extern void proto_disconnect() 
 {
   Proto_Session *s;
@@ -326,413 +378,6 @@ extern void proto_disconnect()
    
   printf("Posting disconnect event!\n");
   proto_server_post_event();
-}
-
-
-
-/**
- * GAME specific code. Move it out of proto_server
- */
-
-static int do_send_players_state()
-{
-  Proto_Session *s;
-  Proto_Msg_Hdr hdr;
-
-  s = proto_server_event_session();
-  bzero(&hdr, sizeof(s));
-  hdr.type = PROTO_MT_EVENT_BASE_UPDATE_PLAYERS;
-  proto_session_hdr_marshall(s, &hdr);
-
-  //TODO: lock, handle errors
-
-  // Marshall objects first
-  object_marshall(s, &(GameState.objects[0]));
-  object_marshall(s, &(GameState.objects[1]));
-  object_marshall(s, &(GameState.objects[2]));
-  object_marshall(s, &(GameState.objects[3]));
-
-  int changed = GameState.changedCell != NULL;
-  proto_session_body_marshall_int(s, changed);
-  if (changed)
-  {
-    maze_marshall_cell(s, GameState.changedCell);
-    GameState.changedCell = NULL;
-  }
-
-  // Then marshall number of players
-  int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
-  proto_session_body_marshall_int(s, totalPlayers);
-
-  int i;
-  for (i = 0; i < MAX_NUM_PLAYERS; i++)
-  {
-    if (GameState.players[0][i] != NULL)
-      player_marshall(s, GameState.players[0][i]);
-    if (GameState.players[1][i] != NULL)
-      player_marshall(s, GameState.players[1][i]);
-  }
-
-  //printf("Posting event!\n");
-  proto_server_post_event();
-
-  return 1;
-}
-
-
-static int
-game_maze_info_handler(Proto_Session *s)
-{
-  int rc=1;
-  char c;
-  int value = -1;
-  Proto_Msg_Hdr h;
-
-  // read in character to see what info the client wants
-  proto_session_body_unmarshall_char(s,0,&c);
-
-  switch (c)
-  {
-    case 'j':
-      value = Board.total_j;
-      break;
-    case 'J':
-	  value = Board.total_J;
-	  break;
-    case 'h':
-	  value = Board.total_h;
-	  break;
-    case 'H':
-	  value = Board.total_H;
-	  break;
-    case '#':
-	  value = Board.total_wall;
-	  break;
-    case ' ':
-	  value = Board.total_floor;
-	  break;
-    case 'd':
-	  value = Board.size;
-	  break;
-    default:
-      value = -1;
-      break;
-  }
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_GET_MAZE_INFO;
-  proto_session_hdr_marshall(s, &h);
-  proto_session_body_marshall_int(s, value);
-
-  rc = proto_session_send_msg(s,1);
-
-  return rc;
-}
-
-/**
- * Expects 2 integers for x, y
- * Returns
- */
-static int
-game_cell_info_handler(Proto_Session *s)
-{
-  int rc=1;
-  Proto_Msg_Hdr h;
-  int x, y;
-
-  proto_session_body_unmarshall_int(s, 0, &x);
-  proto_session_body_unmarshall_int(s, sizeof(int), &y);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_GET_CELL_INFO;
-  proto_session_hdr_marshall(s, &h);
-
-  if (x < 0 || x >= Board.size || y < 0 || y > Board.size)
-  {
-    // if cell coordinates are invalid, return 'i'
-    proto_session_body_marshall_char(s, 'i');
-  }
-  else
-  {
-    proto_session_body_marshall_char(s, tolower(Board.cells[x][y]->type));
-    proto_session_body_marshall_int(s, Board.cells[x][y]->team);
-    // for now, all cells are unoccupied
-    proto_session_body_marshall_int(s, 0);
-  }
-
-  rc = proto_session_send_msg(s,1);
-
-  return rc;
-}
-
-static int
-game_move_handler(Proto_Session *s)
-{
-  int rc=1;
-  Proto_Msg_Hdr h;
-
-  Player clientPlayer;
-  int offset = player_unmarshall(s, 0, &clientPlayer);
-
-  //player_dump(&clientPlayer);
-
-  int direction;
-  proto_session_body_unmarshall_int(s, offset, &direction);
-
-
-  // find the server version of this player
-  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
-
-  //printf("Located server representation of this player:\n");
-  //player_dump(serverPlayer);
-
-  int value = game_move_player(serverPlayer, (Player_Move) direction);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_GET_MAZE_INFO;
-  proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s, value);
-  player_marshall(s, serverPlayer); 
-
-  rc = proto_session_send_msg(s,1);
-
-  // send updates to all clients with the states of all players after this move
-  do_send_players_state();
-
-  return rc;
-}
-
-static int
-pickup_flag_handler(Proto_Session *s) 
-{ 
-  int rc = 1, i;
-  Proto_Msg_Hdr h;
-  Player clientPlayer;
-
-  player_unmarshall(s, 0, &clientPlayer);
- 
-  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
-  i = player_pickup_flag(serverPlayer);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_PICKUP_FLAG;
-  proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s,i);
-  player_marshall(s, serverPlayer); 
-
-  rc = proto_session_send_msg(s,1);  
-
-  do_send_players_state();
- 
-  return rc;
-}
-
-static int
-drop_flag_handler(Proto_Session *s) 
-{ 
-  int rc = 1, i;
-  Proto_Msg_Hdr h;
-  Player clientPlayer;
-
-  player_unmarshall(s, 0, &clientPlayer);
- 
-  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
-  i = player_drop_flag(serverPlayer);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_DROP_FLAG;
-  proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s,i);
-  player_marshall(s, serverPlayer); 
-
-  rc = proto_session_send_msg(s,1);  
-
-  do_send_players_state();
- 
-  return rc;
-}
-
-static int
-pickup_shovel_handler(Proto_Session *s)  
-{ 
-  int rc = 1, i;
-  Proto_Msg_Hdr h;
-  Player clientPlayer;
-
-  player_unmarshall(s, 0, &clientPlayer);
- 
-  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
-  i = player_pickup_shovel(serverPlayer);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_PICKUP_SHOVEL;
-  proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s,i);
-  player_marshall(s, serverPlayer); 
-
-  rc = proto_session_send_msg(s,1);  
-
-  do_send_players_state();
- 
-  return rc;
-}
-
-static int
-drop_shovel_handler(Proto_Session *s) 
-{ 
-  int rc = 1, i;
-  Proto_Msg_Hdr h;
-  Player clientPlayer;
-
-  player_unmarshall(s, 0, &clientPlayer);
- 
-  Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
-  i = player_drop_shovel(serverPlayer);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_DROP_SHOVEL;
-  proto_session_hdr_marshall(s, &h);
-
-  proto_session_body_marshall_int(s,i);
-  player_marshall(s, serverPlayer); 
-
-  rc = proto_session_send_msg(s,1);  
-
-  do_send_players_state();
- 
-  return rc;
-}
-
-static int
-game_dump_handler(Proto_Session *s)
-{
-  int rc=1;
-  Proto_Msg_Hdr h;
-
-  dump();
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_DUMP;
-  proto_session_hdr_marshall(s, &h);
-
-  rc = proto_session_send_msg(s,1);
-
-  return rc;
-}
-
-static void
-remove_player(int fd_id) {
-
-  int i;
-  Player *p = NULL;
-
-  for(i = 0; i < MAX_NUM_PLAYERS; i++) {
-    if(GameState.players[0][i] != NULL) {
-      if(GameState.players[0][i]->fd == fd_id) {
-	p = GameState.players[0][i];
-	break;
-      }
-    }
-    if(GameState.players[1][i] != NULL) {
-      if(GameState.players[1][i]->fd == fd_id) {
-	p = GameState.players[1][i];
-	break;
-      }
-    }
-  }
-
-  //Player already removed
-  if (p == NULL) {
-    //printf("The player was already removed\n");
-    return;
-  }
-
-  // Adjust the gamestate accordingly
-  Board.cells[p->y][p->x]->occupant = NULL;
-  GameState.players[p->team][p->id] = NULL;
-  GameState.numPlayers[p->team]--;
-  free(GameState.players[p->team][p->id]);
-  
-  // printf("Player should be successfully removed!\n");
-
-  // Update the players
-  do_send_players_state();
-}
-
-
-static int
-goodbye_handler(Proto_Session *s)
-{
-  Player p;
-  int fd_id, offset;
-
-  // Gets the id in the EventSubscriber array first, then the player info
-  offset = proto_session_body_unmarshall_int(s,0,&fd_id);
-  if (offset > 0)
-    player_unmarshall(s,offset,&p);
-  else
-    printf("Error!\n");
-
-  //printf("About to remove player... (From goodbye_handler)\n");
-  fd_id = Proto_Server.EventSubscribers[p.fd];
-  printf("p.fd = %d\n", p.fd);
-  //printf("fd_id = %d\n", fd_id);
-  //remove_player(p.fd);
-  remove_player(p.fd);
-
-  return -1;
-}
-
-static int
-hello_handler(Proto_Session *s)
-{
-  int i, rc=1;
-  Proto_Msg_Hdr h;
-  proto_session_body_unmarshall_int(s,0,&i);
-
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_HELLO;
-  proto_session_hdr_marshall(s, &h);
-  
-  maze_marshall_row(s,i);
-
-  //printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
-
-  rc = proto_session_send_msg(s,1);
-  return rc;
-}
-
-static int
-new_player_handler(Proto_Session *s)
-{
-  int rc=1;
-  Proto_Msg_Hdr h;
-  // nothing to unmarshall.
-
-  // create a new player on a team that has fewer players.
-  Player* p = game_create_player(2);
-  // remember the id of the connection
-  p->fd = s->fd; 
-    //Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber-1];
-
-  //printf("Marshalling stuff...\n");
-  bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
-  proto_session_hdr_marshall(s, &h);
-  proto_session_body_marshall_int(s, Proto_Server.EventLastSubscriber-1);
-  player_marshall(s, p);
-  //printf("Alright, everyting marshalled. Sending the message!\n");
-
-  rc = proto_session_send_msg(s,1);
-  //printf("Created player!");
-
-  // No need to update everything. Client hasn't launched ui yet.
-
-  return rc;
 }
 
 extern int

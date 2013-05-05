@@ -27,7 +27,6 @@
 #include "protocol_session.h"
 
 extern int proto_server_init(void);
-static void remove_player(int fd_id);
 
 extern int proto_server_set_session_lost_handler(Proto_MT_Handler h);
 extern int proto_server_set_req_handler(Proto_Msg_Types mt, Proto_MT_Handler h);

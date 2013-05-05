@@ -1,7 +1,10 @@
 #include "server_game_code.h"
 
-extern int 
-do_send_players_state()
+/**
+ * GAME specific code. Move it out of proto_server
+ */
+
+extern int do_send_players_state()
 {
   Proto_Session *s;
   Proto_Msg_Hdr hdr;
@@ -31,7 +34,6 @@ do_send_players_state()
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);
 
-  printf("Marshalling %d players...\n",totalPlayers);
   int i;
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
@@ -315,7 +317,7 @@ remove_player(int fd_id) {
 
   //Player already removed
   if (p == NULL) {
-    printf("The player was already removed\n");
+    //printf("The player was already removed\n");
     return;
   }
 
@@ -325,7 +327,7 @@ remove_player(int fd_id) {
   GameState.numPlayers[p->team]--;
   free(GameState.players[p->team][p->id]);
   
-  printf("Player should be successfully removed!\n");
+  // printf("Player should be successfully removed!\n");
 
   // Update the players
   do_send_players_state();
@@ -345,7 +347,7 @@ goodbye_handler(Proto_Session *s)
   else
     printf("Error!\n");
 
-  printf("About to remove player... (From goodbye_handler)\n");
+  printf("p.fd = %d\n", p.fd);
   remove_player(p.fd);
 
   return -1;
@@ -364,6 +366,8 @@ hello_handler(Proto_Session *s)
   
   maze_marshall_row(s,i);
 
+  //printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
+
   rc = proto_session_send_msg(s,1);
   return rc;
 }
@@ -373,18 +377,23 @@ new_player_handler(Proto_Session *s)
 {
   int rc=1;
   Proto_Msg_Hdr h;
+  // nothing to unmarshall.
 
   // create a new player on a team that has fewer players.
   Player* p = game_create_player(2);
   // remember the id of the connection
   p->fd = s->fd; 
+    //Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber-1];
 
+  //printf("Marshalling stuff...\n");
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
   player_marshall(s, p);
+  //printf("Alright, everyting marshalled. Sending the message!\n");
 
   rc = proto_session_send_msg(s,1);
+  //printf("Created player!");
 
   // No need to update everything. Client hasn't launched ui yet.
 

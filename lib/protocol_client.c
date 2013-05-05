@@ -276,8 +276,8 @@ proto_client_new_player(Proto_Client_Handle ch, int * id)
   else 
   {
 
-    offset = proto_session_body_unmarshall_int(s,0,id);
-    rc = player_unmarshall(s,offset, &clientPlayer);
+    rc = player_unmarshall(s,0, &clientPlayer);
+    *id = clientPlayer.fd;
    
     // put the client player in it's proper place based on team and id.
     player_copy(&(ClientGameState.players[clientPlayer.team][clientPlayer.id]),&clientPlayer);

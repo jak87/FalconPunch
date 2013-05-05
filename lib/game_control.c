@@ -461,7 +461,7 @@ extern int game_move_player(Player* p, Player_Move direction)
   Cell* newCell = findCellForMove(p->x, p->y, direction);
 
 //  player_dump(p);
-  printf(" ..wants to move to cell : %d, %d = %c\n", newCell->x, newCell->y, newCell->type);
+  // printf(" ..wants to move to cell : %d, %d = %c\n", newCell->x, newCell->y, newCell->type);
 
   // if new cell is a wall, check if we can destroy it.
   if (newCell->type == '#')
