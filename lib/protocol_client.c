@@ -327,7 +327,7 @@ proto_client_move(Proto_Client_Handle ch, Player_Move direction)
   }
 
   if (rc < 0) printf("player move Error!\n");
-  else if (rc == 0) printf("player move rejected by server!\n");
+  // else if (rc == 0) printf("player move rejected by server!\n");
 //  else printf("Player move successful.\n");
   return rc;
 

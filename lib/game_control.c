@@ -52,7 +52,6 @@ extern int game_load_board()
           Board.home_cells[0][Board.total_h] = Board.cells[row][col];
           Board.total_floor++;
           Board.total_h++;
-	  printf("So far so good!\n");
           break;
 
         case 'H': //team2 home cell

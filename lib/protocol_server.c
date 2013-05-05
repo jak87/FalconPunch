@@ -158,21 +158,21 @@ proto_server_post_event(void)
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
 
   i = 0;
-  printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
+  //printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
   num = Proto_Server.EventNumSubscribers;
 
-  fprintf(stderr, "Server will send updates to %i subscribers\n\n", num);
+  //fprintf(stderr, "Server will send updates to %i subscribers\n\n", num);
 
   while (num) { 
     Proto_Server.EventSession.fd = Proto_Server.EventSubscribers[i];
     if (Proto_Server.EventSession.fd != -1) {
       num--;
       // try to send the message, without resetting it
-      fprintf(stderr, "Send update to subscriber\n");
+      //fprintf(stderr, "Send update to subscriber\n");
       if (proto_session_send_msg(&(Proto_Server.EventSession), 0) < 0) {
 
-	fprintf(stderr, "\nPost_Event has encountered a dead player!\n");
-	printf("Event Update Failed, removing dead player...\n");
+	//fprintf(stderr, "\nPost_Event has encountered a dead player!\n");
+	//printf("Event Update Failed, removing dead player...\n");
      
 	close(Proto_Server.EventSession.fd);
 	Proto_Server.EventSubscribers[i]=-1;
@@ -198,7 +198,7 @@ proto_server_post_event(void)
 static void *
 proto_server_req_dispatcher(void * arg)
 {
-  fprintf(stderr, "proto_server_req_dispatcher\n");
+  //fprintf(stderr, "proto_server_req_dispatcher\n");
 
   Proto_Session s;
   Proto_Msg_Types mt;
@@ -364,7 +364,6 @@ static int do_send_players_state()
   int totalPlayers = GameState.numPlayers[0] + GameState.numPlayers[1];
   proto_session_body_marshall_int(s, totalPlayers);
 
-  printf("Marshalling %d players...\n",totalPlayers);
   int i;
   for (i = 0; i < MAX_NUM_PLAYERS; i++)
   {
@@ -648,7 +647,7 @@ remove_player(int fd_id) {
 
   //Player already removed
   if (p == NULL) {
-    printf("The player was already removed\n");
+    //printf("The player was already removed\n");
     return;
   }
 
@@ -658,7 +657,7 @@ remove_player(int fd_id) {
   GameState.numPlayers[p->team]--;
   free(GameState.players[p->team][p->id]);
   
-  printf("Player should be successfully removed!\n");
+  // printf("Player should be successfully removed!\n");
 
   // Update the players
   do_send_players_state();
@@ -678,7 +677,7 @@ goodbye_handler(Proto_Session *s)
   else
     printf("Error!\n");
 
-  printf("About to remove player... (From goodbye_handler)\n");
+  //printf("About to remove player... (From goodbye_handler)\n");
   fd_id = Proto_Server.EventSubscribers[p.fd];
   printf("p.fd = %d\n", p.fd);
   //printf("fd_id = %d\n", fd_id);
