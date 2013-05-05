@@ -269,6 +269,7 @@ void game_set_player_start_position(Player* p)
 void game_set_player_jail_position(Player* p)
 {
   int i, success = 0;
+  int enemy_team = (p->team+1)%2;
   srand(time(NULL));
 
   while (success == 0)
@@ -276,9 +277,11 @@ void game_set_player_jail_position(Player* p)
     // we'll be in trouble if no jail cell is available...
     i = rand() % MAX_JAIL_CELLS;
 
-    if (Board.jail_cells[p->team][i] != NULL && Board.jail_cells[p->team][i]->occupant == NULL)
+    // Fixed this - should transport them to the enemy jail, not theirs!
+    if (Board.jail_cells[enemy_team][i] != NULL && 
+	Board.jail_cells[enemy_team][i]->occupant == NULL)
     {
-      game_set_player_position(p, Board.jail_cells[p->team][i], 1);
+      game_set_player_position(p, Board.jail_cells[enemy_team][i], 1);
       success = 1;
     }
   }
@@ -473,17 +476,17 @@ extern int game_move_player(Player* p, Player_Move direction)
   {
     didMove = game_collide_players(p, newCell);
   }
-  // if a free player enters its team's jail
-  else if (p->state != PLAYER_JAILED && ((p->team == 0 && newCell->type == 'j')
-	                                  || (p->team == 1 && newCell->type == 'J')))
+  // if a free player enters the enemy team's jail, free everybody!
+  else if (p->state != PLAYER_JAILED && ((p->team == 0 && newCell->type == 'J')
+	                                  || (p->team == 1 && newCell->type == 'j')))
   {
     game_set_player_position(p, newCell, 1);
     game_free_jailed_players(p->team);
     didMove = 1;
   }
-  // if a player is jailed and tries to move outside its team's jail
-  else if (p->state == PLAYER_JAILED && !((p->team == 0 && newCell->type == 'j')
-                                       || (p->team == 1 && newCell->type == 'J')))
+  // if a player is jailed and tries to move outside the enemy team's jail
+  else if (p->state == PLAYER_JAILED && !((p->team == 0 && newCell->type == 'J')
+                                       || (p->team == 1 && newCell->type == 'j')))
   {
 	  // do nothing, can't move outside your own jail
 	  didMove = 0;
