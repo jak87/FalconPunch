@@ -1,0 +1,9 @@
+Loading...
+
+Registering new player...
+My player (ClientGameState.me) is:
+Player [team=0][id=0] : (x=4;y=103)
+Connected to <localhost:50058>
+For command options, please type 'h'
+
+Player> terminating

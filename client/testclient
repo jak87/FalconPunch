@@ -1,10 +1,12 @@
-port=""
-echo "enter port>"
-read port
-$i=0
+#port=""
+#echo "enter port>"
+#read port
 
-while [ $i < 10 ]
-do
-./client $port
-i = $i + 1
-done
+port="46538"
+
+#while [ "forever" ]
+#do
+#./client $port &> test.txt
+./client $port 
+#sleep 4
+#done
