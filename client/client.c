@@ -31,7 +31,7 @@
 #include "../lib/maze.h"
 #include "../lib/tty.h"
 #include "../lib/objects.h"
-#include "../lib/uistandalone.h"
+#include "../lib/gui.h"
 #include "../lib/player.h"
 #include "../lib/game_control.h"
 

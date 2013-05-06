@@ -2,7 +2,7 @@
 #define __DAGAME_PLAYER_H__
 
 #include "net.h"
-#include "uistandalone.h"
+#include "gui.h"
 
 typedef enum {
   PLAYER_NORMAL,
