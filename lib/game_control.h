@@ -8,7 +8,7 @@
 #include "maze.h"
 #include "player.h"
 
-#define MAX_NUM_PLAYERS 5
+#define MAX_NUM_PLAYERS 100
 
 struct {
   Player *players[2][MAX_NUM_PLAYERS];

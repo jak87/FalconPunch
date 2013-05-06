@@ -1,0 +1,10 @@
+port=""
+echo "enter port>"
+read port
+$i=0
+
+while [ $i < 10 ]
+do
+./client $port
+i = $i + 1
+done

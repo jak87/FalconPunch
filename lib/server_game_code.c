@@ -385,8 +385,6 @@ hello_handler(Proto_Session *s)
   
   maze_marshall_row(s,i);
 
-  //printf("Sending subscriber info (%d)\n",Proto_Server.EventLastSubscriber-1);
-
   rc = proto_session_send_msg(s,1);
   return rc;
 }
@@ -399,20 +397,19 @@ new_player_handler(Proto_Session *s)
   // nothing to unmarshall.
 
   // create a new player on a team that has fewer players.
+
   Player* p = game_create_player(2);
   // remember the id of the connection
+
   p->fd = s->fd; 
     //Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber-1];
 
-  //printf("Marshalling stuff...\n");
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
   proto_session_hdr_marshall(s, &h);
   player_marshall(s, p);
-  //printf("Alright, everyting marshalled. Sending the message!\n");
 
   rc = proto_session_send_msg(s,1);
-  //printf("Created player!");
 
   // No need to update everything. Client hasn't launched ui yet.
 

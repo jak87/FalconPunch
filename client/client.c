@@ -532,7 +532,8 @@ main(int argc, char **argv)
     return -1;
   }
 	
-  bzero(&globals, sizeof(globals));
+  //bzero(&globals, sizeof(globals));
+  initGlobals(argc,argv);
   bzero(&Board, sizeof(Board));
 
   // store a pointer to the Client instance we just created. This will be used for
@@ -547,7 +548,8 @@ main(int argc, char **argv)
   //initialize players
   initializeGameState();
 
-  if (initialShell(&c) == 0) return 0;
+  // if (initialShell(&c) == 0) return 0;
+  
 
   // ok startup our connection to the server
   if (startConnection(&c, globals.host, globals.port, update_event_handler)<0) {
@@ -558,13 +560,13 @@ main(int argc, char **argv)
   // connect to the server
   proto_client_hello(c.ph);
 
-  //printf("Registering new player...\n");
+  printf("Registering new player...\n");
   // register as a new player
   if(proto_client_new_player(c.ph, &(globals.connection_id)) < 1) {
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }
-//  printf("My id is %d!\n", globals.connection_id);
+  //  printf("My id is %d!\n", globals.connection_id);
   printf("My player (ClientGameState.me) is:\n");
   player_dump(ClientGameState.me);
 

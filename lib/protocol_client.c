@@ -225,6 +225,7 @@ proto_client_hello(Proto_Client_Handle ch)
 
   marshall_mtonly(s, PROTO_MT_REQ_BASE_HELLO);
   proto_session_body_marshall_int(s,i);
+ 
   rc = proto_session_rpc(s);
   
   if (rc == 1) 

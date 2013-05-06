@@ -9,8 +9,8 @@
 //#define MAP_PATH "../lib/daGame_small.map"
 #define MAP_PATH "../lib/daGame.map"
 
-#define MAX_HOME_CELLS MAX_BOARD_SIZE*MAX_BOARD_SIZE
-#define MAX_JAIL_CELLS MAX_BOARD_SIZE*MAX_BOARD_SIZE
+#define MAX_HOME_CELLS 190
+#define MAX_JAIL_CELLS 190
 
 typedef struct {
   int x;

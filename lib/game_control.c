@@ -252,11 +252,13 @@ void game_set_player_start_position(Player* p)
   while (success == 0)
   {
     // we'll be in trouble if no home cell is available...
-    i = rand() % MAX_HOME_CELLS;
+    i = rand() % Board.total_h;
+    printf("i = %d\n",i);
 
     // Find an unoccupied home cell
     if (Board.home_cells[p->team][i] != NULL && Board.home_cells[p->team][i]->occupant == NULL)
     {
+      printf("A place has been found!\n");
       // update position pointers consistently, 3rd parameter is NULL because
       // this is a new player and wasn't in any cell before now.
       game_set_player_position(p, Board.home_cells[p->team][i], 0);
@@ -293,7 +295,9 @@ extern Player* game_create_player(int team)
   int i=0, playerTeam;
   Player *p;
 
+  printf("Waiting for lock...\n");
   pthread_mutex_lock(&(GameState.masterLock));
+  printf("Lock acquired!\n");
 
   if (team < 2)
 	  playerTeam = team;
@@ -303,13 +307,15 @@ extern Player* game_create_player(int team)
 
   // New code (Uses same if statement)
   i = 0;
+  printf("Going through while loop...\n");
   while (GameState.players[playerTeam][i] != NULL && i < MAX_NUM_PLAYERS)
     i++;
 
-  //printf("Alright, assigning a new player pointer!\n");
   if (GameState.players[playerTeam][i] == NULL)
     {
-	  p = (Player*) malloc(sizeof(Player));
+      printf("Alright, assigning a new player pointer!\n");
+      printf("Mallocing new space\n");
+      p = (Player*) malloc(sizeof(Player));
 
 	  // slot i is available for the new player.
       GameState.players[playerTeam][i] = p;
@@ -321,8 +327,10 @@ extern Player* game_create_player(int team)
       p->team = playerTeam;
 
       //put player on the first unoccupied cell in its home territory
+      printf("Setting player start position\n");
       game_set_player_start_position(p);
 
+      printf("Unlocking...\n");
       pthread_mutex_unlock(&(GameState.masterLock));
       return p;
     }
