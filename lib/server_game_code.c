@@ -26,6 +26,8 @@ extern int do_send_players_state()
 
   //TODO: lock, handle errors
 
+  pthread_mutex_lock(&GameState.masterLock);
+
   // Marshall objects first
   object_marshall(s, &(GameState.objects[0]));
   object_marshall(s, &(GameState.objects[1]));
@@ -52,6 +54,8 @@ extern int do_send_players_state()
     if (GameState.players[1][i] != NULL)
       player_marshall(s, GameState.players[1][i]);
   }
+  
+  pthread_mutex_unlock(&GameState.masterLock);
 
   //printf("Posting event!\n");
   proto_server_post_event();
