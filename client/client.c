@@ -48,6 +48,7 @@ struct Globals {
   PortType port;
   int connection_id;
   Client* client_inst;
+  int test = 0;
 } globals;
 
 UI *ui;
@@ -471,9 +472,17 @@ initGlobals(int argc, char **argv)
     globals.port = atoi(argv[1]);
   }
 
-  if (argc>=3) {
+  if (argc==3) {
     strncpy(globals.host, argv[1], STRLEN);
     globals.port = atoi(argv[2]);
+  }
+
+  if (argc>=4) {
+    strncpy(globals.host, argv[1], STRLEN);
+    globals.port = atoi(argv[2]);
+    t = atoi(argv[3]);
+    if (t > 0)
+      globals.test = 1;
   }
 
 }
