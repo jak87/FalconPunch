@@ -48,7 +48,7 @@ struct Globals {
   PortType port;
   int connection_id;
   Client* client_inst;
-  int test = 0;
+  int test;
 } globals;
 
 UI *ui;
@@ -483,6 +483,7 @@ void
 initGlobals(int argc, char **argv)
 {
   bzero(&globals, sizeof(globals));
+  int t;
 
   if (argc==1) {
     usage(argv[0]);
@@ -505,6 +506,8 @@ initGlobals(int argc, char **argv)
     t = atoi(argv[3]);
     if (t > 0)
       globals.test = 1;
+    else
+      globals.test = 0;
   }
 
 }
@@ -597,14 +600,20 @@ main(int argc, char **argv)
     fprintf(stderr, "ERROR: Couldn't create new player\n");
     return -1;
   }
-  //  printf("My id is %d!\n", globals.connection_id);
-  printf("My player (ClientGameState.me) is:\n");
-  player_dump(ClientGameState.me);
 
-  printf("Connected to <%s:%i>\n", globals.host, globals.port);
-  printf("For command options, please type 'h'\n");
+  if(globals.test > 0)
+    testWander();
 
-  shell(&c);
+  else {
+    printf("My id is %d!\n", globals.connection_id);
+    printf("My player (ClientGameState.me) is:\n");
+    player_dump(ClientGameState.me);
+    
+    printf("Connected to <%s:%i>\n", globals.host, globals.port);
+    printf("For command options, please type 'h'\n");
+    
+    shell(&c);
+  }
 
   return 0;
 }
