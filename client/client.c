@@ -53,6 +53,28 @@ struct Globals {
 
 UI *ui;
 
+static void
+testWander(){
+  while(1){
+    sleep(1);
+    int i =  rand() %4;
+    switch(i){
+    case 0:
+      proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
+      break;
+    case 1:
+      proto_client_move(globals.client_inst->ph, MOVE_LEFT);
+      break;
+    case 2:
+      proto_client_move(globals.client_inst->ph, MOVE_UP);
+      break;
+    case 3:
+      proto_client_move(globals.client_inst->ph, MOVE_DOWN);
+      break;
+    }
+  }
+}
+
 
 
 static int
