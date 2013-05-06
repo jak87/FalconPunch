@@ -24,6 +24,8 @@
 #include <stdlib.h> /* for exit() */
 #include <pthread.h>
 #include <assert.h>
+#include <unistd.h>
+#include <signal.h>
 #include "uistandalone.h"
 #include "net.h"
 #include "maze.h"
@@ -711,10 +713,8 @@ paint_objects(UI *ui){
     obj = ClientGameState.objects[i];
     if((obj.x >= start_x) && (obj.x < max_x) &&
        (obj.y >= start_y) && (obj.y < max_y)){
-      /******* Added in this stuff *********/
       t.x = (obj.x - start_x) * t.w;
       t.y = (obj.y - start_y) * t.h;
-      /*************************************/
       if((ui->tile_h == SPRITE_H) && (ui->tile_w == SPRITE_W)){
 	si = (obj.type == SHOVEL) ? JACKHAMMER_S : ((obj.team) ? 
 						    GREENFLAG_S : REDFLAG_S);
@@ -727,4 +727,31 @@ paint_objects(UI *ui){
       }//if
     }//if
   }//for
+}
+
+extern void *
+ui_wander(void *arg){
+  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  SDL_KeyboardEvent e;
+  e.type = SDL_KEYDOWN;
+  e.keysym.mod = KMOD_NONE;
+  while(1){
+    sleep(1);
+    int i =  rand() %4;
+    switch(i){
+    case 0:
+      e.keysym.sym = SDLK_UP;
+      break;
+    case 1:
+      e.keysym.sym = SDLK_DOWN;
+      break;
+    case 2:
+      e.keysym.sym = SDLK_LEFT;
+      break;
+    case 3:
+      e.keysym.sym = SDLK_RIGHT;
+      break;
+    }
+    SDL_PushEvent((SDL_Event *)&e);
+  }
 }

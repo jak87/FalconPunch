@@ -75,6 +75,7 @@ sval ui_keypress(UI *ui, SDL_KeyboardEvent *e);
 void ui_update(UI *ui);
 void ui_refresh(UI *ui);
 void ui_quit(UI *ui);
+void *ui_wander(void *arg);
 void ui_main_loop(UI *ui, uval h, uval w);
 void ui_init(UI **ui);
 void ui_center_on_player(UI *ui);
