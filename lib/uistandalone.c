@@ -36,12 +36,6 @@
 
 static void paint_players(UI *ui);
 static void paint_objects(UI *ui);
-#define MAX_NUM_PLAYERS 5 //per team
-
-//struct {
-//  Player *me; //For centering
-//  Player players[2][MAX_NUM_PLAYERS];
-//} ClientGameState;
 
 #define SPRITE_H 32
 #define SPRITE_W 32
@@ -56,7 +50,7 @@ static void paint_objects(UI *ui);
 #define UI_GREENFLAG_BMP "../lib/greenflag.bmp"
 #define UI_JACKHAMMER_BMP "../lib/shovel.bmp"
 
-typedef enum {UI_SDLEVENT_UPDATE, UI_SDLEVENT_QUIT} UI_SDL_Event;
+typedef enum {UI_SDLEVENT_UPDATE, UI_SDLEVENT_QUIT, UI_SDLEVENT_REFRESH} UI_SDL_Event;
 
 static inline SDL_Surface *
 ui_player_img(UI *ui, int team)
@@ -520,6 +514,7 @@ static sval
 ui_userevent(UI *ui, SDL_UserEvent *e) 
 {
   if (e->code == UI_SDLEVENT_UPDATE) return 2;
+  if (e->code == UI_SDLEVENT_REFRESH){ui_update_fullMap(ui);return 2;}
   if (e->code == UI_SDLEVENT_QUIT) return -1;
   return 0;
 }
@@ -587,6 +582,15 @@ ui_pan(UI *ui, sval xdir, sval ydir)
   ui_check_camera_edges(ui);
 
   return 2;
+}
+
+extern void
+ui_refresh(UI *ui){
+  SDL_Event event;
+  
+  event.type = SDL_USEREVENT;
+  event.user.code = UI_SDLEVENT_REFRESH;
+  SDL_PushEvent(&event);
 }
 
 extern void

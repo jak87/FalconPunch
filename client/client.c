@@ -118,6 +118,7 @@ update_event_handler(Proto_Session *s)
     offset = maze_unmarshall_cell(s, offset);
     // The trouble now is that the way we have done unmarshalling, here we
     // don't know which cell changed... and the UI needs to know to repaint it.
+    ui_refresh(ui);
   }
 
 
@@ -144,8 +145,9 @@ update_event_handler(Proto_Session *s)
     }
     }*/
   //printf("Done getting update with all players\n");
-
-  ui_update(ui);
+  if(SDL_WasInit(SDL_INIT_VIDEO) != 0){
+    ui_update(ui);
+  }
 
   //printf("UI Updated!\n");
 
@@ -231,38 +233,42 @@ game_process_reply(Client *C)
 extern sval
 ui_keypress(UI *ui, SDL_KeyboardEvent *e)
 {
-  int rc;
+  int rc = 1;
   SDLKey sym = e->keysym.sym;
   SDLMod mod = e->keysym.mod;
 
   if (e->type == SDL_KEYDOWN) {
-    if (sym == SDLK_LEFT && mod == KMOD_NONE) {
-      //fprintf(stderr, "%s: move left\n", __func__);
+    if (sym == SDLK_z && mod & KMOD_SHIFT ) return ui_zoom(ui,-1);
+    if (sym == SDLK_z) return ui_zoom(ui, 1);
+    if (sym == SDLK_LEFT && mod & KMOD_SHIFT) return ui_pan(ui,-1,0);
+    if (sym == SDLK_RIGHT && mod & KMOD_SHIFT) return ui_pan(ui,1,0);
+    if (sym == SDLK_UP && mod & KMOD_SHIFT) return ui_pan(ui, 0,-1);
+    if (sym == SDLK_DOWN && mod & KMOD_SHIFT) return ui_pan(ui, 0,1);
+    if (sym == SDLK_LEFT) {
+      if(Board.cells[ClientGameState.me->y][ClientGameState.me->x-1]->type == '#' && !ClientGameState.me->shovel){return rc;}
       rc = proto_client_move(globals.client_inst->ph, MOVE_LEFT);
       ui_center_on_player(ui);
       return rc;
     }
-    if (sym == SDLK_RIGHT && mod == KMOD_NONE) {
-      //fprintf(stderr, "%s: move right\n", __func__);
+    if (sym == SDLK_RIGHT) {
+      if(Board.cells[ClientGameState.me->y][ClientGameState.me->x+1]->type == '#' && !ClientGameState.me->shovel){return rc;}
       rc = proto_client_move(globals.client_inst->ph, MOVE_RIGHT);
       ui_center_on_player(ui);
       return rc;
     }
-    if (sym == SDLK_UP && mod == KMOD_NONE)  {  
-      //fprintf(stderr, "%s: move up\n", __func__);
+    if (sym == SDLK_UP)  {  
+      if(Board.cells[ClientGameState.me->y-1][ClientGameState.me->x]->type == '#' && !ClientGameState.me->shovel){return rc;}
       rc = proto_client_move(globals.client_inst->ph, MOVE_UP);
-//      printf("Attempting to center...\n");
       ui_center_on_player(ui);
-//      printf("Centered!\n");
       return rc;
     }
-    if (sym == SDLK_DOWN && mod == KMOD_NONE)  {
-      //fprintf(stderr, "%s: move down\n", __func__);
+    if (sym == SDLK_DOWN)  {
+      if(Board.cells[ClientGameState.me->y+1][ClientGameState.me->x]->type == '#' && !ClientGameState.me->shovel){return rc;}
       rc = proto_client_move(globals.client_inst->ph, MOVE_DOWN);
       ui_center_on_player(ui);
       return rc;
     }
-    if (sym == SDLK_r && mod == KMOD_NONE)  {  
+    if (sym == SDLK_r)  {  
       fprintf(stderr, "%s: Pickup/putdown flag\n", __func__);
       if(ClientGameState.me->state == PLAYER_OWN_FLAG ||
 	 ClientGameState.me->state == PLAYER_OPPONENT_FLAG)
@@ -271,7 +277,7 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
 	rc = proto_client_pickup_flag(globals.client_inst->ph);
       return rc;
     }
-    if (sym == SDLK_g && mod == KMOD_NONE)  {   
+    if (sym == SDLK_g)  {
       fprintf(stderr, "%s: Pickup/putdown shovel\n", __func__);
       if(ClientGameState.me->shovel > 0)
 	rc = proto_client_drop_shovel(globals.client_inst->ph);
@@ -279,29 +285,8 @@ ui_keypress(UI *ui, SDL_KeyboardEvent *e)
 	rc = proto_client_pickup_shovel(globals.client_inst->ph);
       return rc;
     }
-    if (sym == SDLK_j && mod == KMOD_NONE)  {   
-      fprintf(stderr, "%s: dummy jail\n", __func__);
-      //return ui_dummy_jail(ui);
-    }
-    if (sym == SDLK_n && mod == KMOD_NONE)  {   
-      fprintf(stderr, "%s: dummy normal state\n", __func__);
-      //return ui_dummy_normal(ui);
-    }
-    if (sym == SDLK_t && mod == KMOD_NONE)  {   
-      fprintf(stderr, "%s: dummy toggle team\n", __func__);
-      //return ui_dummy_toggle_team(ui);
-    }
-    if (sym == SDLK_i && mod == KMOD_NONE)  {   
-      fprintf(stderr, "%s: dummy inc player id \n", __func__);
-      //return ui_dummy_inc_id(ui);
-    }
     if (sym == SDLK_q) return -1;
-    if (sym == SDLK_z && mod == KMOD_NONE) return ui_zoom(ui, 1);
-    if (sym == SDLK_z && mod & KMOD_SHIFT ) return ui_zoom(ui,-1);
-    if (sym == SDLK_LEFT && mod & KMOD_SHIFT) return ui_pan(ui,-1,0);
-    if (sym == SDLK_RIGHT && mod & KMOD_SHIFT) return ui_pan(ui,1,0);
-    if (sym == SDLK_UP && mod & KMOD_SHIFT) return ui_pan(ui, 0,-1);
-    if (sym == SDLK_DOWN && mod & KMOD_SHIFT) return ui_pan(ui, 0,1);
+
     else {
       //fprintf(stderr, "%s: key pressed: %d\n", __func__, sym); 
     }
