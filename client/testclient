@@ -1,12 +1,10 @@
-#port=""
-#echo "enter port>"
-#read port
+port=""
+echo "enter port>"
+read port
 
-port="46538"
+ip="128.197.12.134"
 
-#while [ "forever" ]
-#do
-#./client $port &> test.txt
-./client $port 
-#sleep 4
-#done
+for i in {1..8}
+do
+./client $ip $port 2 & 
+done

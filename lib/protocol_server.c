@@ -141,7 +141,7 @@ proto_server_record_event_subscriber(int fd, int *num)
 static void *
 proto_server_event_listen(void *arg)
 {
-  fprintf(stderr, "proto_server_event_listen\n");
+  //fprintf(stderr, "proto_server_event_listen\n");
   int fd = Proto_Server.EventListenFD;
   int connfd;
 
@@ -247,8 +247,8 @@ proto_server_req_dispatcher(void * arg)
 
   s.fd = (FDType) arg_value;
 
-  fprintf(stderr, "proto_rpc_dispatcher: %p: Started: fd=%d\n", 
-	  pthread_self(), s.fd);
+  //fprintf(stderr, "proto_rpc_dispatcher: %p: Started: fd=%d\n", 
+  //  pthread_self(), s.fd);
 
   // Listening for RPCs
   for (;;) {
@@ -282,7 +282,7 @@ proto_server_req_dispatcher(void * arg)
 static void *
 proto_server_rpc_listen(void *arg)
 {
-  fprintf(stderr, "proto_server_rpc_listen\n");
+  //fprintf(stderr, "proto_server_rpc_listen\n");
 
   int fd = Proto_Server.RPCListenFD;
   unsigned long connfd;
@@ -307,13 +307,13 @@ proto_server_rpc_listen(void *arg)
 extern int
 proto_server_start_rpc_loop(void)
 {
-  fprintf(stderr, "proto_server_start_rpc_loop\n");
+  //fprintf(stderr, "proto_server_start_rpc_loop\n");
 
 
   if (pthread_create(&(Proto_Server.RPCListenTid), NULL, 
 		     &proto_server_rpc_listen, NULL) !=0) {
     fprintf(stderr, 
-	    "proto_server_rpc_listen: pthread_create: create RPCListen thread failed\n");
+        "proto_server_rpc_listen: pthread_create: create RPCListen thread failed\n");
     perror("pthread_create:");
     return -3;
   }

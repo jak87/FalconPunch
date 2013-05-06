@@ -208,7 +208,7 @@ extern void game_init()
  */
 void game_set_player_position(Player* p, Cell* c, int updateOldCell)
 {
-  printf("Updating player position to %d,%d\n", c->x, c->y);
+  //printf("Updating player position to %d,%d\n", c->x, c->y);
 
   if (updateOldCell)
   {
@@ -253,12 +253,10 @@ void game_set_player_start_position(Player* p)
   {
     // we'll be in trouble if no home cell is available...
     i = rand() % Board.total_h;
-    printf("i = %d\n",i);
 
     // Find an unoccupied home cell
     if (Board.home_cells[p->team][i] != NULL && Board.home_cells[p->team][i]->occupant == NULL)
     {
-      printf("A place has been found!\n");
       // update position pointers consistently, 3rd parameter is NULL because
       // this is a new player and wasn't in any cell before now.
       game_set_player_position(p, Board.home_cells[p->team][i], 0);
@@ -295,9 +293,7 @@ extern Player* game_create_player(int team)
   int i=0, playerTeam;
   Player *p;
 
-  printf("Waiting for lock...\n");
   pthread_mutex_lock(&(GameState.masterLock));
-  printf("Lock acquired!\n");
 
   if (team < 2)
 	  playerTeam = team;
@@ -307,14 +303,12 @@ extern Player* game_create_player(int team)
 
   // New code (Uses same if statement)
   i = 0;
-  printf("Going through while loop...\n");
+
   while (GameState.players[playerTeam][i] != NULL && i < MAX_NUM_PLAYERS)
     i++;
 
   if (GameState.players[playerTeam][i] == NULL)
     {
-      printf("Alright, assigning a new player pointer!\n");
-      printf("Mallocing new space\n");
       p = (Player*) malloc(sizeof(Player));
 
 	  // slot i is available for the new player.
@@ -327,10 +321,9 @@ extern Player* game_create_player(int team)
       p->team = playerTeam;
 
       //put player on the first unoccupied cell in its home territory
-      printf("Setting player start position\n");
+      
       game_set_player_start_position(p);
 
-      printf("Unlocking...\n");
       pthread_mutex_unlock(&(GameState.masterLock));
       return p;
     }
@@ -372,7 +365,7 @@ Cell* findCellForMove(int x, int y, Player_Move direction)
  */
 int game_move_into_wall(Player* p, Cell* newCell)
 {
-  printf("Moving into a wall\n");
+  //printf("Moving into a wall\n");
 
   // return 0 for all of these?
   if (newCell->y == 0)
