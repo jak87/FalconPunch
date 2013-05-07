@@ -10,9 +10,16 @@
 
 #define MAX_NUM_PLAYERS 100
 
+typedef enum {
+  WAITING_TO_START,
+  IN_PROGRESS,
+  TEAM_0_VICTORY,
+  TEAM_1_VICTORY
+} Game_State;
+
 struct {
   Player *players[2][MAX_NUM_PLAYERS];
-  int gameStatus;
+  Game_State gameStatus;
   int numPlayers[2];
   Object objects[4];
   Cell * changedCell;
@@ -23,7 +30,7 @@ struct {
   Player *me;
   Player players[2][MAX_NUM_PLAYERS];
   Object objects[4];
-  int gameStatus;
+  Game_State gameStatus;
   pthread_mutex_t masterLock;
 } ClientGameState;
 

@@ -178,22 +178,23 @@ update_event_handler(Proto_Session *s)
 }
 
 static int
-gameover_event_handler(Proto_Session *s)
+gamestatus_event_handler(Proto_Session *s)
 {
 //  Proto_Client_Handle pch = ((Client *) proto_session_get_data(s))->ph;
 
-  int winner;
-  proto_session_body_unmarshall_int(s, 0, &winner);
+  int state = 0;
+  printf("received gamestatus update!\n");
+  proto_session_body_unmarshall_int(s, 0, &state);
+  ClientGameState.gameStatus = state;
 
-  fprintf(stderr, "Game Over\n");
-  if(ClientGameState.me->team == winner)
-    fprintf(stderr, "You won!\n");
-  else
-    fprintf(stderr, "You lost...\n");
-  
-  proto_client_disconnect();
-
-  exit(1);
+  if(ClientGameState.gameStatus > IN_PROGRESS) {
+    fprintf(stderr, "Game Over\n");
+    if(ClientGameState.me->team == (ClientGameState.gameStatus - 2))
+      fprintf(stderr, "You won!\n");
+    else
+      fprintf(stderr, "You lost...\n");
+    ui_quit(ui);
+  }
 }
 
 
@@ -213,7 +214,7 @@ startConnection(Client *C, char *host, PortType port, Proto_MT_Handler h)
 				     h);
     }
     //also add handler for game over
-    proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_GAMEOVER, gameover_event_handler);
+    proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_UPDATE_GAME_STATE, gamestatus_event_handler);
 
     proto_client_set_event_handler(C->ph, PROTO_MT_EVENT_BASE_DISCONNECT, disconnect_handler);
 
@@ -421,7 +422,10 @@ docmd(Client *C, char * buf)
   }
 
   else if(strcmp(cmd, "launch") == 0){
-    launch();
+    if (ClientGameState.gameStatus == IN_PROGRESS)
+      launch();
+    else
+      printf("Still waiting for game to start...\n");
   }
 
   else if (strcmp(cmd,"h") == 0) {
@@ -579,6 +583,7 @@ main(int argc, char **argv)
   // no need to initialize yourself. .me will always point to the real memory location reserved
   // for the player based on team and id.
 //  ClientGameState.me = malloc(sizeof(Player));
+  ClientGameState.gameStatus = WAITING_TO_START;
   //initialize players
   initializeGameState();
 

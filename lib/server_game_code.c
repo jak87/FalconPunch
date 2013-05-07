@@ -1,14 +1,14 @@
 #include "server_game_code.h"
 
-extern int do_gameover(int winner) {
+extern int do_send_game_state() {
   Proto_Session *s;
   Proto_Msg_Hdr hdr;
 
   s = proto_server_event_session();
   bzero(&hdr, sizeof(s));
-  hdr.type = PROTO_MT_EVENT_BASE_GAMEOVER;
+  hdr.type = PROTO_MT_EVENT_BASE_UPDATE_GAME_STATE;
   proto_session_hdr_marshall(s, &hdr);
-  proto_session_body_marshall_int(s, winner);
+  proto_session_body_marshall_int(s, GameState.gameStatus);
   proto_server_post_event();
   //proto_disconnect();
   return 1;
@@ -225,10 +225,11 @@ drop_flag_handler(Proto_Session *s)
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
   i = player_drop_flag(serverPlayer);
 
-  if (i == 2) // Team 0 won! 
-    { do_gameover(0); }
-  else if (i == 3) // Team 1 won! 
-    { do_gameover(1); }
+  // Game is over!
+  if (i > 1) {
+    GameState.gameStatus = i;
+    do_send_game_state();
+  }
 
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_DROP_FLAG;
@@ -402,7 +403,6 @@ new_player_handler(Proto_Session *s)
   // remember the id of the connection
 
   p->fd = s->fd; 
-    //Proto_Server.EventSubscribers[Proto_Server.EventLastSubscriber-1];
 
   bzero(&h, sizeof(s));
   h.type = PROTO_MT_REP_BASE_NEW_PLAYER;
@@ -411,7 +411,10 @@ new_player_handler(Proto_Session *s)
 
   rc = proto_session_send_msg(s,1);
 
-  // No need to update everything. Client hasn't launched ui yet.
+  if(GameState.numPlayers[0] + GameState.numPlayers[1] > 1) {
+    GameState.gameStatus = IN_PROGRESS;
+    do_send_game_state();
+  }
 
   return rc;
 }

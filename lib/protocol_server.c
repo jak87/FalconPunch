@@ -181,7 +181,7 @@ proto_server_post_event(void)
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
 
   i = 0;
-  //printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
+  printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
   num = Proto_Server.EventNumSubscribers;
 
   //fprintf(stderr, "Server will send updates to %i subscribers\n\n", num);
