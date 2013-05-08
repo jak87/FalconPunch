@@ -173,7 +173,7 @@ game_move_handler(Proto_Session *s)
   int value = game_move_player(serverPlayer, (Player_Move) direction);
 
   bzero(&h, sizeof(s));
-  h.type = PROTO_MT_REP_BASE_GET_MAZE_INFO;
+  h.type = PROTO_MT_REP_BASE_MOVE;
   proto_session_hdr_marshall(s, &h);
 
   proto_session_body_marshall_int(s, value);

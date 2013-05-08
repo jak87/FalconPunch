@@ -17,7 +17,6 @@ typedef struct {
   int y;
   char type;
   int team;
-  // TODO: make outer walls and walls around home and jail indestructable
   int destructable;
   Player* occupant;
 } Cell;

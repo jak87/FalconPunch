@@ -289,7 +289,6 @@ void game_set_player_jail_position(Player* p)
 
 extern Player* game_create_player(int team)
 {
-  // TODO: do we need to lock here?
   int i=0, playerTeam;
   Player *p;
 
