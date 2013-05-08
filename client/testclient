@@ -2,9 +2,10 @@ port=""
 echo "enter port>"
 read port
 
-ip="128.197.12.134"
+ip="128.197.11.31"
 
-for i in {1..8}
+for i in {1..199}
 do
 ./client $ip $port 2 & 
+sleep 0.5
 done

@@ -149,6 +149,25 @@ game_cell_info_handler(Proto_Session *s)
   return rc;
 }
 
+/* Searches through players struct to find player with given fd
+ *
+ * param: FDType fd - File Descriptor to search for
+ * Returns pointer to player if found, NULL otherwise
+ */
+static Player *
+find_player_by_fd(FDType fd){
+  int i;
+  int j = 0;
+  Player *player;
+  for(i=0; i <= 1;i++){
+    while ((player = GameState.players[i][j]) != NULL){
+      if(player->fd == fd) return player;
+    }
+    j = 0;
+  }
+  return NULL;
+}
+
 extern int
 game_move_handler(Proto_Session *s)
 {
@@ -163,10 +182,10 @@ game_move_handler(Proto_Session *s)
   int direction;
   proto_session_body_unmarshall_int(s, offset, &direction);
 
-
   // find the server version of this player
   Player* serverPlayer = GameState.players[clientPlayer.team][clientPlayer.id];
 
+  if(serverPlayer == NULL) {return -1;}
   //printf("Located server representation of this player:\n");
   //player_dump(serverPlayer);
 
