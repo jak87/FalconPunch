@@ -21,6 +21,7 @@
 *****************************************************************************/
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <strings.h>
@@ -38,6 +39,7 @@
 #include "server_game_code.h"
 
 #define PROTO_SERVER_MAX_EVENT_SUBSCRIBERS 1024
+#define UPDATES_PER_SECOND 50
 
 struct {
   FDType   RPCListenFD;
@@ -177,9 +179,11 @@ proto_server_post_event(void)
 {
   int i;
   int num;
+  clock_t start, end, diff;
+  int ms;
 
   pthread_mutex_lock(&Proto_Server.EventSubscribersLock);
-
+  start = clock();
   i = 0;
   printf("NumSubscribers = %d\n", Proto_Server.EventNumSubscribers);
   num = Proto_Server.EventNumSubscribers;
@@ -223,6 +227,10 @@ proto_server_post_event(void)
   }
   proto_session_reset_send(&Proto_Server.EventSession);
   pthread_mutex_unlock(&Proto_Server.EventSubscribersLock);
+  end = clock();
+  if ((diff = start - end) < (ms = 1/UPDATES_PER_SECOND * 1000)){
+    nanosleep((struct timespec[]){{0, (diff - ms)*1000}}, NULL);
+  }
 }
 
 
